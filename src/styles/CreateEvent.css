@@ -1,0 +1,73 @@
+.create-event {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.create-event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+}
+
+.create-event-title {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.image-upload-area {
+  width: 100%;
+  height: 200px;
+  background: var(--gray-light);
+  border: 2px dashed var(--gray-medium);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.image-upload-area:hover {
+  border-color: var(--primary-color);
+}
+
+.image-upload-placeholder {
+  text-align: center;
+}
+
+.image-upload-icon {
+  font-size: 2rem;
+  color: var(--gray-medium);
+  margin-bottom: 1rem;
+}
+
+.description-area {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.submit-button {
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+} 

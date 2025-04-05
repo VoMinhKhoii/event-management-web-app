@@ -1,0 +1,128 @@
+.profile-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.profile-image-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--gray-light);
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-image-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.edit-image-button:hover {
+  background: var(--white);
+  transform: scale(1.1);
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--gray-dark);
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid var(--gray-light);
+  margin-bottom: 2rem;
+}
+
+.profile-tab {
+  padding: 1rem 0;
+  color: var(--gray-dark);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.profile-tab.active {
+  color: var(--primary-color);
+}
+
+.profile-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary-color);
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.setting-label {
+  font-weight: 500;
+}
+
+.logout-button {
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1rem;
+  background: #EF4444;
+  color: var(--white);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-button:hover {
+  background: #DC2626;
+} 
