@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import NavPane from '../components/NavPane.jsx';
 
 const CreateEvent = () => {
   const [formData, setFormData] = useState({
@@ -10,12 +11,14 @@ const CreateEvent = () => {
     endTime: '',
     startDate: '',
     endDate: '',
-    location: '',
+    location: null,
     eventType: '',
     image: null,
     maxAttendees: ''
   });
   const [errors, setErrors] = useState({});
+
+  const validateForm = () => {}
 
   
 
@@ -53,42 +56,16 @@ const CreateEvent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 fonts-['Poppins']">
       {/* Navigation Header */}
-      <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-center py-4">
-          <nav className="flex items-center space-x-12">
-            <Link to="/" className="flex items-center text-gray-600 hover:text-gray-900">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Home
-            </Link>
-            <Link to="/calendar" className="flex items-center text-blue-600">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Calendar
-            </Link>
-            <Link to="/notifications" className="flex items-center text-gray-600 hover:text-gray-900">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              Notifications
-            </Link>
-          </nav>
-          <div className="absolute right-4">
-            <img src="/images/avatar.png" alt="Profile" className="w-8 h-8 rounded-full" />
-          </div>
-        </div>
-      </header>
+      <NavPane/>
 
-      <div className="max-w-6xl mx-auto px-4 pt-24">
-        <h1 className="text-2xl font-bold mb-8">New event</h1>
+      <div className="max-w-6xl mx-auto px-4 pt-16">
+        <h1 className="text-[28px] font-semibold mb-4 text-center">New event</h1>
         
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-8">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-[48px]">
           {/* Left Column */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -98,7 +75,7 @@ const CreateEvent = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 placeholder="Enter title"
               />
             </div>
@@ -112,7 +89,7 @@ const CreateEvent = () => {
                 value={formData.summary}
                 onChange={handleChange}
                 rows="4"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 placeholder="Enter summary"
               />
             </div>
@@ -127,7 +104,7 @@ const CreateEvent = () => {
                   name="startTime"
                   value={formData.startTime}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
                 />
               </div>
               <div>
@@ -139,7 +116,7 @@ const CreateEvent = () => {
                   name="endTime"
                   value={formData.endTime}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
               </div>
             </div>
@@ -154,7 +131,7 @@ const CreateEvent = () => {
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
               </div>
               <div>
@@ -166,7 +143,7 @@ const CreateEvent = () => {
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
               </div>
             </div>
@@ -180,21 +157,22 @@ const CreateEvent = () => {
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 placeholder="Enter location"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Event Type
-              </label>
-              <select
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
                 name="eventType"
                 value={formData.eventType}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
+                placeHolder="Select event type"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                >
                 <option value="">Select event type</option>
                 <option value="conference">Conference</option>
                 <option value="workshop">Workshop</option>
@@ -202,13 +180,12 @@ const CreateEvent = () => {
                 <option value="networking">Networking</option>
                 <option value="other">Other</option>
               </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Attendees
-              </label>
-              <input
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Capacity
+                </label>
+                <input
                 type="number"
                 name="maxAttendees"
                 value={formData.maxAttendees}
@@ -220,16 +197,17 @@ const CreateEvent = () => {
                     ? 'border-red-500 focus:ring-red-500' 
                     : 'border-gray-300 focus:ring-blue-500'
                 }`}
-                placeholder="Enter maximum number of attendees"
+                placeholder="Enter maximum attendees"
               />
               {errors.maxAttendees && (
                 <p className="mt-1 text-sm text-red-500">{errors.maxAttendees}</p>
               )}
+              </div>
             </div>
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
@@ -239,7 +217,7 @@ const CreateEvent = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows="8"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
                 placeholder="Enter event description"
               />
             </div>
@@ -251,7 +229,7 @@ const CreateEvent = () => {
               <div
                 onDrop={handleImageDrop}
                 onDragOver={(e) => e.preventDefault()}
-                className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
+                className="w-full h-[259px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
               >
                 <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -265,7 +243,7 @@ const CreateEvent = () => {
         <div className="flex justify-center mt-8 pb-8">
           <button
             type="submit"
-            className="px-8 py-3 bg-[#5BA4A4] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-medium"
+            className="w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
           >
             Create
           </button>
