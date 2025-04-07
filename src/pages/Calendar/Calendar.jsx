@@ -26,34 +26,50 @@ const Calendar = () => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  // Format date for display
-  const formatDate = (date) => {
-    // eslint-disable-next-line no-undef
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
-  };
-
-  // Sample event data
+  // Sample event data with accepted events
   const events = {
     5: [
       {
         id: 1,
         title: "EEET2205 Online lecture",
-        time: "9:00 AM - 1:00 PM",
-        type: "Online",
-        organizer: "Hung Viet Pham",
-        color: "bg-blue-100 text-blue-800"
+        time: "8:30 AM - 10:00 AM",
+        location: "Microsoft Teams",
+        description: "Intro to Embedded System course.",
+        accepted: true
+      },
+      {
+        id: 2,
+        title: "Project Meeting",
+        time: "2:00 PM - 3:00 PM",
+        location: "Zoom",
+        description: "Weekly team sync-up.",
+        accepted: true
       }
     ],
     15: [
       {
-        id: 2,
-        title: "EEET2205 Online lecture",
+        id: 3,
+        title: "Tech Conference",
         time: "10:00 AM - 12:00 PM",
-        type: "Online",
-        color: "bg-green-100 text-green-800"
+        location: "Convention Center",
+        description: "Emerging technologies discussion.",
+        accepted: true
+      },
+      {
+        id: 4,
+        title: "Lunch with Tai",
+        time: "12:30 PM - 1:30 PM",
+        location: "Cafe",
+        description: "Catch up over lunch.",
+        accepted: true
+      },
+      {
+        id: 5,
+        title: "Project Deadline",
+        time: "All Day",
+        location: "RMIT University",
+        description: "Submit project report.",
+        accepted: true
       }
     ]
   };
@@ -62,7 +78,17 @@ const Calendar = () => {
     navigate(`/event/${eventId}`);
   };
 
-  // Generate calendar grid
+  // Sample colors
+  const eventColors = [
+    "bg-blue-100 text-blue-800",
+    "bg-green-100 text-green-800",
+    "bg-yellow-100 text-yellow-800",
+    "bg-red-100 text-red-800",
+    "bg-purple-100 text-purple-800",
+    "bg-pink-100 text-pink-800",
+    "bg-indigo-100 text-indigo-800"
+  ];
+
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
@@ -76,7 +102,7 @@ const Calendar = () => {
     }
     prevMonthDays.reverse();
     
-    // Add next month's first days
+  
     const nextMonthDays = [];
     const totalCells = 42; // 6 rows x 7 columns
     const remainingCells = totalCells - (prevMonthDays.length + daysInMonth);
@@ -123,20 +149,34 @@ const Calendar = () => {
                 }`}
                 onClick={dayData.isCurrentMonth ? () => setSelectedDate(dayData.day) : undefined}
               >
-                <div className="font-light text-sm mb-1">{dayData.day}</div>
-                {dayData.events && dayData.events.map((event, index) => (
-                  <div
-                    key={index}
-                    className="mt-1 p-1 rounded text-xs hover:opacity-75 cursor-pointer bg-[#BFDAE5]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEventClick(event.id);
-                    }}
-                  >
-                    <div className="font-medium truncate">{event.title}</div>
-                    {event.organizer && <div className="text-xs truncate">{event.organizer}</div>}
-                  </div>
-                ))}
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-light text-sm">{dayData.day}</span>
+                  {dayData.events && dayData.events.length > 0 && (
+                    <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                      {dayData.events.length}
+                    </span>
+                  )}
+                </div>
+                <div className="max-h-24 overflow-y-auto space-y-2">
+                  {dayData.events && dayData.events.map((event, index) => (
+                    <div
+                      key={index}
+                      className={`p-2 rounded text-xs hover:opacity-75 cursor-pointer ${
+                        eventColors[index % eventColors.length]
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEventClick(event.id);
+                      }}
+                    >
+                      <div className="font-medium truncate">{event.title}</div>
+                      <div className="text-xs truncate">{event.time}</div>
+                      {event.accepted && (
+                        <div className="text-green-600 text-xs font-semibold">Accepted</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </td>
             ))}
           </tr>
