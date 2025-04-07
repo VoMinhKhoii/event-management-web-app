@@ -2,7 +2,13 @@ import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../components/NavPane.jsx';
 
+
+
+
 const CreateEvent = () => {
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
