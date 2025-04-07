@@ -1,6 +1,7 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/EventDetails.css';
+import NavPane from '../components/NavPane.jsx';
 
 const EventDetails = ({ event }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -58,33 +59,7 @@ const EventDetails = ({ event }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Header */}
-      <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-center py-4">
-          <nav className="flex items-center space-x-12">
-            <Link to="/" className="flex items-center text-gray-600 hover:text-gray-900">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Home
-            </Link>
-            <Link to="/calendar" className="flex items-center text-blue-600">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Calendar
-            </Link>
-            <Link to="/notifications" className="flex items-center text-gray-600 hover:text-gray-900">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              Notifications
-            </Link>
-          </nav>
-          <div className="absolute right-4">
-            <img src="/images/avatar.png" alt="Profile" className="w-8 h-8 rounded-full" />
-          </div>
-        </div>
-      </header>
+      <NavPane/>
 
       <div className="max-w-6xl mx-auto px-4 pt-20">
         {/* Image Carousel */}
@@ -128,7 +103,7 @@ const EventDetails = ({ event }) => {
         {/* Content Grid */}
         <div className="grid grid-cols-3 gap-8 pb-8">
           <div className="col-span-2">
-            <h1 className="text-[40px] font-bold mb-4">{eventData.title}</h1>
+            <h1 className="text-[52px] font-bold mb-4">{eventData.title}</h1>
             
             <div className="flex items-center gap-6 text-gray-600 mb-8">
               <div className="flex items-center gap-2">
@@ -153,10 +128,10 @@ const EventDetails = ({ event }) => {
             </div>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-bold mb-4">About this event</h2>
+              <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
               
-              <h3 className="text-xl font-bold mb-4">What to expect</h3>
+              <h3 className="text-xl font-semibold mb-4">What to expect</h3>
               <ul className="space-y-3">
                 {eventData.expectations.map((item, index) => (
                   <li key={index} className="flex items-center gap-3 text-gray-600">
@@ -237,8 +212,8 @@ const EventDetails = ({ event }) => {
 
           {/* Right Sidebar */}
           <div className="col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-24">
-              <button className="w-full py-3 bg-[#5BA4A4] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-medium mb-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-[12px] sticky top-24">
+              <button className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8">
                 Request to join
               </button>
               
@@ -248,10 +223,10 @@ const EventDetails = ({ event }) => {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="font-medium">Date and time</span>
+                    <span className="font-regular text-black text-[18px]">Date and time</span>
                   </div>
-                  <p className="text-gray-600">{eventData.date}</p>
-                  <p className="text-gray-600">{eventData.time}</p>
+                  <p className="text-[#6B7280]">{eventData.date}</p>
+                  <p className="text-[#6B7280]">{eventData.time}</p>
                 </div>
 
                 <div>
@@ -260,9 +235,9 @@ const EventDetails = ({ event }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span className="font-medium">Location</span>
+                    <span className="font-regular text-black text-[18px]">Location</span>
                   </div>
-                  <p className="text-gray-600">{eventData.location}</p>
+                  <p className="text-[#6B7280]">{eventData.location}</p>
                 </div>
 
                 <div>
@@ -270,7 +245,7 @@ const EventDetails = ({ event }) => {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span className="font-medium">{eventData.attendees} attending ({eventData.maxAttendees} max)</span>
+                    <span className="font-regular text-black text-[18px]">{eventData.attendees} attending ({eventData.maxAttendees} max)</span>
                   </div>
                 </div>
               </div>
@@ -282,4 +257,4 @@ const EventDetails = ({ event }) => {
   );
 };
 
-export default EventDetails; 
+export default EventDetails;

@@ -1,13 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomePage from './components/HomePage';
-import Calendar from './components/Calendar';
+import HomePage from './pages/Home/HomePage.jsx';
+import Calendar from './pages/Calendar/Calendar.jsx';
 import EventDetails from './components/EventDetails';
 import Profile from './components/Profile';
 import CreateEvent from './components/CreateEvent';
 
-import SearchBar from './components/SearchBar';
-import EventCard from './components/EventCard';
 
 const App = () => {
   return (
