@@ -1,14 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../components/NavPane.jsx';
-
-
-
 
 const CreateEvent = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  
+  const widgetRef = useRef(null); 
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -24,11 +22,43 @@ const CreateEvent = () => {
   });
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    // Load the Cloudinary upload widget script
+    if (!window.cloudinary) {
+      const script = document.createElement('script');
+      script.src = 'https://upload-widget.cloudinary.com/global/all.js';
+      script.async = true;
+      script.onload = () => {
+        initWidget();
+      };
+      document.body.appendChild(script);
+    } else {
+      initWidget();
+    }
+
+    function initWidget() {
+      widgetRef.current = window.cloudinary.createUploadWidget(
+        {
+          cloudName: 'hzxyensd5',
+          uploadPreset: 'aoh4fpwm',
+        },
+        (error, result) => {
+          if (!error && result && result.event === 'success') {
+            console.log('Upload successful:', result.info);
+            setFormData((prev) => ({
+              ...prev,
+              image: result.info.public_id,
+            }));
+            setImagePreview(result.info.secure_url);
+          } else if (error) {
+            console.error('Upload Error:', error);
+          }
+        }
+      );
+    }
+  }, []);
 
   const validateForm = () => {}
-
-  
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -39,35 +69,32 @@ const CreateEvent = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     if (name === 'startTime' || name === 'endTime') {
-      // Convert 24h to 12h format
-      const [hours, minutes] = value.split(':');
-      const hour = parseInt(hours);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const hour12 = hour % 12 || 12;
-      const time12 = `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
-      
-      setFormData(prev => ({
+      // Store the time in 24-hour format directly
+      setFormData((prev) => ({
         ...prev,
-        [name]: time12
+        [name]: value,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
-    
+
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: null,
       }));
     }
-  };
+  }
 
   const handleImageClick = () => {
-    fileInputRef.current.click();
+    if (widgetRef.current) {
+      widgetRef.current.open(); // Open the Cloudinary widget
+    }
   };
 
   const handleImageChange = (e) => {
@@ -167,6 +194,7 @@ const CreateEvent = () => {
                   name="startTime"
                   value={formData.startTime}
                   onChange={handleChange}
+                  step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
                 />
 
@@ -181,6 +209,7 @@ const CreateEvent = () => {
                   name="endTime"
                   value={formData.endTime}
                   onChange={handleChange}
+                  step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
 
@@ -325,7 +354,7 @@ const CreateEvent = () => {
                     <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <p className="text-sm text-gray-500">Click or drag file to this area to upload</p>
+                    <p className="text-sm text-gray-500">Click to upload an image</p>
                   </>
                 )}
                 <input
@@ -353,4 +382,4 @@ const CreateEvent = () => {
   );
 };
 
-export default CreateEvent; 
+export default CreateEvent;
