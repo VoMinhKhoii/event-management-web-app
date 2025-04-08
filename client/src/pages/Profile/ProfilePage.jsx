@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
+import { AuthContext } from '../../context/authContext.jsx';
+import { useContext } from 'react';
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
+  const { updateUser } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('settings');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notifications, setNotifications] = useState({
     events: true,
     offers: false,
@@ -14,6 +20,33 @@ const ProfilePage = () => {
       ...prev,
       [type]: !prev[type]
     }));
+  };
+  
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      
+      const res = await fetch('http://localhost:8800/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include' // Important for cookie handling
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Logout failed');
+      }
+      
+      // Clear any user data from localStorage
+      updateUser(null);
+      
+      // Redirect to login page
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('Failed to log out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -142,13 +175,17 @@ const ProfilePage = () => {
               </div>
               
               <div className="pt-6">
-                <button className="w-full sm:w-auto px-8 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+                <button 
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="w-full sm:w-auto px-8 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                   </svg>
-                  Log Out
+                  {isLoggingOut ? 'Logging out...' : 'Log Out'}
                 </button>
               </div>
             </div>

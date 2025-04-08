@@ -1,7 +1,17 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/authContext.jsx';
+import { useContext } from 'react';
 
 const LoginPage = () => {
+
+    const navigate = useNavigate();
+
+    const { updateUser } = useContext(AuthContext);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
         username: '',
         password: ''
@@ -15,10 +25,42 @@ const LoginPage = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login submitted:', formData);
-        // Add your login logic here
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const res = await fetch('http://localhost:8800/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: formData.username,
+                    password: formData.password
+                }),
+                credentials: 'include' // Important for storing cookies
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            updateUser(data.user); 
+            
+            console.log('Login successful:', data);
+            navigate('/home'); // Redirect to home page after successful login
+            
+        } catch (err) {
+            console.error('Login error:', err);
+            setError(err.message || 'Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

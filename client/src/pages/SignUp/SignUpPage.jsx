@@ -1,26 +1,47 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const SignupPage = () => {
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        username: '',
-        password: ''
-    });
+const SignUpPage = () => {
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        // Add your signup logic here
+        const formData = new FormData(e.target);
+
+        const firstName = formData.get('firstName');
+        const lastName = formData.get('lastName');
+        const username = formData.get('username');
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        console.log(firstName, lastName, username, email, password);
+
+        const res = await fetch('http://localhost:8800/api/auth/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                firstName,
+                lastName,
+                username,
+                email,
+                password
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.message || 'Registration failed');
+        }
+
+        navigate("/login");
+        console.log(data);
     };
 
     return (
@@ -37,8 +58,6 @@ const SignupPage = () => {
                                 type="text"
                                 id="firstName"
                                 name="firstName"
-                                value={formData.firstName}
-                                onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                                 required
                             />
@@ -50,8 +69,6 @@ const SignupPage = () => {
                                 type="text"
                                 id="lastName"
                                 name="lastName"
-                                value={formData.lastName}
-                                onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                                 required
                             />
@@ -64,8 +81,17 @@ const SignupPage = () => {
                             type="text"
                             id="username"
                             name="username"
-                            value={formData.username}
-                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <label htmlFor="email" className="block font-medium text-[#374151] mb-1">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                             required
                         />
@@ -77,12 +103,11 @@ const SignupPage = () => {
                             type="password"
                             id="password"
                             name="password"
-                            value={formData.password}
-                            onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                             required
                         />
                     </div>
+
 
                     <button
                         type="submit"
@@ -108,4 +133,4 @@ const SignupPage = () => {
     );
 };
 
-export default SignupPage;
+export default SignUpPage;

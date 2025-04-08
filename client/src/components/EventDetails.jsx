@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import NavPane from '../components/NavPane.jsx';
+import NavPane from './NavPane.jsx';
 
 const EventDetails = ({ event }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
