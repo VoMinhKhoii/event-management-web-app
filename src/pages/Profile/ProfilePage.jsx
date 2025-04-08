@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import NavPane from './NavPane';
+import NavPane from '../../components/NavPane';
 
-const Profile = () => {
+const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('settings');
   const [notifications, setNotifications] = useState({
     events: true,
@@ -180,4 +180,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;

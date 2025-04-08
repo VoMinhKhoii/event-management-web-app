@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import NavPane from '../components/NavPane.jsx';
+import NavPane from '../../components/NavPane.jsx';
 
 const CreateEvent = () => {
   const [formData, setFormData] = useState({
@@ -56,7 +56,7 @@ const CreateEvent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 fonts-['Poppins']">
+    <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
       <NavPane/>
 

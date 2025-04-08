@@ -146,7 +146,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white fonts-['Poppins']">
+    <div className="flex flex-col h-screen bg-white font-['Poppins']">
       {/* Top Navigation */}
       <NavPane />
 
