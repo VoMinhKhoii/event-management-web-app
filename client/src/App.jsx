@@ -8,6 +8,7 @@ import CreateEvent from './pages/CreateEvent/CreateEvent.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import SignUpPage from './pages/SignUp/SignUpPage.jsx';
+import NotificationPage from './pages/Notification/NotificationPage.jsx';
 
 // Define routes as an array of route objects
 const router = createBrowserRouter([
@@ -42,7 +43,12 @@ const router = createBrowserRouter([
   {
     path: "/create-event",
     element: <CreateEvent />
+  },
+  {
+    path: "/notifications",
+    element: <NotificationPage />
   }
+
 ]);
 
 const App = () => {

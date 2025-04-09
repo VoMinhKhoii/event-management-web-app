@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 
 const CreateEvent = () => {
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+  const widgetRef = useRef(null); 
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -17,10 +21,45 @@ const CreateEvent = () => {
     maxAttendees: ''
   });
   const [errors, setErrors] = useState({});
+  const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
+
+  useEffect(() => {
+    // Load the Cloudinary upload widget script
+    if (!window.cloudinary) {
+      const script = document.createElement('script');
+      script.src = 'https://upload-widget.cloudinary.com/global/all.js';
+      script.async = true;
+      script.onload = () => {
+        initWidget();
+      };
+      document.body.appendChild(script);
+    } else {
+      initWidget();
+    }
+
+    function initWidget() {
+      widgetRef.current = window.cloudinary.createUploadWidget(
+        {
+          cloudName: 'hzxyensd5',
+          uploadPreset: 'aoh4fpwm',
+        },
+        (error, result) => {
+          if (!error && result && result.event === 'success') {
+            console.log('Upload successful:', result.info);
+            setFormData((prev) => ({
+              ...prev,
+              image: result.info.public_id,
+            }));
+            setImagePreview(result.info.secure_url);
+          } else if (error) {
+            console.error('Upload Error:', error);
+          }
+        }
+      );
+    }
+  }, []);
 
   const validateForm = () => {}
-
-  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -31,16 +70,50 @@ const CreateEvent = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
+
+    if (name === 'startTime' || name === 'endTime') {
+      // Store the time in 24-hour format directly
+      setFormData((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: value,
       }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: null,
+      }));
+    }
+  }
+
+  const handleImageClick = () => {
+    if (widgetRef.current) {
+      widgetRef.current.open(); // Open the Cloudinary widget
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setFormData(prev => ({
+          ...prev,
+          image: file
+        }));
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please upload an image file');
+      }
     }
   };
 
@@ -48,11 +121,32 @@ const CreateEvent = () => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
-      setFormData(prev => ({
-        ...prev,
-        image: file
-      }));
+      if (file.type.startsWith('image/')) {
+        setFormData(prev => ({
+          ...prev,
+          image: file
+        }));
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Please upload an image file');
+      }
     }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      image: null
+    }));
+  };
+
+  const handlePrivacyToggle = () => {
+    setPrivacy((prev) => !prev);
   };
 
   return (
@@ -60,12 +154,29 @@ const CreateEvent = () => {
       {/* Navigation Header */}
       <NavPane/>
 
-      <div className="max-w-6xl mx-auto px-4 pt-16">
-        <h1 className="text-[28px] font-semibold mb-4 text-center">New event</h1>
+      <div className="max-w-7xl mx-auto px-2 pt-16">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-[28px] font-semibold mb-4 text-center">New Event</h1>
+          {/* Privacy Toggle */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700">
+              {privacy ? 'Private' : 'Public'}
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={privacy}
+                onChange={handlePrivacyToggle}
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#569DBA]"></div>
+            </label>
+          </div>
+        </div>
         
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-[48px]">
-          {/* Left Column */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-12 gap-[16px]">
+          {/* Left Column: Event Form */}
+          <form onSubmit={handleSubmit} className="col-span-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -99,25 +210,31 @@ const CreateEvent = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start time
                 </label>
+
                 <input
                   type="time"
                   name="startTime"
                   value={formData.startTime}
                   onChange={handleChange}
+                  step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
                 />
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   End time
                 </label>
+
                 <input
                   type="time"
                   name="endTime"
                   value={formData.endTime}
                   onChange={handleChange}
+                  step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
+
               </div>
             </div>
 
@@ -204,10 +321,11 @@ const CreateEvent = () => {
               )}
               </div>
             </div>
-          </div>
+          </form>
 
-          {/* Right Column */}
-          <div className="space-y-4">
+          {/* Middle Column: Description and Image Upload */}
+          <div className="col-span-4 space-y-6">
+            {/* Description Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
@@ -217,40 +335,144 @@ const CreateEvent = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows="8"
-                className="w-full h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
+                className="w-full h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 placeholder="Enter event description"
               />
             </div>
 
+            {/* Upload Image Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Event Image
               </label>
               <div
+                onClick={handleImageClick}
                 onDrop={handleImageDrop}
                 onDragOver={(e) => e.preventDefault()}
-                className="w-full h-[259px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
+                className="w-full h-[252px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
               >
-                <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <p className="text-sm text-gray-500">Click or drag file to this area to upload</p>
+                {imagePreview ? (
+                  <div className="relative w-full h-full">
+                    <img
+                      src={imagePreview}
+                      alt="Event preview"
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage();
+                      }}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <svg
+                      className="w-8 h-8 text-gray-400 mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    <p className="text-sm text-gray-500">Click to upload an image</p>
+                  </>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
               </div>
             </div>
           </div>
-        </form>
 
-        <div className="flex justify-center mt-8 pb-8">
-          <button
-            type="submit"
-            className="w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
-          >
-            Create
-          </button>
+          {/* Right Column: Invite Participants */}
+          <div className="col-span-3 space-y-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Invite Participants
+            </label>
+            
+            {privacy ? (
+              // Public event - Show invitation form
+              <div className="bg-[#569DBA] text-white p-6 rounded-lg">
+                {/* Invite Form */}
+                <form onSubmit={(e) => e.preventDefault()} className="mb-6">
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <input
+                    type="email"
+                    placeholder="Enter email"
+                    className="w-full px-3 py-2 mb-4 border border-gray-300 rounded-lg focus:outline-none text-black"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-white text-[#569DBA] py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+                  >
+                    Send Invite
+                  </button>
+                </form>
+              </div>
+            ) : (
+              // Private event - Show message
+              <div className="bg-gray-100 text-gray-700 p-6 rounded-lg h-full">
+                <div className="flex flex-col items-center justify-center h-full">
+                  <svg 
+                    className="w-16 h-16 text-gray-400 mb-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="1.5" 
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                    />
+                  </svg>
+                  <p className="text-center font-medium mb-2">Private Event</p>
+                  <p className="text-center text-sm text-gray-500">
+                    Invitations are disabled for private events. Switch to public mode to enable invitations.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+
+      <div className="flex justify-center mt-8 pb-8">
+        <button
+          type="submit"
+          className="w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
+        >
+          Create
+        </button>
       </div>
     </div>
   );
 };
 
-export default CreateEvent; 
+export default CreateEvent;
