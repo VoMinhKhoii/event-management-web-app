@@ -192,7 +192,7 @@ const NotificationPage = () => {
                 <div className="max-w-7xl mx-auto px-4 pt-20 pb-20">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Left Column - Fixed position */}
-                        <div className="md:col-span-1">
+                        <div className="md:col-span-1 min-w-[300px]">
                             <div className="bg-gray-50 rounded-lg shadow fixed"
                                 style={{
                                     width: "30%",

@@ -41,19 +41,69 @@ const Calendar = () => {
       {
         id: 1,
         title: "EEET2205 Online lecture",
-        time: "9:00 AM - 1:00 PM",
-        type: "Online",
-        organizer: "Hung Viet Pham",
-        color: "bg-blue-100 text-blue-800"
+        time: "8:30 AM - 10:00 AM",
+        location: "Microsoft Teams",
+        description: "Intro to Embedded System course.",
+        accepted: true
+      },
+      {
+        id: 2,
+        title: "Project Meeting",
+        time: "2:00 PM - 3:00 PM",
+        location: "Zoom",
+        description: "Weekly team sync-up.",
+        accepted: true
       }
     ],
     15: [
       {
-        id: 2,
-        title: "EEET2205 Online lecture",
+        id: 3,
+        title: "Tech Conference",
         time: "10:00 AM - 12:00 PM",
-        type: "Online",
-        color: "bg-green-100 text-green-800"
+        location: "Convention Center",
+        description: "Emerging technologies discussion.",
+        accepted: true
+      },
+      {
+        id: 4,
+        title: "Lunch with Tai",
+        time: "12:30 PM - 1:30 PM",
+        location: "Cafe",
+        description: "Catch up over lunch.",
+        accepted: true
+      },
+      {
+        id: 5,
+        title: "Project Deadline",
+        time: "All Day",
+        location: "RMIT University",
+        description: "Submit project report.",
+        accepted: true
+      },
+      // Adding more events to test scrolling
+      {
+        id: 6,
+        title: "Team Meeting",
+        time: "3:00 PM - 4:00 PM",
+        location: "Conference Room",
+        description: "Weekly update",
+        accepted: true
+      },
+      {
+        id: 7,
+        title: "Client Call",
+        time: "4:30 PM - 5:30 PM",
+        location: "Zoom",
+        description: "Project progress review",
+        accepted: true
+      },
+      {
+        id: 8,
+        title: "Evening Workshop",
+        time: "6:00 PM - 8:00 PM",
+        location: "Innovation Lab",
+        description: "Hands-on session",
+        accepted: true
       }
     ]
   };
@@ -123,7 +173,18 @@ const Calendar = () => {
                 }`}
                 onClick={dayData.isCurrentMonth ? () => setSelectedDate(dayData.day) : undefined}
               >
-                <div className="font-light text-sm mb-1">{dayData.day}</div>
+                {/* Date header */}
+                <div className="flex justify-between items-center mb-[4px] sticky">
+                  <span className="font-light text-[14px]">{dayData.day}</span>
+                  {dayData.events && dayData.events.length > 0 && (
+                    <span className="bg-blue-500 text-white text-xs px-2 py-[4px] rounded-full">
+                      {dayData.events.length}
+                    </span>
+                  )}
+                </div>
+
+
+                <div className = " max-h-[64px] overflow-y-auto space-y-2">
                 {dayData.events && dayData.events.map((event, index) => (
                   <div
                     key={index}
@@ -137,6 +198,7 @@ const Calendar = () => {
                     {event.organizer && <div className="text-xs truncate">{event.organizer}</div>}
                   </div>
                 ))}
+                </div>
               </td>
             ))}
           </tr>
