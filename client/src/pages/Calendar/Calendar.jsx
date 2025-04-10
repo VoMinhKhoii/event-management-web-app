@@ -116,61 +116,60 @@ const Calendar = () => {
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
-    
+
     // Get previous month's last days
     const prevMonthDays = [];
     const prevMonthLastDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
-    
+
     for (let i = 0; i < firstDay; i++) {
       prevMonthDays.push(prevMonthLastDate - i);
     }
     prevMonthDays.reverse();
-    
+
     // Add next month's first days
     const nextMonthDays = [];
     const totalCells = 42; // 6 rows x 7 columns
     const remainingCells = totalCells - (prevMonthDays.length + daysInMonth);
-    
+
     for (let i = 1; i <= remainingCells; i++) {
       nextMonthDays.push(i);
     }
-    
+
     // Combine all days
     const allDays = [
-      ...prevMonthDays.map(day => ({ 
-        day, 
-        isCurrentMonth: false, 
-        isPrevMonth: true 
+      ...prevMonthDays.map(day => ({
+        day,
+        isCurrentMonth: false,
+        isPrevMonth: true
       })),
-      ...Array.from({ length: daysInMonth }, (_, i) => ({ 
-        day: i + 1, 
+      ...Array.from({ length: daysInMonth }, (_, i) => ({
+        day: i + 1,
         isCurrentMonth: true,
         events: events[i + 1]
       })),
-      ...nextMonthDays.map(day => ({ 
-        day, 
-        isCurrentMonth: false, 
-        isNextMonth: true 
+      ...nextMonthDays.map(day => ({
+        day,
+        isCurrentMonth: false,
+        isNextMonth: true
       }))
     ];
-    
+
     // Group days into weeks (rows)
     const weeks = [];
     for (let i = 0; i < allDays.length; i += 7) {
       weeks.push(allDays.slice(i, i + 7));
     }
-    
+
     return (
       <tbody>
         {weeks.map((week, weekIndex) => (
           <tr key={`week-${weekIndex}`} className="calendar-row h-1/6">
             {week.map((dayData) => (
-              <td 
+              <td
                 key={`${dayData.isPrevMonth ? 'prev-' : dayData.isNextMonth ? 'next-' : ''}${dayData.day}`}
-                className={`min-w-[20px] border border-gray-200 p-1 md:p-2 align-top overflow-hidden relative ${
-                  !dayData.isCurrentMonth ? 'text-black opacity-30' 
-                                          : 'hover:bg-gray-100 cursor-pointer transition-colors duration-200'
-                }`}
+                className={`min-w-[20px] border border-gray-200 p-1 md:p-2 align-top overflow-hidden relative ${!dayData.isCurrentMonth ? 'text-black opacity-30'
+                    : 'hover:bg-gray-100 cursor-pointer transition-colors duration-200'
+                  }`}
                 onClick={dayData.isCurrentMonth ? () => setSelectedDate(dayData.day) : undefined}
               >
                 {/* Date header */}
@@ -184,20 +183,20 @@ const Calendar = () => {
                 </div>
 
 
-                <div className = " h-2/3 overflow-y-auto space-y-1">
-                {dayData.events && dayData.events.map((event, index) => (
-                  <div
-                    key={index}
-                    className="mt-[2px] md:mt-1 p-1 rounded text-[10px] md:text-xs hover:opacity-75 cursor-pointer bg-[#BFDAE5]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEventClick(event.id);
-                    }}
-                  >
-                    <div className="font-medium truncate">{event.title}</div>
-                    {event.organizer && <div className="hidden md:block text-[10px] md:text-xs truncate">{event.organizer}</div>}
-                  </div>
-                ))}
+                <div className=" h-2/3 overflow-y-auto space-y-1">
+                  {dayData.events && dayData.events.map((event, index) => (
+                    <div
+                      key={index}
+                      className="mt-[2px] md:mt-1 p-1 rounded text-[10px] md:text-xs hover:opacity-75 cursor-pointer bg-[#BFDAE5]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEventClick(event.id);
+                      }}
+                    >
+                      <div className="font-medium truncate">{event.title}</div>
+                      {event.organizer && <div className="hidden md:block text-[10px] md:text-xs truncate">{event.organizer}</div>}
+                    </div>
+                  ))}
                 </div>
               </td>
             ))}
@@ -218,7 +217,7 @@ const Calendar = () => {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6">
           {/* Month/Year Navigation - stacked on mobile, side-by-side on larger screens */}
           <div className="flex items-center justify-center mb-3 md:mb-0 w-full md:w-auto">
-            <button 
+            <button
               onClick={prevMonth}
               className="p-2 hover:bg-gray-100 rounded"
             >
@@ -229,7 +228,7 @@ const Calendar = () => {
             <h2 className="text-[22px] md:text-[30px] mx-2 md:mx-4 text-center font-thin">
               {new Intl.DateTimeFormat('en-US', { month: 'long' }).format(currentDate)} | {currentDate.getFullYear()}
             </h2>
-            <button 
+            <button
               onClick={nextMonth}
               className="p-2 hover:bg-gray-100 rounded"
             >

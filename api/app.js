@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import connectDb from './config/db.js';
 import cors from 'cors';
 import authRoute from './routes/authRoute.js';
+import userRoute from './routes/userRoute.js';
 import cookieParser from 'cookie-parser';
 
 // Log that we're starting
@@ -23,6 +24,7 @@ app.use(cookieParser());
 
 //Authentication routes
 app.use('/api/auth', authRoute);
+app.user('api/user', userRoute)
 
 
 app.listen(8800, () => {
