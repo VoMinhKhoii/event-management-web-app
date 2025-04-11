@@ -9,7 +9,7 @@ const NavPane = () => {
         <header className=" border-b bg-white fixed top-0 left-0 right-0 z-50 font-['Poppins']">
             <div className="max-w-6xl mx-auto flex items-center justify-center py-4">
                 <nav className="flex items-center space-x-12">
-                    <Link to="/" className="flex items-center">
+                    <Link to="/home" className="flex items-center">
                         <img
                             src={homeIcon}
                             alt=""

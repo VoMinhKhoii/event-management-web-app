@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import NavPane from '../components/NavPane.jsx';
+import NavPane from './NavPane.jsx';
 
 const EventDetails = ({ event }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -59,7 +59,7 @@ const EventDetails = ({ event }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Header */}
-      <NavPane/>
+      <NavPane />
 
       <div className="max-w-6xl mx-auto px-4 pt-20">
         {/* Image Carousel */}
@@ -69,7 +69,7 @@ const EventDetails = ({ event }) => {
             alt={eventData.title}
             className="w-full h-full object-cover"
           />
-          <button 
+          <button
             className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg"
             onClick={() => setCurrentImageIndex(prev => (prev - 1 + eventData.images.length) % eventData.images.length)}
           >
@@ -77,7 +77,7 @@ const EventDetails = ({ event }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <button 
+          <button
             className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg"
             onClick={() => setCurrentImageIndex(prev => (prev + 1) % eventData.images.length)}
           >
@@ -90,9 +90,8 @@ const EventDetails = ({ event }) => {
               {eventData.images.map((_, index) => (
                 <button
                   key={index}
-                  className={`w-2 h-2 rounded-full ${
-                    currentImageIndex === index ? 'bg-white' : 'bg-gray-400'
-                  }`}
+                  className={`w-2 h-2 rounded-full ${currentImageIndex === index ? 'bg-white' : 'bg-gray-400'
+                    }`}
                   onClick={() => setCurrentImageIndex(index)}
                 />
               ))}
@@ -104,7 +103,7 @@ const EventDetails = ({ event }) => {
         <div className="grid grid-cols-3 gap-8 pb-8">
           <div className="col-span-2">
             <h1 className="text-[52px] font-bold mb-4">{eventData.title}</h1>
-            
+
             <div className="flex items-center gap-6 text-gray-600 mb-8">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +129,7 @@ const EventDetails = ({ event }) => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-              
+
               <h3 className="text-xl font-semibold mb-4">What to expect</h3>
               <ul className="space-y-3">
                 {eventData.expectations.map((item, index) => (
@@ -216,7 +215,7 @@ const EventDetails = ({ event }) => {
               <button className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8">
                 Request to join
               </button>
-              
+
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center gap-2 text-gray-600 mb-2">

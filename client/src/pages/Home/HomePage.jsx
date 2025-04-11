@@ -57,27 +57,32 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 c">
+    <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
       <NavPane/>
 
-      {/* Under the title Section */}
-      <div className="bg-[#569DBA] text-white pt-[12px] pb-[64px] mt-[57px]">
-        <div className="max-w-7xl min-y-[145px] mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-[60px] font-bold">
+      {/* Under the title Section - Hidden on small screens, responsive text on medium */}
+      <div className="hidden md:block bg-[#569DBA] text-white pt-[12px] pb-[40px] lg:pb-[64px] mt-[57px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-[48px] lg:text-[60px] font-bold leading-tight">
             Discover Amazing Events Near You
           </h1>
-          <p className="text-[20px]">
+          <p className="text-[16px] lg:text-[20px]">
             Join exciting events, connect with people, and create unforgettable memories.
           </p>
         </div>
       </div>
 
-      {/* Search Section */}
-      <SearchBar/>
+      {/* Adjusted margin for when banner is hidden */}
+      <div className="md:hidden h-[18px]"></div>
 
-      {/* Events Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Search Section with additional margin on small screens */}
+      <div className="mt-[80px] md:mt-0">
+        <SearchBar/>
+      </div>
+
+      {/* Events Grid - adjust top padding when banner is hidden */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
             <EventCard 
