@@ -454,7 +454,7 @@ const CreateEvent = () => {
                   </svg>
                   <p className="text-center font-medium mb-2">Private Event</p>
                   <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for private events. Switch to public mode to enable invitations.
+                    Invitations are disabled for public events. Switch to private mode to enable invitations.
                   </p>
                 </div>
               </div>

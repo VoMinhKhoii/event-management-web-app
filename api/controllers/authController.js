@@ -61,7 +61,7 @@ const login = async (req, res) => {
                     maxAge: age
                 }).status(200).json({
                     message: 'Login successful',
-                    user: userObject,
+                    user: userObject
                 });
                     
     } catch (error) {
