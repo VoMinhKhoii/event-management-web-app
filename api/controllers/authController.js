@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/user.js';
+import User from '../models/User.js';
 
 //Register a new user
 const signup = async (req, res) => {
@@ -61,7 +61,7 @@ const login = async (req, res) => {
                     maxAge: age
                 }).status(200).json({
                     message: 'Login successful',
-                    user: userObject,
+                    user: userObject
                 });
                     
     } catch (error) {
