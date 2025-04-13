@@ -40,7 +40,7 @@ const ProfilePage = () => {
       updateUser(null);
       
       // Redirect to login page
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
       alert('Failed to log out. Please try again.');

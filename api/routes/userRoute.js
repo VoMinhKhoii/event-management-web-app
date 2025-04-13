@@ -15,4 +15,5 @@ router.put('/:id', verifyToken, updateUser);
 
 // delete user
 router.delete('/:id', verifyToken, deleteUser);
+
 export default router;

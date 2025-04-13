@@ -9,6 +9,8 @@ import LandingPage from './pages/Landing/LandingPage.jsx';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import SignUpPage from './pages/SignUp/SignUpPage.jsx';
 import NotificationPage from './pages/Notification/NotificationPage.jsx';
+import AdminDashboard from './Admin/AdminDashboard.jsx';
+import AdminEventsPage from './Admin/AdminEventsPage.jsx';
 
 function App () {
   const router = createBrowserRouter([
@@ -19,6 +21,14 @@ function App () {
     {
       path: "/login",
       element: <LoginPage />
+    },
+    {
+      path: "/admindashboard",
+      element: <AdminDashboard />
+    },
+    {
+      path: "/adminevents",
+      element: <AdminEventsPage />
     },
     {
       path: "/signup",

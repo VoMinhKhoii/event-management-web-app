@@ -154,11 +154,12 @@ const CreateEvent = () => {
       {/* Navigation Header */}
       <NavPane/>
 
-      <div className="max-w-7xl mx-auto px-2 pt-16">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-[28px] font-semibold mb-4 text-center">New Event</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
+        {/* Header with responsive layout */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-[24px] sm:text-[28px] font-semibold">New Event</h1>
           {/* Privacy Toggle */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 self-end sm:self-auto">
             <span className="text-sm font-medium text-gray-700">
               {privacy ? 'Private' : 'Public'}
             </span>
@@ -174,9 +175,10 @@ const CreateEvent = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-12 gap-[16px]">
-          {/* Left Column: Event Form */}
-          <form onSubmit={handleSubmit} className="col-span-5 space-y-4">
+        {/* Responsive grid layout that adapts to screen size */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+          {/* Left Column: Event Form - Full width on mobile, appropriate size on larger screens */}
+          <form onSubmit={handleSubmit} className="md:col-span-1 lg:col-span-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -205,27 +207,24 @@ const CreateEvent = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start time
                 </label>
-
                 <input
                   type="time"
                   name="startTime"
                   value={formData.startTime}
                   onChange={handleChange}
                   step="60"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
-
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   End time
                 </label>
-
                 <input
                   type="time"
                   name="endTime"
@@ -234,11 +233,10 @@ const CreateEvent = () => {
                   step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
-
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start date
@@ -278,53 +276,53 @@ const CreateEvent = () => {
                 placeholder="Enter location"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category
                 </label>
                 <select
-                name="eventType"
-                value={formData.eventType}
-                onChange={handleChange}
-                placeHolder="Select event type"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                  name="eventType"
+                  value={formData.eventType}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 >
-                <option value="">Select event type</option>
-                <option value="conference">Conference</option>
-                <option value="workshop">Workshop</option>
-                <option value="seminar">Seminar</option>
-                <option value="networking">Networking</option>
-                <option value="other">Other</option>
-              </select>
+                  <option value="">Select event type</option>
+                  <option value="conference">Conference</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="networking">Networking</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Capacity
                 </label>
                 <input
-                type="number"
-                name="maxAttendees"
-                value={formData.maxAttendees}
-                onChange={handleChange}
-                min="1"
-                max="1000"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 ${
-                  errors.maxAttendees 
-                    ? 'border-red-500 focus:ring-red-500' 
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="Enter maximum attendees"
-              />
-              {errors.maxAttendees && (
-                <p className="mt-1 text-sm text-red-500">{errors.maxAttendees}</p>
-              )}
+                  type="number"
+                  name="maxAttendees"
+                  value={formData.maxAttendees}
+                  onChange={handleChange}
+                  min="1"
+                  max="1000"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 ${
+                    errors.maxAttendees 
+                      ? 'border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 focus:ring-blue-500'
+                  }`}
+                  placeholder="Enter maximum attendees"
+                />
+                {errors.maxAttendees && (
+                  <p className="mt-1 text-sm text-red-500">{errors.maxAttendees}</p>
+                )}
               </div>
             </div>
           </form>
 
           {/* Middle Column: Description and Image Upload */}
-          <div className="col-span-4 space-y-6">
+          <div className="md:col-span-1 lg:col-span-4 space-y-6">
             {/* Description Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -335,7 +333,7 @@ const CreateEvent = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows="8"
-                className="w-full h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                className="w-full h-[180px] md:h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 placeholder="Enter event description"
               />
             </div>
@@ -349,7 +347,7 @@ const CreateEvent = () => {
                 onClick={handleImageClick}
                 onDrop={handleImageDrop}
                 onDragOver={(e) => e.preventDefault()}
-                className="w-full h-[252px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
+                className="w-full h-[200px] md:h-[252px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
               >
                 {imagePreview ? (
                   <div className="relative w-full h-full">
@@ -411,14 +409,14 @@ const CreateEvent = () => {
           </div>
 
           {/* Right Column: Invite Participants */}
-          <div className="col-span-3 space-y-2">
+          <div className="md:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Invite Participants
             </label>
             
             {privacy ? (
               // Public event - Show invitation form
-              <div className="bg-[#569DBA] text-white p-6 rounded-lg">
+              <div className="bg-[#569DBA] text-white p-4 md:p-6 rounded-lg">
                 {/* Invite Form */}
                 <form onSubmit={(e) => e.preventDefault()} className="mb-6">
                   <label className="block text-sm font-medium mb-2">Email</label>
@@ -437,10 +435,10 @@ const CreateEvent = () => {
               </div>
             ) : (
               // Private event - Show message
-              <div className="bg-gray-100 text-gray-700 p-6 rounded-lg h-full">
-                <div className="flex flex-col items-center justify-center h-full">
+              <div className="bg-gray-100 text-gray-700 p-4 md:p-6 rounded-lg h-full min-h-[200px] flex items-center">
+                <div className="flex flex-col items-center justify-center w-full">
                   <svg 
-                    className="w-16 h-16 text-gray-400 mb-4" 
+                    className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mb-4" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -463,10 +461,10 @@ const CreateEvent = () => {
         </div>
       </div>
 
-      <div className="flex justify-center mt-8 pb-8">
+      <div className="flex justify-center mt-4 sm:mt-8 pb-8 px-4">
         <button
           type="submit"
-          className="w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
+          className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
         >
           Create
         </button>

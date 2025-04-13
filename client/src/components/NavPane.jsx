@@ -1,38 +1,211 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import homeIcon from '../assets/home-2-inactive.png'
-import calendarIcon from '../assets/calendar.png';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
+// Import active and inactive icons
+import homeActive from '../assets/home-2.png';
+import homeInactive from '../assets/home-2-inactive.png';
+import calendarActive from '../assets/calendar-active.png';
+import calendarInactive from '../assets/calendar-inactive.png';
 import notificationIcon from '../assets/notification.png';
+import notificationActiveIcon from '../assets/notification-active.png';
 
 const NavPane = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [activeMenu, setActiveMenu] = useState('');
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
+    // Update active menu based on current route
+    useEffect(() => {
+        const path = location.pathname;
+        if (path.includes('/home')) {
+            setActiveMenu('home');
+        } else if (path.includes('/calendar')) {
+            setActiveMenu('calendar');
+        } else if (path.includes('/notifications')) {
+            setActiveMenu('notifications');
+        }
+    }, [location]);
+
+    const toggleMobileMenu = () => {
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
+
+    const goToProfile = () => {
+        navigate('/profile');
+    };
+
+    // Add a class to the body to fix scrollbar issue
+    useEffect(() => {
+        document.body.classList.add('pr-0');
+        document.body.style.overflowY = 'scroll'; // Always show scrollbar
+        
+        return () => {
+            document.body.classList.remove('pr-0');
+            document.body.style.overflowY = '';
+        };
+    }, []);
+
     return (
-        <header className=" border-b bg-white fixed top-0 left-0 right-0 z-50 font-['Poppins']">
-            <div className="max-w-6xl mx-auto flex items-center justify-center py-4">
-                <nav className="flex items-center space-x-12">
-                    <Link to="/home" className="flex items-center">
-                        <img
-                            src={homeIcon}
-                            alt=""
-                            className="w-[20px] h-[20px] mr-[5px]" />
-                        Home
+        <header className="border-b bg-white fixed top-0 left-0 right-0 z-50 font-['Poppins'] shadow-sm">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center h-16">
+                    
+                    {/* Mobile menu button */}
+                    <div className="flex md:hidden">
+                        <button 
+                            type="button" 
+                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                            aria-expanded={mobileMenuOpen}
+                            onClick={toggleMobileMenu}
+                        >
+                            <span className="sr-only">Open main menu</span>
+                            {/* Hamburger icon */}
+                            <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    {/* Desktop menu centered */}
+                    <nav className="hidden md:flex items-center justify-center mx-auto">
+                        <div className="flex items-center">
+                            <Link 
+                                to="/home" 
+                                className={`flex items-center px-4 py-2 text-sm font-medium ${
+                                    activeMenu === 'home' 
+                                        ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900' 
+                                        : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
+                                } transition-all`}
+                            >
+                                <img
+                                    src={activeMenu === 'home' ? homeActive : homeInactive}
+                                    alt="Home"
+                                    className="w-5 h-5 mr-3"
+                                />
+                                Home
+                            </Link>
+                            <Link 
+                                to="/calendar" 
+                                className={`flex items-center px-4 py-2 text-sm font-medium mx-4 ${
+                                    activeMenu === 'calendar' 
+                                        ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900' 
+                                        : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
+                                } transition-all`}
+                            >
+                                <img
+                                    src={activeMenu === 'calendar' ? calendarActive : calendarInactive}
+                                    alt="Calendar"
+                                    className="w-5 h-5 mr-3"
+                                />
+                                Calendar
+                            </Link>
+                            <Link 
+                                to="/notifications" 
+                                className={`flex items-center px-4 py-2 text-sm font-medium ${
+                                    activeMenu === 'notifications' 
+                                        ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900' 
+                                        : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
+                                } transition-all`}
+                            >
+                                <img
+                                    src={activeMenu === 'notifications' ? notificationActiveIcon : notificationIcon}
+                                    alt="Notifications"
+                                    className="w-5 h-5 mr-3"
+                                />
+                                Notifications
+                            </Link>
+                        </div>
+                    </nav>
+                    
+                    {/* Profile button - absolute positioned to be at the rightmost edge */}
+                    <div className="absolute right-4 sm:right-6 lg:right-8">
+                        <button 
+                            onClick={goToProfile}
+                            className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:opacity-80 transition-opacity"
+                        >
+                            <span className="sr-only">Go to profile</span>
+                            <img 
+                                className="h-8 w-8 rounded-full" 
+                                src="/images/avatar.png" 
+                                alt="Profile" 
+                            />
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Mobile menu, show/hide based on menu state */}
+            <div className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}>
+                <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-md">
+                    <Link 
+                        to="/home" 
+                        className={`block px-3 py-2 rounded-md text-base font-medium ${
+                            activeMenu === 'home' 
+                                ? 'bg-[#E0E0E0] text-gray-900' 
+                                : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        <div className="flex items-center">
+                            <img
+                                src={activeMenu === 'home' ? homeActive : homeInactive}
+                                alt="Home"
+                                className="w-5 h-5 mr-3"
+                            />
+                            Home
+                        </div>
                     </Link>
-                    <Link to="/calendar" className="flex items-center hover:text-gray-900">
-                        <img
-                            src={calendarIcon}
-                            alt=""
-                            className="w-[20px] h-[20px] mr-[5px]" />
-                        Calendar
+                    <Link 
+                        to="/calendar" 
+                        className={`block px-3 py-2 rounded-md text-base font-medium ${
+                            activeMenu === 'calendar' 
+                                ? 'bg-[#E0E0E0] text-gray-900' 
+                                : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        <div className="flex items-center">
+                            <img
+                                src={activeMenu === 'calendar' ? calendarActive : calendarInactive}
+                                alt="Calendar"
+                                className="w-5 h-5 mr-3"
+                            />
+                            Calendar
+                        </div>
                     </Link>
-                    <Link to="/notifications" className="flex items-center hover:text-gray-900">
-                        <img
-                            src={notificationIcon}
-                            alt=""
-                            className="w-[20px] h-[20px] mr-[5px]" />
-                        Notifications
+                    <Link 
+                        to="/notifications" 
+                        className={`block px-3 py-2 rounded-md text-base font-medium ${
+                            activeMenu === 'notifications' 
+                                ? 'bg-[#E0E0E0] text-gray-900' 
+                                : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        <div className="flex items-center">
+                            <img
+                                src={activeMenu === 'notifications' ? notificationActiveIcon : notificationIcon}
+                                alt="Notifications"
+                                className="w-5 h-5 mr-3"
+                            />
+                            Notifications
+                        </div>
                     </Link>
-                </nav>
-                <div className="absolute right-4">
-                    <img src="/images/avatar.png" alt="Profile" className="w-8 h-8 rounded-full" />
+                    <Link 
+                        to="/profile" 
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900"
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        <div className="flex items-center">
+                            <img
+                                src="/images/avatar.png"
+                                alt="Profile"
+                                className="w-5 h-5 mr-3 rounded-full"
+                            />
+                            Profile
+                        </div>
+                    </Link>
                 </div>
             </div>
         </header>
