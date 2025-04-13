@@ -26,14 +26,13 @@ const userSchema = mongoose.Schema({
             'Please provide a valid email',
         ],
     },
-    contact: {
-        type: String,
-        required: [true, "Please add a contact number"]
-    },
-    
     password: {
         type: String,
         required: [true, "Please add a password"]
+    },
+    contact: {
+        type: String,
+        required: [true, "Please add a contact number"]
     },
     avatar: {
         type: String,

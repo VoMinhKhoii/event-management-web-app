@@ -17,8 +17,10 @@ const signup = async (req, res) => {
             contact,
             password: hashedPassword,
         });
-
+        const userObject = newUser.toObject();
+        delete userObject.password;
         res.status(201).json({ message: 'User registered successfully' });
+        user: userObject
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

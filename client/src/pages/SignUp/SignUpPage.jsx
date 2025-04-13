@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 
 const SignUpPage = () => {
 
-    const [isLoading, setIsLoading] = useState(false);
+    
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
+       
         const formData = new FormData(e.target);
 
         const firstName = formData.get('firstName');
@@ -33,9 +33,8 @@ const SignUpPage = () => {
                 lastName,
                 username,
                 email,
-                contact,
                 password, 
-               
+                contact,
             })
         });
 
@@ -47,11 +46,6 @@ const SignUpPage = () => {
 
         navigate("/login");
         console.log(data);
-    } catch (error) {
-            console.error('Error during registration:', error);
-        } finally {
-            setIsLoading(false);
-        }
     };
 
     return (
