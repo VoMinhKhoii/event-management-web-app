@@ -12,8 +12,15 @@ export const AuthContextProvider = ({ children }) => {
     const updateUser = (data) => {
         setCurrentUser(data);
     }
-
-
+    
+    const updateAvatar = (avatarUrl) => {
+        if (currentUser) {
+            setCurrentUser({
+                ...currentUser,
+                avatar: avatarUrl
+            });
+        }
+    }
     useEffect(() => {
         // Only save to localStorage if user is not null
         if (currentUser === null) {
@@ -25,7 +32,7 @@ export const AuthContextProvider = ({ children }) => {
 
 
     return (
-        <AuthContext.Provider value = {{currentUser, updateUser}}>
+        <AuthContext.Provider value = {{currentUser, updateUser, updateAvatar}}>
             {children}
         </AuthContext.Provider>
     );
