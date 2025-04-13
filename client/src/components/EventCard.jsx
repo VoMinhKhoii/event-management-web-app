@@ -1,8 +1,9 @@
 import React from 'react';
 
-const EventCard = ({ title, date, time, location, description, attendees, category }) => {
-  return (
-    <div className="event-card bg-white rounded-lg shadow-md overflow-hidden font-['Poppins'] flex flex-col h-full">
+const EventCard = ({ title, date, time, location, description, attendees, category , onClick}) => {
+  return (  
+    
+    <div className="event-card bg-white rounded-lg shadow-md overflow-hidden font-['Poppins'] flex flex-col h-full" onClick={onClick}>
       <div className="card-image-container relative h-48">
         <img
           src="/images/tech.png"
@@ -14,7 +15,7 @@ const EventCard = ({ title, date, time, location, description, attendees, catego
           {category}
         </span>
       </div>
-      <div className="p-6 flex flex-col flex-grow">
+      <div className="p-6 flex flex-col flex-grow" >
         <h2 className="text-[24px] font-semibold mb-4 text-gray-900">{title}</h2>
         <div className="space-y-4 text-gray-600">
           <div className="flex items-center">
