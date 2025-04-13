@@ -1,17 +1,20 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import User from '../models/user.js';
+import User from '../models/User.js';
 
 //Register a new user
 const signup = async (req, res) => {
     try {
-        const { firstName, lastName, username, email, password } = req.body;
+        
+        const { firstName, lastName, username, email, password, contact } = req.body;
+       
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
             firstName,
             lastName,
             username,
             email,
+            contact,
             password: hashedPassword,
         });
 
@@ -61,7 +64,7 @@ const login = async (req, res) => {
                     maxAge: age
                 }).status(200).json({
                     message: 'Login successful',
-                    user: userObject,
+                    user: userObject
                 });
                     
     } catch (error) {

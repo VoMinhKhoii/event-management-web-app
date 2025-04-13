@@ -3,7 +3,9 @@ import dotenv from 'dotenv';
 import connectDb from './config/db.js';
 import cors from 'cors';
 import authRoute from './routes/authRoute.js';
+import userRoute from './routes/userRoute.js';
 import cookieParser from 'cookie-parser';
+
 
 // Log that we're starting
 console.log('Starting API server...');
@@ -24,6 +26,8 @@ app.use(cookieParser());
 //Authentication routes
 app.use('/api/auth', authRoute);
 
+//User routes
+app.use('/api/users', userRoute);
 
 app.listen(8800, () => {
     console.log('Server is running on port 8800'); 
