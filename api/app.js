@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 //Authentication routes
 app.use('/api/auth', authRoute);
-app.use('api/user', userRoute)
+app.use('/api/user', userRoute)
 
 
 app.listen(8800, () => {
