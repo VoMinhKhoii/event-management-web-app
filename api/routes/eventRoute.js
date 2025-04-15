@@ -1,4 +1,5 @@
 import express from 'express';
+
 import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent } from '../controllers/eventController.js';
 import { verifyToken} from '../middleware/verifyToken.js';
 
