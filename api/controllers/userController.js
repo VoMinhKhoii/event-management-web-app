@@ -23,31 +23,39 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const updates = req.body;
-
-        // If password is being updated, hash it
+        const userId = req.params.id;
+        // if person updating not the owner of the info
+        if (userId !== req.user.id) {
+            return res.status(403).json({ message: 'Permission denied' });
+        }
+        
         if (updates.password) {
             updates.password = await bcrypt.hash(updates.password, 10);
         }
 
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            updates,
-            { new: true }
-        ).select('-password');
-
+        const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
         if (!updatedUser) return res.status(404).json({ message: 'User not found' });
+
         res.status(200).json({ message: 'User updated', user: updatedUser });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}
+};
 
 export const deleteUser = async (req, res) => {
     try {
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        const userId = req.params.id;
+
+        // current user can only delete their own information
+        if (userId !== req.user.id) {
+            return res.status(403).json({ message: 'Permission denied' });
+        }
+
+        const deletedUser = await User.findByIdAndDelete(userId);
         if (!deletedUser) return res.status(404).json({ message: 'User not found' });
+
         res.status(200).json({ message: 'User deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}
+};
