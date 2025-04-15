@@ -4,6 +4,7 @@ import connectDb from './config/db.js';
 import cors from 'cors';
 import authRoute from './routes/authRoute.js';
 import userRoute from './routes/userRoute.js';
+import eventRoute from './routes/eventRoute.js';
 import cookieParser from 'cookie-parser';
 
 // Log that we're starting
@@ -24,7 +25,8 @@ app.use(cookieParser());
 
 //Authentication routes
 app.use('/api/auth', authRoute);
-app.use('/api/user', userRoute)
+app.use('/api/user', userRoute);
+app.use('/api/event', eventRoute);
 
 
 app.listen(8800, () => {
