@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
 import { AuthContext } from '../../context/authContext.jsx';
 import { useContext } from 'react';
+import EventMiniCard from '../../components/EventMiniCard';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,38 @@ const ProfilePage = () => {
     darkMode: false
   });
   
+
+  // Sample user events data
+  const [userEvents, setUserEvents] = useState([
+    {
+      id: 1,
+      title: "Tech Summit 2025",
+      date: "Mar 15, 2025",
+      time: "9:00 AM - 1:00 PM",
+      location: "Convention Center, New York",
+      image: "/images/tech.png",
+      status: "upcoming"
+    },
+    {
+      id: 2,
+      title: "Business Workshop",
+      date: "Apr 22, 2025",
+      time: "2:00 PM - 5:00 PM",
+      location: "Downtown Conference Hall",
+      image: "/images/business.png",
+      status: "active"
+    },
+    {
+      id: 3,
+      title: "Gaming Tournament",
+      date: "May 10, 2025",
+      time: "10:00 AM - 6:00 PM",
+      location: "Esports Arena, Las Vegas",
+      image: "/images/game.png",
+      status: "upcoming"
+    }
+  ]);
+
   // Add password visibility state
   const [pwdInputType, setPwdInputType] = useState({
     type: 'password',
@@ -137,7 +170,7 @@ const ProfilePage = () => {
       updateUser(null);
       
       // Redirect to login page
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
       alert('Failed to log out. Please try again.');
@@ -503,8 +536,28 @@ const ProfilePage = () => {
 
         {activeTab === 'events' && (
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-xl font-semibold mb-6">My Events</h2>
-            <p className="text-gray-600">You haven't created any events yet.</p>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">My Events</h2>
+              <button 
+                onClick={() => navigate('/create-event')}
+                className="bg-[#569DBA] text-white px-4 py-2 rounded-full text-sm hover:bg-opacity-90 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Event
+              </button>
+            </div>
+            
+            {userEvents.length > 0 ? (
+              <div className="space-y-4">
+                {userEvents.map((event) => (
+                  <EventMiniCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">You haven't created any events yet.</p>
+            )}
           </div>
         )}
       </div>

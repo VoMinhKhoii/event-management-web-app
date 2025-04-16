@@ -4,7 +4,6 @@ import { updateProfile, getUserProfile, updateAvatar } from '../controllers/user
 import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
-
 // // get all users
 // router.get('/', getUsers);
 
@@ -18,12 +17,12 @@ const router = express.Router();
 //  router.delete('/:id', verifyToken, deleteUser);
 
 // Get user profile
-router.get('/profile', verifyToken, getUserProfile);
+router.get('/:id', verifyToken, getUserProfile);
 
 // Update user profile
-router.put('/updateProfile', verifyToken, updateProfile);
+router.put('/:id', verifyToken, updateProfile);
 
 // Update user avatar
-router.put('/updateAvatar', verifyToken, updateAvatar);
+router.put('/:id', verifyToken, updateAvatar);
 
 export default router;
