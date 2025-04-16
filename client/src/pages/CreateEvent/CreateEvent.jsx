@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
 
 const CreateEvent = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const widgetRef = useRef(null); 
+  const { currentUser } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -15,10 +18,13 @@ const CreateEvent = () => {
     endTime: '',
     startDate: '',
     endDate: '',
-    location: null,
+    location: '',
     eventType: '',
     image: null,
-    maxAttendees: ''
+    maxAttendees: '',
+    publicity: true,
+    
+    
   });
   const [errors, setErrors] = useState({});
   const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
@@ -59,12 +65,72 @@ const CreateEvent = () => {
     }
   }, []);
 
-  const validateForm = () => {}
+  const validateForm = () => {
 
-  const handleSubmit = (e) => {
+    const {
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+    } = formData;
+
+    const newErrors = {};
+    
+    try {
+      if (startDate && endDate && startTime && endTime) {
+        const start = new Date(`${startDate}T${startTime}`);
+        const end = new Date(`${endDate}T${endTime}`);
+      
+        if (!isNaN(start) && !isNaN(end)) {
+          if (start >= end) {
+            newErrors.startDate = "Start datetime must be before end datetime.";
+            newErrors.startTime = "Start datetime must be before end datetime.";
+          }
+        }
+      }
+      
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0; // valid if no errors
+      
+    } catch (error) {
+      console.error("Error validating input: ",error.message);
+    }
+
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      console.log('Form submitted:', formData);
+      try {
+        const response = await fetch('http://localhost:8800/api/event', { 
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            ...formData,
+            organizer: currentUser
+          }),
+        });
+
+        console.log(formData);
+  
+        if (!response.ok) {
+          // If response is not in the 200-299 range
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create event');
+        }
+  
+        const data = await response.json();
+        console.log('Event created:', data);
+        // Optional: redirect or show success message here
+  
+      } catch (error) {
+        console.error('Error creating event:', error.message);
+      }
     }
   };
 
@@ -454,7 +520,7 @@ const CreateEvent = () => {
                   </svg>
                   <p className="text-center font-medium mb-2">Private Event</p>
                   <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for private events. Switch to public mode to enable invitations.
+                    Invitations are disabled for public events. Switch to private mode to enable invitations.
                   </p>
                 </div>
               </div>
@@ -467,6 +533,7 @@ const CreateEvent = () => {
         <button
           type="submit"
           className="w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
+          onClick={handleSubmit}
         >
           Create
         </button>

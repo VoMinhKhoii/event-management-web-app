@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import EventCard from '../../components/EventCard.jsx';
 import NavPane from '../../components/NavPane.jsx';
 import SearchBar from '../../components/SearchBar.jsx';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  
   const events = [
     {
       id: 1,
@@ -55,7 +58,11 @@ const HomePage = () => {
       maxAttendees: 120
     }
   ];
-
+  
+  const handleEventClick = (eventId) => {
+    navigate(`/event/${eventId}`);
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
@@ -86,8 +93,12 @@ const HomePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
             <EventCard 
-              key={event.id} 
-              {...event} 
+            key={event.id} 
+            {...event}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEventClick(event.id);
+            }}
             />
           ))}
         </div>
@@ -95,5 +106,6 @@ const HomePage = () => {
     </div>
   );
 };
+
 
 export default HomePage;
