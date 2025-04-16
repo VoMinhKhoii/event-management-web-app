@@ -26,18 +26,22 @@ const userSchema = mongoose.Schema({
             'Please provide a valid email',
         ],
     },
-
     password: {
         type: String,
         required: [true, "Please add a password"]
     },
+    contact: {
+        type: String,
+        required: [true, "Please add a contact number"]
+    },
     avatar: {
         type: String,
-    }
+        default: "https://img.freepik.com/premium-vector/cute-boy-smiling-cartoon-kawaii-boy-illustration-boy-avatar-happy-kid_1001605-3447.jpg"
+    },
 },
 {
     timestamps: true,
 })
 
-const User = mongoose.model("User", userSchema);
+const User =  mongoose.models.User||mongoose.model("User", userSchema);
 export default User;

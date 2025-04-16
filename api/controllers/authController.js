@@ -5,17 +5,22 @@ import User from '../models/User.js';
 //Register a new user
 const signup = async (req, res) => {
     try {
-        const { firstName, lastName, username, email, password } = req.body;
+        
+        const { firstName, lastName, username, email, password, contact } = req.body;
+       
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
             firstName,
             lastName,
             username,
             email,
+            contact,
             password: hashedPassword,
         });
-
+        const userObject = newUser.toObject();
+        delete userObject.password;
         res.status(201).json({ message: 'User registered successfully' });
+        user: userObject
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

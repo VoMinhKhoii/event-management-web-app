@@ -45,7 +45,6 @@ const NavPane = () => {
             document.body.style.overflowY = '';
         };
     }, []);
-
     return (
         <header className="border-b bg-white fixed top-0 left-0 right-0 z-50 font-['Poppins'] shadow-sm">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
