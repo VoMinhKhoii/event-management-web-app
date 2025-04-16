@@ -11,6 +11,7 @@ import SignUpPage from './pages/SignUp/SignUpPage.jsx';
 import NotificationPage from './pages/Notification/NotificationPage.jsx';
 import AdminDashboard from './Admin/AdminDashboard.jsx';
 import AdminEventsPage from './Admin/AdminEventsPage.jsx';
+import EventDetailsForOrganizer from './components/EventDetailsForOrganizer.jsx';
 
 function App () {
   const router = createBrowserRouter([
@@ -57,6 +58,10 @@ function App () {
     {
       path: "/notifications",
       element: <NotificationPage />
+    },
+    {
+      path: "/organizerevents",
+      element: <EventDetailsForOrganizer />
     }
   
   ]);
