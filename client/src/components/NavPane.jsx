@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/authContext.jsx';
+import { useContext } from 'react';
 
 // Import active and inactive icons
 import homeActive from '../assets/home-2.png';
@@ -9,11 +12,16 @@ import calendarInactive from '../assets/calendar-inactive.png';
 import notificationIcon from '../assets/notification.png';
 import notificationActiveIcon from '../assets/notification-active.png';
 
+
 const NavPane = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const {currentUser, updateUser, updateAvatar } = useContext(AuthContext);
     const [activeMenu, setActiveMenu] = useState('');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
+    // Default avatar to use if user has no avatar
+    const defaultAvatar = "/images/avatar.png";
     
     // Update active menu based on current route
     useEffect(() => {
@@ -45,6 +53,7 @@ const NavPane = () => {
             document.body.style.overflowY = '';
         };
     }, []);
+
     return (
         <header className="border-b bg-white fixed top-0 left-0 right-0 z-50 font-['Poppins'] shadow-sm">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -125,8 +134,8 @@ const NavPane = () => {
                         >
                             <span className="sr-only">Go to profile</span>
                             <img 
-                                className="h-8 w-8 rounded-full" 
-                                src="/images/avatar.png" 
+                                className="h-8 w-8 rounded-full object-cover" 
+                                src={currentUser?.avatar || defaultAvatar} 
                                 alt="Profile" 
                             />
                         </button>
@@ -198,9 +207,9 @@ const NavPane = () => {
                     >
                         <div className="flex items-center">
                             <img
-                                src="/images/avatar.png"
+                                src={currentUser?.avatar || defaultAvatar}
                                 alt="Profile"
-                                className="w-5 h-5 mr-3 rounded-full"
+                                className="w-5 h-5 mr-3 rounded-full object-cover"
                             />
                             Profile
                         </div>

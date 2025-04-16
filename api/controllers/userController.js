@@ -21,7 +21,7 @@ export const getUserProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         
-        const { firstName, lastName, username, email, contact, password } = req.body;
+        const { firstName, lastName, username, email, password } = req.body;
         
        
         // Check if user exists
@@ -52,7 +52,7 @@ export const updateProfile = async (req, res) => {
         if (lastName) user.lastName = lastName;
         if (username) user.username = username;
         if (email) user.email = email;
-        if (contact) user.contact = contact;
+
         
         // Update password if provided
         if (password && password.trim() !== '') {

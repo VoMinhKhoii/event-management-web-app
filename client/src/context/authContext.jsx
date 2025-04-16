@@ -14,14 +14,36 @@ export const AuthContextProvider = ({ children }) => {
         setCurrentUser(data);
     }
     
-    const updateAvatar = (avatarUrl) => {
-        if (currentUser) {
-            setCurrentUser({
-                ...currentUser,
-                avatar: avatarUrl
-            });
+    const updateAvatar = async (avatarUrl) => {
+        try {
+            if (currentUser) {
+                // Update in local state first for immediate UI update
+                setCurrentUser({
+                    ...currentUser,
+                    avatar: avatarUrl
+                });
+                
+                // Then update in the database
+                const response = await fetch(`http://localhost:8800/api/users/${currentUser._id}/avatar`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // Important for cookies
+                    body: JSON.stringify({ avatarUrl })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Failed to update avatar in database:', errorData.message);
+                    // You might want to handle this error or show a notification to the user
+                }
+            }
+        } catch (error) {
+            console.error('Error updating avatar:', error);
         }
     }
+    
     useEffect(() => {
         // Only save to localStorage if user is not null
         if (currentUser === null) {
@@ -30,7 +52,6 @@ export const AuthContextProvider = ({ children }) => {
             localStorage.setItem("user", JSON.stringify(currentUser));
         }
     }, [currentUser]);
-
 
     return (
         <AuthContext.Provider value = {{currentUser, updateUser, updateAvatar}}>

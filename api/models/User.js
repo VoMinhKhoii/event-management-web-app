@@ -30,13 +30,8 @@ const userSchema = mongoose.Schema({
         type: String,
         required: [true, "Please add a password"]
     },
-    contact: {
-        type: String,
-        required: [true, "Please add a contact number"]
-    },
     avatar: {
-        type: String,
-        default: "https://img.freepik.com/premium-vector/cute-boy-smiling-cartoon-kawaii-boy-illustration-boy-avatar-happy-kid_1001605-3447.jpg"
+        type: String
     },
 },
 {

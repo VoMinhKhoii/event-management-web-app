@@ -22,7 +22,7 @@ router.get('/:id', verifyToken, getUserProfile);
 // Update user profile
 router.put('/:id', verifyToken, updateProfile);
 
-// Update user avatar
-router.put('/:id', verifyToken, updateAvatar);
+// Update user avatar - Using a specific path to avoid conflict with the general update route
+router.put('/:id/avatar', verifyToken, updateAvatar);
 
 export default router;

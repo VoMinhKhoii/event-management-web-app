@@ -14,7 +14,6 @@ const signup = async (req, res) => {
             lastName,
             username,
             email,
-            contact,
             password: hashedPassword,
         });
         const userObject = newUser.toObject();
