@@ -31,7 +31,6 @@ app.use('api/user', userRoute);
 app.use('/api/event', eventRoute);
 
 
-
 app.listen(8800, () => {
     console.log('Server is running on port 8800');
 });

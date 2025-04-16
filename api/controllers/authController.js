@@ -2,10 +2,15 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-//Register a new user
 const signup = async (req, res) => {
     try {
         const { firstName, lastName, username, email, password } = req.body;
+
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email or Username already in use' });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
             firstName,
