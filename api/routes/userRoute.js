@@ -1,26 +1,16 @@
 import express from 'express';
-import { updateProfile, getUserProfile, updateAvatar } from '../controllers/userController.js';
-// import { getUser, getUsers, updateUser, deleteUser } from '../controllers/userController.js';
+import { getUser, getUsers, updateUser, deleteUser, updateAvatar } from '../controllers/userController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
-// // get all users
-// router.get('/', getUsers);
-
-//  // get user by id
-//  router.get('/:id', getUser);
-
-// // // update user
-//  router.put('/:id', verifyToken, updateUser);
-
-// // delete user
-//  router.delete('/:id', verifyToken, deleteUser);
+// get all users
+router.get('/', getUsers);
 
 // Get user profile
-router.get('/:id', verifyToken, getUserProfile);
+router.get('/:id', verifyToken, getUser);
 
 // Update user profile
-router.put('/:id', verifyToken, updateProfile);
+router.put('/:id', verifyToken, updateUser);
 
 // Update user avatar - Using a specific path to avoid conflict with the general update route
 router.put('/:id/avatar', verifyToken, updateAvatar);
