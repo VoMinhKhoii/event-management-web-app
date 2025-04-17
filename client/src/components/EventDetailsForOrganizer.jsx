@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from './NavPane.jsx';
+import { useLoaderData } from 'react-router-dom';
 
-const EventDetailsForOrganizer = ({ event }) => {
+const EventDetailsForOrganizer = () => {
+    const event = useLoaderData();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [comment, setComment] = useState('');
 

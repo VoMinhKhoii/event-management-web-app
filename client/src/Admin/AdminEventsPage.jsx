@@ -16,6 +16,7 @@ import chartInactive from '../assets/chart-inactive.png';
 import chartActive from '../assets/chart-active.png';
 import totalEvents from '../assets/total-events.png'; // You'll need to add this image
 import rsvpRate from '../assets/rsvp-rate.png'; // You'll need to add this image
+import AdminNavPane from '../components/AdminNavPane';
 
 const AdminEventsPage = () => {
     const navigate = useNavigate();
@@ -155,54 +156,7 @@ const AdminEventsPage = () => {
     return (
         <div className="flex h-screen bg-gray-50 font-[Poppins]">
             {/* Sidebar */}
-            <div className="px-2 w-48 bg-white shadow-sm">
-                <nav className="mt-[24px] space-y-6">
-                    <div
-                        className={`flex items-center px-6 py-4 cursor-pointer ${activeMenu === 'dashboard' ? 'bg-[#E0E0E0] rounded-[12px]' : 'hover:bg-[#F5F5F5] hover:rounded-[12px]'} transition-all`}
-                        onClick={() => handleNavigation('/admindashboard', 'dashboard')}
-                    >
-                        <img 
-                            src={activeMenu === 'dashboard' ? chartActive : chartInactive} 
-                            alt="Dashboard" 
-                            className="h-5 w-5"
-                        />
-                        <span className="mx-4 font-medium">Dashboard</span>
-                    </div>
-                    <div
-                        className={`flex items-center px-6 py-4 cursor-pointer ${activeMenu === 'users' ? 'bg-[#E0E0E0] rounded-[12px]' : 'hover:bg-[#F5F5F5] hover:rounded-[12px]'} transition-all`}
-                        onClick={() => handleNavigation('/admindashboard', 'users')}
-                    >
-                        <img 
-                            src={activeMenu === 'users' ? userActive : userInactive} 
-                            alt="Users" 
-                            className="h-5 w-5"
-                        />
-                        <span className="mx-4 font-medium">User</span>
-                    </div>
-                    <div
-                        className={`flex items-center px-6 py-4 cursor-pointer ${activeMenu === 'events' ? 'bg-[#E0E0E0] rounded-[12px]' : 'hover:bg-[#F5F5F5] hover:rounded-[12px]'} transition-all`}
-                        onClick={() => handleNavigation('/adminevents', 'events')}
-                    >
-                        <img 
-                            src={activeMenu === 'events' ? calendarActive : calendarInactive} 
-                            alt="Events" 
-                            className="h-5 w-5"
-                        />
-                        <span className="mx-4 font-medium">Events</span>
-                    </div>
-                    <div
-                        className={`flex items-center px-6 py-4 cursor-pointer ${activeMenu === 'settings' ? 'bg-[#E0E0E0] rounded-[12px]' : 'hover:bg-[#F5F5F5] hover:rounded-[12px]'} transition-all`}
-                        onClick={() => handleNavigation('/adminsettings', 'settings')}
-                    >
-                        <img 
-                            src={activeMenu === 'settings' ? settingActive : settingInactive} 
-                            alt="Settings" 
-                            className="h-5 w-5"
-                        />
-                        <span className="mx-4 font-medium">Setting</span>
-                    </div>
-                </nav>
-            </div>
+            <AdminNavPane activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 
             {/* Main Content */}
             <div className="flex-1 overflow-auto px-6 py-8">
