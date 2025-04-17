@@ -10,6 +10,8 @@ const CreateEvent = () => {
   const widgetRef = useRef(null); 
   const { currentUser } = useContext(AuthContext);
 
+  const [errors, setErrors] = useState({});
+  const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,12 +24,10 @@ const CreateEvent = () => {
     eventType: '',
     image: null,
     maxAttendees: '',
-    publicity: true,
-    
+    publicity: !privacy,
     
   });
-  const [errors, setErrors] = useState({});
-  const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
+
 
   useEffect(() => {
     // Load the Cloudinary upload widget script
