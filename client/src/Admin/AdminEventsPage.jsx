@@ -1,0 +1,353 @@
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FiSearch, FiMoreVertical, FiEye, FiEdit, FiTrash2 } from 'react-icons/fi';
+
+// Import custom icons
+import homeActive from '../assets/home-2.png';
+import homeInactive from '../assets/home-2-inactive.png';
+import userActive from '../assets/user-active.png';
+import userInactive from '../assets/user-inactive.png';
+import calendarActive from '../assets/calendar-active.png';
+import calendarInactive from '../assets/calendar-inactive.png';
+import settingActive from '../assets/setting-active.png';
+import settingInactive from '../assets/setting-inactive.png';
+import chartInactive from '../assets/chart-inactive.png';
+import chartActive from '../assets/chart-active.png';
+import totalEvents from '../assets/total-events.png'; // You'll need to add this image
+import rsvpRate from '../assets/rsvp-rate.png'; // You'll need to add this image
+import AdminNavPane from '../components/AdminNavPane';
+
+const AdminEventsPage = () => {
+    const navigate = useNavigate();
+    const [searchTerm, setSearchTerm] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('All categories');
+    const [dateRange, setDateRange] = useState('Last 7 days');
+    const [events, setEvents] = useState([]);
+    const [stats, setStats] = useState({
+        totalEvents: 324,
+        averageRsvpRate: 78 // percentage
+    });
+    const [activeMenu, setActiveMenu] = useState('events'); // Track which menu is active
+
+    // Simulating data fetch on component mount
+    useEffect(() => {
+        // This would be an API call in a real application
+        const mockEvents = [
+            {
+                id: 1,
+                name: "Tech Summit 2025",
+                category: "Conference",
+                attendees: 45,
+                maxAttendees: 120,
+                organizer: "Vo Minh Khoi",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 82, // percentage
+                date: "Mar 15, 2025"
+            },
+            {
+                id: 2,
+                name: "Design Workshop 2025",
+                category: "Workshop",
+                attendees: 28,
+                maxAttendees: 60,
+                organizer: "Jane Smith",
+                organizerAvatar: "/images/avatar1.png",
+                rsvpRate: 93, // percentage
+                date: "Apr 5, 2025"
+            },
+            {
+                id: 3,
+                name: "Networking Mixer",
+                category: "Networking",
+                attendees: 55,
+                maxAttendees: 100,
+                organizer: "Vo Minh Khoi",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 67, // percentage
+                date: "May 20, 2025"
+            },
+            {
+                id: 4,
+                name: "AI Conference 2025",
+                category: "Conference",
+                attendees: 75,
+                maxAttendees: 150,
+                organizer: "Alex Johnson",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 72, // percentage
+                date: "Jun 10, 2025"
+            },
+            {
+                id: 5,
+                name: "Startup Pitch Day",
+                category: "Workshop",
+                attendees: 40,
+                maxAttendees: 80,
+                organizer: "Sarah Williams",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 77, // percentage
+                date: "Jul 25, 2025"
+            },
+            {
+                id: 6,
+                name: "Game Development Summit",
+                category: "Conference",
+                attendees: 62,
+                maxAttendees: 100,
+                organizer: "Mike Chen",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 85, // percentage
+                date: "Aug 12, 2025"
+            },
+            {
+                id: 7,
+                name: "UX Design Bootcamp",
+                category: "Workshop",
+                attendees: 32,
+                maxAttendees: 40,
+                organizer: "Emily Taylor",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 90, // percentage
+                date: "Sep 8, 2025"
+            },
+            {
+                id: 8,
+                name: "Web3 Hackathon",
+                category: "Hackathon",
+                attendees: 85,
+                maxAttendees: 120,
+                organizer: "Vo Minh Khoi",
+                organizerAvatar: "/images/avatar.png",
+                rsvpRate: 71, // percentage
+                date: "Oct 15, 2025"
+            }
+        ];
+
+        setEvents(mockEvents);
+    }, []);
+
+    const handleSearch = () => {
+        console.log('Searching for:', searchTerm, 'with filters:', categoryFilter, dateRange);
+        // Implement search functionality
+    };
+
+    const handleNavigation = (path, menu) => {
+        setActiveMenu(menu);
+        navigate(path);
+    };
+
+    const handleViewEvent = (eventId) => {
+        console.log('View event:', eventId);
+        // Navigate to event details
+        navigate(`/event/${eventId}`);
+    };
+
+    const handleEditEvent = (eventId) => {
+        console.log('Edit event:', eventId);
+        // Navigate to event edit page
+    };
+
+    const handleDeleteEvent = (eventId) => {
+        console.log('Delete event:', eventId);
+        // Show delete confirmation dialog
+    };
+
+    return (
+        <div className="flex h-screen bg-gray-50 font-[Poppins]">
+            {/* Sidebar */}
+            <AdminNavPane activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
+
+            {/* Main Content */}
+            <div className="flex-1 overflow-auto px-6 py-8">
+                <div className="flex flex-col">
+                    {/* Search and Filter Bar */}
+                    <div className="flex items-center mb-8 space-x-4 flex-wrap gap-y-2">
+                        <div className="relative flex-grow min-w-[200px]">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <FiSearch className="h-5 w-5 text-gray-400" />
+                            </span>
+                            <input
+                                type="text"
+                                placeholder="Search events..."
+                                className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="relative min-w-[150px]">
+                            <select
+                                className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                            >
+                                <option>All categories</option>
+                                <option>Conference</option>
+                                <option>Workshop</option>
+                                <option>Networking</option>
+                                <option>Hackathon</option>
+                                <option>Seminar</option>
+                            </select>
+                        </div>
+
+                        <div className="relative min-w-[150px]">
+                            <select
+                                className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                                value={dateRange}
+                                onChange={(e) => setDateRange(e.target.value)}
+                            >
+                                <option>Last 7 days</option>
+                                <option>Last 30 days</option>
+                                <option>This month</option>
+                                <option>This year</option>
+                                <option>All time</option>
+                            </select>
+                        </div>
+
+                        <button
+                            className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onClick={handleSearch}
+                        >
+                            Search
+                        </button>
+                    </div>
+
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
+                            <div className="flex items-center space-x-4">
+                                <div className="p-3 rounded-full bg-[#EFF6FF]">
+                                    <img src={totalEvents} alt="Total Events" className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl font-bold">{stats.totalEvents.toLocaleString()}</h2>
+                                    <p className="text-gray-600">Total events</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
+                            <div className="flex items-center space-x-4">
+                                <div className="p-3 rounded-full bg-[#EFF6FF]">
+                                    <img src={rsvpRate} alt="RSVP Rate" className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl font-bold">{stats.averageRsvpRate}%</h2>
+                                    <p className="text-gray-600">Average RSVP rate</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Events Table */}
+                    <div className="bg-white shadow-sm rounded-md border border-gray-200 overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Event Name
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Category
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Attendees
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Organizer
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        RSVP Rate
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {events.map((event) => (
+                                    <tr key={event.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">
+                                                {event.name}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {event.category}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {event.attendees} / {event.maxAttendees}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className="h-8 w-8 flex-shrink-0">
+                                                    <img
+                                                        className="h-8 w-8 rounded-full"
+                                                        src={event.organizerAvatar}
+                                                        alt={event.organizer}
+                                                    />
+                                                </div>
+                                                <div className="ml-3">
+                                                    <div className="text-sm font-medium text-gray-900">
+                                                        {event.organizer}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-[100px]">
+                                                    <div 
+                                                        className={`h-2.5 rounded-full ${
+                                                            event.rsvpRate >= 80 ? 'bg-green-500' : 
+                                                            event.rsvpRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        }`} 
+                                                        style={{ width: `${event.rsvpRate}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-sm text-gray-700">{event.rsvpRate}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {event.date}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div className="flex items-center space-x-3">
+                                                <button 
+                                                    onClick={() => handleViewEvent(event.id)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    <FiEye className="h-5 w-5" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleEditEvent(event.id)}
+                                                    className="text-yellow-600 hover:text-yellow-900"
+                                                >
+                                                    <FiEdit className="h-5 w-5" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteEvent(event.id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    <FiTrash2 className="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default AdminEventsPage;
