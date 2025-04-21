@@ -5,20 +5,23 @@ import { useNavigate } from 'react-router-dom';
 
 const SignUpPage = () => {
 
-    const [isLoading, setIsLoading] = useState(false);
+    
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+       
         const formData = new FormData(e.target);
 
         const firstName = formData.get('firstName');
         const lastName = formData.get('lastName');
         const username = formData.get('username');
         const email = formData.get('email');
+        const contact = formData.get('contact');
         const password = formData.get('password');
 
-        console.log(firstName, lastName, username, email, password);
+
+        console.log("Register:", {firstName, lastName, username, email, contact, password});
 
         const res = await fetch('http://localhost:8800/api/auth/signup', {
             method: 'POST',
@@ -30,7 +33,8 @@ const SignUpPage = () => {
                 lastName,
                 username,
                 email,
-                password
+                password, 
+                contact,
             })
         });
 
@@ -92,6 +96,17 @@ const SignUpPage = () => {
                             type="email"
                             id="email"
                             name="email"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <label htmlFor="contact" className="block font-medium text-[#374151] mb-1">Contact</label>
+                        <input
+                            type="text"
+                            id="contact"
+                            name="contact"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                             required
                         />

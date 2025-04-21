@@ -12,7 +12,7 @@ import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-router.post("/:eventId", verifyToken, createComment);
+router.post("/:eventId",verifyToken, createComment);
 router.get("/:eventId", getAllComments);
 router.put("/:commentId", verifyToken, updateComment);
 router.delete("/:commentId", verifyToken, deleteComment);

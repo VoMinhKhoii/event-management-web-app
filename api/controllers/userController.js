@@ -22,25 +22,63 @@ export const getUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     try {
-        const updates = req.body;
-        const userId = req.params.id;
-        // if person updating not the owner of the info
-        if (userId !== req.user.id) {
-            return res.status(403).json({ message: 'Permission denied' });
+        
+        const { firstName, lastName, username, email, password } = req.body;
+        
+       
+        // Check if user exists
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
         
-        if (updates.password) {
-            updates.password = await bcrypt.hash(updates.password, 10);
+        console.log('User before update:', user);
+        // Check if username is being changed and if it's already taken
+        if (username && username !== user.username) {
+            const existingUsername = await User.findOne({ username });
+            if (existingUsername) {
+                return res.status(400).json({ message: 'Username already taken' });
+            }
         }
+        
+        // Check if email is being changed and if it's already taken
+        if (email && email !== user.email) {
+            const existingEmail = await User.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'Email already taken' });
+            }
+        }
+        
+        // Update user information
+        if (firstName) user.firstName = firstName;
+        if (lastName) user.lastName = lastName;
+        if (username) user.username = username;
+        if (email) user.email = email;
 
-        const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
-        if (!updatedUser) return res.status(404).json({ message: 'User not found' });
+        
+        // Update password if provided
+        if (password && password.trim() !== '') {
+            user.password = await bcrypt.hash(password, 10);
+        }
+        
+        // Save updated user
+        const updatedUser = await user.save();
+        console.log('User profile updated:', updatedUser);
 
-        res.status(200).json({ message: 'User updated', user: updatedUser });
+        // Convert to object and remove password before sending response
+        const userObject = updatedUser.toObject();
+        delete userObject.password;
+        
+        res.status(200).json({
+            message: 'Profile updated successfully',
+            user: userObject
+        });
     } catch (error) {
+        console.error('Error updating profile:', error);
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const deleteUser = async (req, res) => {
     try {
@@ -59,3 +97,31 @@ export const deleteUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Update user avatar
+export const updateAvatar = async (req, res) => {
+    try {
+        const { avatarUrl } = req.body;
+        
+        if (!avatarUrl) {
+            return res.status(400).json({ message: 'Avatar URL is required' });
+        }
+        
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        user.avatar = avatarUrl;
+        await user.save();
+        
+        res.status(200).json({
+            message: 'Avatar updated successfully',
+            avatar: avatarUrl
+        });
+    } catch (error) {
+        console.error('Error updating avatar:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
