@@ -31,6 +31,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/comments', commentRoute);
 app.use('/api/users', userRoute);
 app.use('/api/events', eventRoute);
+app.use('/api/notifications', notificationRoute);
 
 app.listen(8800, () => {
     console.log('Server is running on port 8800');
