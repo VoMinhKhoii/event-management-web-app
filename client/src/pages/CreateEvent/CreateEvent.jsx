@@ -18,7 +18,8 @@ const CreateEvent = () => {
     location: null,
     eventType: '',
     image: null,
-    maxAttendees: ''
+    maxAttendees: '',
+    publicity: !privacy
   });
   const [errors, setErrors] = useState({});
   const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
