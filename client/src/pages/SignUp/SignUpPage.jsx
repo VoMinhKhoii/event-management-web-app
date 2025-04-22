@@ -34,7 +34,6 @@ const SignUpPage = () => {
                 username,
                 email,
                 password, 
-                contact,
             })
         });
 
@@ -101,16 +100,6 @@ const SignUpPage = () => {
                         />
                     </div>
 
-                    <div className="mb-6">
-                        <label htmlFor="contact" className="block font-medium text-[#374151] mb-1">Contact</label>
-                        <input
-                            type="text"
-                            id="contact"
-                            name="contact"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                            required
-                        />
-                    </div>
 
                     <div className="mb-6">
                         <label htmlFor="password" className="block font-medium text-[#374151] mb-1">Password</label>
