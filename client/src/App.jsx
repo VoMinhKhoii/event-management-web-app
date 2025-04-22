@@ -9,9 +9,10 @@ import LandingPage from './pages/Landing/LandingPage.jsx';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import SignUpPage from './pages/SignUp/SignUpPage.jsx';
 import NotificationPage from './pages/Notification/NotificationPage.jsx';
-import AdminDashboard from './Admin/AdminDashboard.jsx';
+import AdminUserPage from './Admin/AdminUserPage.jsx';
 import AdminEventsPage from './Admin/AdminEventsPage.jsx';
-import EventDetailsForOrganizer from './components/EventDetailsForOrganizer.jsx';
+import AdminDashboard from './Admin/AdminDashboard.jsx';
+import { singleEventLoader } from "./lib/loaders";
 
 function App () {
   const router = createBrowserRouter([
@@ -26,6 +27,10 @@ function App () {
     {
       path: "/admindashboard",
       element: <AdminDashboard />
+    },
+    {
+      path: "/adminuserpage",
+      element: <AdminUserPage />
     },
     {
       path: "/adminevents",
@@ -45,7 +50,8 @@ function App () {
     },
     {
       path: "/event/:id",
-      element: <EventDetails />
+      element: <EventDetails />,
+      loader: singleEventLoader
     },
     {
       path: "/profile",
@@ -58,12 +64,7 @@ function App () {
     {
       path: "/notifications",
       element: <NotificationPage />
-    },
-    {
-      path: "/organizerevents",
-      element: <EventDetailsForOrganizer />
     }
-  
   ]);
   return <RouterProvider router={router} />;
 }

@@ -1,24 +1,26 @@
-
+import bcrypt from "bcrypt";
 import User from '../models/User.js';
-import bcrypt from 'bcrypt';
 
-
-// Get current user profile
-export const getUserProfile = async (req, res) => {
+export const getUsers = async (req, res) => {
     try {
-        const user = await User.findById(req.userId).select('-password');
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json(user);
+        const users = await User.find().select('-password');
+        res.status(200).json(users);
     } catch (error) {
-        console.error('Error getting user profile:', error);
         res.status(500).json({ message: error.message });
     }
-};
+}
 
-// Update user profile
-export const updateProfile = async (req, res) => {
+export const getUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+export const updateUser = async (req, res) => {
     try {
         
         const { firstName, lastName, username, email, password } = req.body;
@@ -77,6 +79,25 @@ export const updateProfile = async (req, res) => {
     }
 };
 
+
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // current user can only delete their own information
+        if (userId !== req.user.id) {
+            return res.status(403).json({ message: 'Permission denied' });
+        }
+
+        const deletedUser = await User.findByIdAndDelete(userId);
+        if (!deletedUser) return res.status(404).json({ message: 'User not found' });
+
+        res.status(200).json({ message: 'User deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Update user avatar
 export const updateAvatar = async (req, res) => {
     try {
@@ -103,3 +124,4 @@ export const updateAvatar = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+

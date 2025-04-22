@@ -2,12 +2,10 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-//Register a new user
 const signup = async (req, res) => {
     try {
         
         const { firstName, lastName, username, email, password, contact } = req.body;
-       
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
             firstName,
