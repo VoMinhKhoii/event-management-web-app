@@ -54,7 +54,7 @@ const CreateEvent = () => {
             console.log('Upload successful:', result.info);
             setFormData((prev) => ({
               ...prev,
-              image: result.info.public_id,
+              image: result.info.secure_url,
             }));
             setImagePreview(result.info.secure_url);
           } else if (error) {
