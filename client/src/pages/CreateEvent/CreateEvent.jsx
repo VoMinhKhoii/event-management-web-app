@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
 
 const CreateEvent = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const widgetRef = useRef(null); 
+  const { currentUser } = useContext(AuthContext);
 
   const [errors, setErrors] = useState({});
   const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
@@ -23,7 +26,7 @@ const CreateEvent = () => {
     maxAttendees: '',
     publicity: !privacy
     
-
+    
   });
 
 
@@ -63,12 +66,73 @@ const CreateEvent = () => {
     }
   }, []);
 
-  const validateForm = () => {}
+  const validateForm = () => {
 
-  const handleSubmit = (e) => {
+    const {
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+    } = formData;
+
+    const newErrors = {};
+    
+    try {
+      if (startDate && endDate && startTime && endTime) {
+        const start = new Date(`${startDate}T${startTime}`);
+        const end = new Date(`${endDate}T${endTime}`);
+      
+        if (!isNaN(start) && !isNaN(end)) {
+          if (start >= end) {
+            newErrors.startDate = "Start datetime must be before end datetime.";
+            newErrors.startTime = "Start datetime must be before end datetime.";
+          }
+        }
+      }
+      
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0; // valid if no errors
+      
+    } catch (error) {
+      console.error("Error validating input: ",error.message);
+    }
+
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      console.log('Form submitted:', formData);
+      try {
+        const response = await fetch('http://localhost:8800/api/events', { 
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+            
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            ...formData,
+            organizer: currentUser
+          }),
+        });
+
+        console.log(formData);
+  
+        if (!response.ok) {
+          // If response is not in the 200-299 range
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create event');
+        }
+  
+        const data = await response.json();
+        console.log('Event created:', data);
+        // Optional: redirect or show success message here
+  
+      } catch (error) {
+        console.error('Error creating event:', error.message);
+      }
     }
   };
 
@@ -216,6 +280,7 @@ const CreateEvent = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start time
                 </label>
+
                 <input
                   type="time"
                   name="startTime"
@@ -224,11 +289,13 @@ const CreateEvent = () => {
                   step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   End time
                 </label>
+
                 <input
                   type="time"
                   name="endTime"
@@ -237,6 +304,7 @@ const CreateEvent = () => {
                   step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
+
               </div>
             </div>
 
@@ -469,6 +537,7 @@ const CreateEvent = () => {
         <button
           type="submit"
           className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
+          onClick={handleSubmit}
         >
           Create
         </button>
