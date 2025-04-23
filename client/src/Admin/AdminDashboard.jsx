@@ -23,6 +23,23 @@ const AdminDashboard = () => {
     const navigate = useNavigate();
     const [activeMenu, setActiveMenu] = useState('dashboard');
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    // Add this with your other useState declarations
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        totalEvents: 0,
+        ongoingEvents: 0,
+        upcomingEvents: 0,
+        onlineUsers: 0,
+        newUsersToday: 0,
+        rsvpRate: 0
+    });
+
+    // Add this with your state declarations
+    const [activities, setActivities] = useState([
+        { id: 1, desc: "John created a new event", action: "created", type: "event", time: "2 hours ago" },
+        { id: 2, desc: "Sarah updated her profile", action: "updated", type: "user", time: "5 hours ago" },
+        // Add more mock activities as needed
+    ]);
 
     // Track window width for responsive layout
     useEffect(() => {
@@ -34,25 +51,84 @@ const AdminDashboard = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Mock stats
-    const [stats, setStats] = useState({
-        totalUsers: 1234,
-        totalEvents: 324,
-        newUsersToday: 5,
-        onlineUsers: 42,
-        ongoingEvents: 3,
-        upcomingEvents: 7,
-        rsvpRate: 78 // percent
-    });
-    // Mock recent activity
-    const [activities, setActivities] = useState([
-        { id: 1, type: 'user', action: 'created', desc: 'User John Doe created', time: '1 minute ago' },
-        { id: 2, type: 'event', action: 'updated', desc: 'Event "Tech Summit" updated', time: '5 minutes ago' },
-        { id: 3, type: 'user', action: 'deleted', desc: 'User Jane Smith deleted', time: '10 minutes ago' },
-        { id: 4, type: 'event', action: 'created', desc: 'Event "Design Workshop" created', time: '30 minutes ago' },
-        { id: 5, type: 'user', action: 'updated', desc: 'User Alex Johnson updated', time: '1 hour ago' },
-        { id: 6, type: 'event', action: 'deleted', desc: 'Event "Startup Pitch Day" deleted', time: '2 hours ago' },
-    ]);
+    const fetchDashboardStats = async (forceRefresh = false) => {
+        // Try to get cached data first
+        const cachedData = localStorage.getItem('dashboardStats');
+        const cacheTimestamp = localStorage.getItem('dashboardStatsTimestamp');
+        const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
+        
+        // Use cached data if it exists, is not expired, and force refresh is not requested
+        if (
+            cachedData && 
+            cacheTimestamp && 
+            Date.now() - parseInt(cacheTimestamp) < ONE_HOUR && 
+            !forceRefresh
+        ) {
+            setStats(JSON.parse(cachedData));
+            return; // Exit early - no need to fetch
+        }
+        
+        try {
+            // Fetch fresh data
+            const users = await fetch('http://localhost:8800/api/users', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const events = await fetch('http://localhost:8800/api/events', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const userData = await users.json();
+            const eventData = await events.json();
+
+            // Calculate stats
+            const newStats = {
+                totalUsers: userData.length,
+                totalEvents: eventData.length,
+                ongoingEvents: eventData.filter(event => 
+                    new Date(event.startDate) <= new Date() && 
+                    new Date(event.endDate || event.startDate) >= new Date()
+                ).length,
+                upcomingEvents: eventData.filter(event => 
+                    new Date(event.startDate) > new Date()
+                ).length,
+                onlineUsers: userData.filter(user => user.isOnline).length,
+                newUsersToday: userData.filter(user => {
+                    const today = new Date();
+                    const userDate = new Date(user.createdAt);
+                    return userDate.getDate() === today.getDate() &&
+                        userDate.getMonth() === today.getMonth() &&
+                        userDate.getFullYear() === today.getFullYear();
+                }).length,
+                rsvpRate: 75 // Placeholder - replace with actual calculation
+            };
+
+            // Update state with all stats
+            setStats(newStats);
+            
+            // Cache the data
+            localStorage.setItem('dashboardStats', JSON.stringify(newStats));
+            localStorage.setItem('dashboardStatsTimestamp', Date.now().toString());
+
+        } catch (error) {
+            console.error("Error fetching dashboard stats:", error);
+            
+            // If there's cached data, use it as fallback on error
+            if (cachedData) {
+                setStats(JSON.parse(cachedData));
+            }
+        }
+    };
+
+    // Add this effect
+    useEffect(() => {
+        fetchDashboardStats();
+    }, []);
+
     const handleNavigation = (path, menu) => {
         setActiveMenu(menu);
         navigate(path);
@@ -66,7 +142,7 @@ const AdminDashboard = () => {
     return (
         <div className="flex bg-gray-50 font-[Poppins] min-h-screen">
             <AdminNavPane activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
-            
+
             {/* Main Content with responsive padding */}
             <div className="flex-1 transition-all duration-300">
                 {/* Top bar for mobile */}
@@ -75,7 +151,7 @@ const AdminDashboard = () => {
                         <h1 className="text-xl font-bold">Admin Dashboard</h1>
                     </div>
                 )}
-                
+
                 {/* Dashboard content with responsive padding */}
                 <div className={`p-4 md:p-6 ${windowWidth < 640 ? 'pt-20' : ''}`}>
                     <div className="flex flex-col gap-6">
@@ -87,7 +163,7 @@ const AdminDashboard = () => {
                                     <img src={totalUsers} alt="Total Users" className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-bold">{stats.totalUsers.toLocaleString()}</h2>
+                                    <h2 className="text-3xl font-bold">{stats.totalUsers}</h2>
                                     <p className="text-gray-600">Total users</p>
                                 </div>
                             </div>
@@ -97,7 +173,7 @@ const AdminDashboard = () => {
                                     <img src={totalEvents} alt="Total Events" className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-bold">{stats.totalEvents.toLocaleString()}</h2>
+                                    <h2 className="text-3xl font-bold">{stats.totalEvents}</h2>
                                     <p className="text-gray-600">Total events</p>
                                 </div>
                             </div>
@@ -143,30 +219,6 @@ const AdminDashboard = () => {
                                     <div className="text-3xl font-semibold">{stats.upcomingEvents}</div>
                                     <div className="text-sm text-gray-600">Upcoming events</div>
                                 </div>
-                            </div>
-                        </div>
-                        {/* Donut Chart */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="md:col-start-3 bg-white p-6 rounded-md shadow-sm border border-gray-200 flex flex-col items-center justify-center">
-                                <h3 className="text-lg font-semibold mb-2">Overall RSVP Rate</h3>
-                                {/* Donut chart mockup */}
-                                <div className="relative w-32 h-32 flex items-center justify-center">
-                                    <svg width="128" height="128" viewBox="0 0 42 42" className="transform -rotate-90">
-                                        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#E5E7EB" strokeWidth="6" />
-                                        <circle 
-                                            cx="21" 
-                                            cy="21" 
-                                            r="15.9155" 
-                                            fill="none" 
-                                            stroke="#3B82F6" 
-                                            strokeWidth="6" 
-                                            strokeDasharray={`${stats.rsvpRate} ${100 - stats.rsvpRate}`} 
-                                            strokeDashoffset="25" 
-                                        />
-                                    </svg>
-                                    <span className="absolute text-2xl font-bold">{stats.rsvpRate}%</span>
-                                </div>
-                                <div className="text-gray-500 text-sm mt-2">of all events</div>
                             </div>
                         </div>
                         

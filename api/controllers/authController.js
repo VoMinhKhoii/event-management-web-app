@@ -5,7 +5,7 @@ import User from '../models/User.js';
 const signup = async (req, res) => {
     try {
         
-        const { firstName, lastName, username, email, password, contact } = req.body;
+        const { firstName, lastName, username, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
             firstName,
