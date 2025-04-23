@@ -21,7 +21,7 @@ const NavPane = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     
     // Default avatar to use if user has no avatar
-    const defaultAvatar = "/images/avatar.png";
+    const defaultAvatar = "https://img.freepik.com/premium-vector/cute-boy-smiling-cartoon-kawaii-boy-illustration-boy-avatar-happy-kid_1001605-3447.jpg";
     
     // Update active menu based on current route
     useEffect(() => {
@@ -69,7 +69,7 @@ const NavPane = () => {
                         >
                             <span className="sr-only">Open main menu</span>
                             {/* Hamburger icon */}
-                            <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-6 w-6"  fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
