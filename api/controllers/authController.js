@@ -8,15 +8,18 @@ const signup = async (req, res) => {
         
         const { firstName, lastName, username, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
+        const defaultAvatar = "https://img.freepik.com/premium-vector/cute-boy-smiling-cartoon-kawaii-boy-illustration-boy-avatar-happy-kid_1001605-3447.jpg";
         const newUser = await User.create({
             firstName,
             lastName,
             username,
             email,
             password: hashedPassword,
+            avatar: defaultAvatar
         });
         const userObject = newUser.toObject();
         delete userObject.password;
+
 
         await logActivity(
                     newUser._id,
@@ -30,6 +33,7 @@ const signup = async (req, res) => {
             message: 'User registered successfully', 
             user: userObject
         });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

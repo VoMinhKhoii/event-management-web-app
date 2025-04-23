@@ -34,6 +34,7 @@ const SignUpPage = () => {
                 username,
                 email,
                 password,
+
             })
         });
 
@@ -99,6 +100,8 @@ const SignUpPage = () => {
                             required
                         />
                     </div>
+
+
 
                     <div className="mb-6">
                         <label htmlFor="password" className="block font-medium text-[#374151] mb-1">Password</label>
