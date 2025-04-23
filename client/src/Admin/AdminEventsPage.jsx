@@ -358,7 +358,7 @@ const AdminEventsPage = () => {
             <AdminNavPane activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 
             {/* Main Content */}
-            <div className="flex-1 overflow-auto px-6 py-8">
+            <div className="flex-1 overflow-auto px-4 py-6">
                 <div className="flex flex-col">
                     {/* Search and Filter Bar */}
                     <div className="flex flex-wrap items-center mb-6 gap-4">
