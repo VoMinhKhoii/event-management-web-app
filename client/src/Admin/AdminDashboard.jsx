@@ -166,23 +166,16 @@ const AdminDashboard = () => {
         deleted: 'bg-red-100 text-red-800',
     };
     return (
-        <div className="flex bg-gray-50 font-[Poppins] min-h-screen">
+        <div className="flex h-screen bg-gray-50 font-[Poppins]">
             <AdminNavPane activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 
             {/* Main Content with responsive padding */}
-            <div className="flex-1 transition-all duration-300">
-                {/* Top bar for mobile */}
-                {windowWidth < 640 && (
-                    <div className="h-16 bg-white shadow-sm flex items-center justify-center sticky top-0 z-10 px-4">
-                        <h1 className="text-xl font-bold">Admin Dashboard</h1>
-                    </div>
-                )}
-
+            <div className="flex-1 overflow-auto">
                 {/* Dashboard content with responsive padding */}
-                <div className={`p-4 md:p-6 ${windowWidth < 640 ? 'pt-20' : ''}`}>
+                <div className="p-4 md:p-6">
                     <div className="flex flex-col gap-6">
                         {/* Top Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             {/* Total Users */}
                             <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 flex flex-col items-start">
                                 <div className="p-3 rounded-full bg-[#EFF6FF] w-12 h-12 flex items-center justify-center mb-4">
