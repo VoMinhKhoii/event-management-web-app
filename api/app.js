@@ -6,6 +6,7 @@ import authRoute from './routes/authRoute.js';
 import commentRoute from './routes/commentRoute.js';
 import userRoute from './routes/userRoute.js';
 import eventRoute from './routes/eventRoute.js';
+import adminRoute from './routes/adminRoute.js';
 import cookieParser from 'cookie-parser';
 
 // Log that we're starting
@@ -31,6 +32,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/comments', commentRoute);
 app.use('/api/users', userRoute);
 app.use('/api/events', eventRoute);
+app.use('/api/admin', adminRoute)
 
 app.listen(8800, () => {
     console.log('Server is running on port 8800');

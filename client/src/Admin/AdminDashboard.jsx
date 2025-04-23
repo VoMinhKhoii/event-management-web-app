@@ -18,6 +18,7 @@ import ongoingIcon from '../assets/ongoing.png';
 import upcomingIcon from '../assets/upcoming.png';
 import recentActivityIcon from '../assets/recent-activity.png';
 import AdminNavPane from '../components/AdminNavPane';
+import TimeAgo from 'react-time-ago';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -35,11 +36,7 @@ const AdminDashboard = () => {
     });
 
     // Add this with your state declarations
-    const [activities, setActivities] = useState([
-        { id: 1, desc: "John created a new event", action: "created", type: "event", time: "2 hours ago" },
-        { id: 2, desc: "Sarah updated her profile", action: "updated", type: "user", time: "5 hours ago" },
-        // Add more mock activities as needed
-    ]);
+    const [activities, setActivities] = useState([]);
 
     // Track window width for responsive layout
     useEffect(() => {
@@ -56,18 +53,18 @@ const AdminDashboard = () => {
         const cachedData = localStorage.getItem('dashboardStats');
         const cacheTimestamp = localStorage.getItem('dashboardStatsTimestamp');
         const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
-        
+
         // Use cached data if it exists, is not expired, and force refresh is not requested
         if (
-            cachedData && 
-            cacheTimestamp && 
-            Date.now() - parseInt(cacheTimestamp) < ONE_HOUR && 
+            cachedData &&
+            cacheTimestamp &&
+            Date.now() - parseInt(cacheTimestamp) < ONE_HOUR &&
             !forceRefresh
         ) {
             setStats(JSON.parse(cachedData));
             return; // Exit early - no need to fetch
         }
-        
+
         try {
             // Fetch fresh data
             const users = await fetch('http://localhost:8800/api/users', {
@@ -89,11 +86,11 @@ const AdminDashboard = () => {
             const newStats = {
                 totalUsers: userData.length,
                 totalEvents: eventData.length,
-                ongoingEvents: eventData.filter(event => 
-                    new Date(event.startDate) <= new Date() && 
+                ongoingEvents: eventData.filter(event =>
+                    new Date(event.startDate) <= new Date() &&
                     new Date(event.endDate || event.startDate) >= new Date()
                 ).length,
-                upcomingEvents: eventData.filter(event => 
+                upcomingEvents: eventData.filter(event =>
                     new Date(event.startDate) > new Date()
                 ).length,
                 onlineUsers: userData.filter(user => user.isOnline).length,
@@ -109,14 +106,14 @@ const AdminDashboard = () => {
 
             // Update state with all stats
             setStats(newStats);
-            
+
             // Cache the data
             localStorage.setItem('dashboardStats', JSON.stringify(newStats));
             localStorage.setItem('dashboardStatsTimestamp', Date.now().toString());
 
         } catch (error) {
             console.error("Error fetching dashboard stats:", error);
-            
+
             // If there's cached data, use it as fallback on error
             if (cachedData) {
                 setStats(JSON.parse(cachedData));
@@ -124,9 +121,38 @@ const AdminDashboard = () => {
         }
     };
 
+    const fetchActivities = async () => {
+        try {
+            const response = await fetch('http://localhost:8800/api/admin/activities', {
+                credentials: 'include'
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch activities');
+
+            const data = await response.json();
+            console.log("Activities data:", data);
+            data.forEach(activity => {
+                console.log(`Activity ID: ${activity.id}`);
+                console.log(`Timestamp value: ${activity.timestamp}`);
+                console.log(`Timestamp type: ${typeof activity.timestamp}`);
+                console.log(`Is valid date: ${activity.timestamp && !isNaN(new Date(activity.timestamp).getTime())}`);
+            });
+            setActivities(data);
+        } catch (error) {
+            console.error('Error fetching activities:', error);
+        }
+    };
+
     // Add this effect
     useEffect(() => {
         fetchDashboardStats();
+        fetchActivities();
+        // Refresh stats for every minutes
+        const interval = setInterval(() => {
+            fetchDashboardStats(true);
+            fetchActivities();
+        }, 60 * 1000); // 1 minute
+        return () => clearInterval(interval); // Cleanup on unmount
     }, []);
 
     const handleNavigation = (path, menu) => {
@@ -221,7 +247,7 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         {/* Recent Activity Table */}
                         <div className="bg-white shadow-sm rounded-md border border-gray-200 overflow-hidden">
                             <div className="p-6 pb-2">
@@ -242,7 +268,20 @@ const AdminDashboard = () => {
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${actionColor[activity.action]}`}>{activity.action.charAt(0).toUpperCase() + activity.action.slice(1)}</span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activity.time}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {activity.timestamp && !isNaN(new Date(activity.timestamp).getTime()) ? (
+                                                            // Pass exact time to TimeAgo component
+                                                            <TimeAgo 
+                                                            date={new Date(activity.timestamp)} 
+                                                            formatter={{
+                                                                allowFuture: false,
+                                                                minPeriod: 60 // Prevent timestamps from saying "just now" until 30 seconds
+                                                            }}
+                                                            />
+                                                        ) : (
+                                                            "Unknown time"
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
