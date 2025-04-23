@@ -22,8 +22,6 @@ const CreateEvent = () => {
     image: null,
     maxAttendees: '',
     publicity: !privacy
-    
-
   });
 
 

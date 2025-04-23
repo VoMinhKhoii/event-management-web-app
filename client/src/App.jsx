@@ -13,6 +13,7 @@ import AdminUserPage from './Admin/AdminUserPage.jsx';
 import AdminEventsPage from './Admin/AdminEventsPage.jsx';
 import AdminDashboard from './Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
+import { eventCommentsLoader } from "./lib/loaders";
 
 function App () {
   const router = createBrowserRouter([
