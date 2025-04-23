@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import User from '../models/User.js';
+import { logActivity } from '../middleware/logActivity.js';
 
 export const getUsers = async (req, res) => {
     try {
@@ -69,6 +70,14 @@ export const updateUser = async (req, res) => {
         const userObject = updatedUser.toObject();
         delete userObject.password;
 
+        await logActivity(
+            req.userId,
+            'updated',
+            'user',
+            updatedUser._id || updatedUser.id,
+            { username: updatedUser.username }
+        );
+
         res.status(200).json({
             message: 'Profile updated successfully',
             user: userObject
@@ -91,6 +100,14 @@ export const deleteUser = async (req, res) => {
 
         const deletedUser = await User.findByIdAndDelete(userId);
         if (!deletedUser) return res.status(404).json({ message: 'User not found' });
+
+        await logActivity(
+            req.userId,
+            'deleted',
+            'user',
+            deletedUser._id,
+            { username: deletedUser.username }
+        );
 
         res.status(200).json({ message: 'User deleted' });
     } catch (error) {

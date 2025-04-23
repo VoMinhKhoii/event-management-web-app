@@ -21,7 +21,7 @@ const SignUpPage = () => {
         const password = formData.get('password');
 
 
-        console.log("Register:", {firstName, lastName, username, email, contact, password});
+        console.log("Register:", {firstName, lastName, username, email, password});
 
         const res = await fetch('http://localhost:8800/api/auth/signup', {
             method: 'POST',
@@ -33,7 +33,8 @@ const SignUpPage = () => {
                 lastName,
                 username,
                 email,
-                password, 
+                password,
+
             })
         });
 
@@ -99,6 +100,7 @@ const SignUpPage = () => {
                             required
                         />
                     </div>
+
 
 
                     <div className="mb-6">

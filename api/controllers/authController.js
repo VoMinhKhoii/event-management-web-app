@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { logActivity } from '../middleware/logActivity.js';
 
 const signup = async (req, res) => {
     try {
@@ -18,7 +19,21 @@ const signup = async (req, res) => {
         });
         const userObject = newUser.toObject();
         delete userObject.password;
-        res.status(201).json({ message: 'User registered successfully', user: userObject });
+
+
+        await logActivity(
+                    newUser._id,
+                    'created',
+                    'user',
+                    newUser._id,
+                    { username: newUser.username }
+                );
+
+        res.status(201).json({ 
+            message: 'User registered successfully', 
+            user: userObject
+        });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
