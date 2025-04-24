@@ -1,5 +1,7 @@
 import Event from '../models/Event.js';
-import EventRequest from '../models/EventRequest.js';
+import Participation from '../models/Participation.js';
+import Request from '../models/Request.js';
+import Invitation from '../models/Invitation.js';
 import { logActivity } from '../middleware/logActivity.js';
 
 // GET /api/events
@@ -34,7 +36,11 @@ export const getEvent = async (req, res) => {
 // POST /api/events
 export const createEvent = async (req, res) => {
   try {
-    const newEvent = new Event(req.body);
+    const newEvent = new Event({
+      ...req.body,
+      organizer: req.userId // Set organizer as current user
+    });
+
     await newEvent.save();
 
     // Log this activity
@@ -46,7 +52,9 @@ export const createEvent = async (req, res) => {
       { eventTitle: newEvent.title }
     );
 
-    res.status(201).json(newEvent);
+    const populatedEvent = await Event.findById(newEvent._id).populate('organizer');
+
+    res.status(201).json(populatedEvent);
   } catch (err) {
     res.status(400).json({ error: 'Failed to create event', message: err.message });
   }
@@ -126,7 +134,7 @@ export const requestToJoinEvent = async (req, res) => {
     }
 
     // Check if user already has pending/approved request
-    const existingRequest = await EventRequest.findOne({
+    const existingRequest = await Request.findOne({
       event: eventId,
       user: userId,
       status: { $in: ['pending', 'approved'] }
@@ -144,10 +152,9 @@ export const requestToJoinEvent = async (req, res) => {
     }
 
     // Create new join request
-    const joinRequest = new EventRequest({
+    const joinRequest = new Request({
       event: eventId,
       user: userId,
-      type: 'request',
       status: 'pending'
     });
 
@@ -175,7 +182,7 @@ export const handleJoinRequest = async (req, res) => {
     }
 
     // Find request
-    const request = await EventRequest.findById(requestId)
+    const request = await Request.findById(requestId)
       .populate({
         path: 'event',
         select: 'title maxAttendees curAttendees'
@@ -184,6 +191,14 @@ export const handleJoinRequest = async (req, res) => {
         path: 'user',
         select: 'name email'
       });
+
+    if (!request || request.event._id.toString() !== eventId) {
+      return res.status(404).json({ error: 'Join request not found' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ error: 'This request has already been processed' });
+    }
 
     // Process
     if (action === 'approve') {
@@ -199,6 +214,7 @@ export const handleJoinRequest = async (req, res) => {
 
     } else if (action === 'reject') {
       request.status = 'rejected';
+      request.respondedAt = new Date();
       await request.save();
 
       // TODO: Send notification to user

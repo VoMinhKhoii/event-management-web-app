@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const eventRequestSchema = mongoose.Schema({
+const participationSchema = mongoose.Schema({
     event: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
@@ -16,17 +16,13 @@ const eventRequestSchema = mongoose.Schema({
         enum: ['pending', 'approved', 'rejected', 'invited'],
         default: 'pending'
     },
-    type: {
-        type: String,
-        enum: ['request', 'invitation'],
-        required: true
-    },
     respondedAt: Date
 },
     {
-        timestamps: true
+        timestamps: true,
+        discriminatorKey: 'kind'
     });
 
-const EventRequest = mongoose.model("EventRequest", eventRequestSchema);
+const Participation = mongoose.model("Participation", participationSchema);
 
-export default EventRequest;
+export default Participation;
