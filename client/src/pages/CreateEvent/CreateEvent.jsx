@@ -359,6 +359,7 @@ const CreateEvent = () => {
                     border-color: #d1d5db;
                     border-bottom-left-radius: 0.5rem;
                     border-bottom-right-radius: 0.5rem;
+                    background-color: white;
                   }
                   .quill-wrapper .ql-toolbar {
                     border-color: #d1d5db;
