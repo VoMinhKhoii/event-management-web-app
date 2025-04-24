@@ -73,7 +73,13 @@ const eventSchema = mongoose.Schema({
     curAttendees: {
         type: Number,
         default: 0
-    }
+    },
+
+    joinRequests: [{
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        requestedAt: { type: Date, default: Date.now },
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
+    }]
 },
     {
         timestamps: true,
