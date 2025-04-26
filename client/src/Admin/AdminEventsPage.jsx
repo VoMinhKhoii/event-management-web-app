@@ -4,16 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiEye, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 
 // Import custom icons
-import homeActive from '../assets/home-2.png';
-import homeInactive from '../assets/home-2-inactive.png';
-import userActive from '../assets/user-active.png';
-import userInactive from '../assets/user-inactive.png';
-import calendarActive from '../assets/calendar-active.png';
-import calendarInactive from '../assets/calendar-inactive.png';
-import settingActive from '../assets/setting-active.png';
-import settingInactive from '../assets/setting-inactive.png';
-import chartInactive from '../assets/chart-inactive.png';
-import chartActive from '../assets/chart-active.png';
 import totalEvents from '../assets/total-events.png';
 import rsvpRate from '../assets/rsvp-rate.png';
 import AdminNavPane from '../components/AdminNavPane';
@@ -39,10 +29,11 @@ const AdminEventsPage = () => {
     const [filteredEvents, setFilteredEvents] = useState([]);
     const [events, setEvents] = useState([]);
     const [stats, setStats] = useState({
-        totalEvents: 324,
-        averageRsvpRate: 78 // percentage
+        totalEvents: 0,
+        averageRsvpRate: 0
     });
     const [activeMenu, setActiveMenu] = useState('events');
+    const [isLoading, setIsLoading] = useState(true);
     
     // For search dropdown functionality
     const [showResults, setShowResults] = useState(false);
@@ -51,102 +42,53 @@ const AdminEventsPage = () => {
     const searchInputRef = useRef(null);
     const resultsRef = useRef(null);
 
-    // Simulating data fetch on component mount
+    // Fetch real events data on component mount
     useEffect(() => {
-        // This would be an API call in a real application
-        const mockEvents = [
-            {
-                id: 1,
-                name: "Tech Summit 2025",
-                category: "Conference",
-                attendees: 45,
-                maxAttendees: 120,
-                organizer: "Vo Minh Khoi",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 82, // percentage
-                date: "Mar 15, 2025"
-            },
-            {
-                id: 2,
-                name: "Design Workshop 2025",
-                category: "Workshop",
-                attendees: 28,
-                maxAttendees: 60,
-                organizer: "Jane Smith",
-                organizerAvatar: "/images/avatar1.png",
-                rsvpRate: 93, // percentage
-                date: "Apr 5, 2025"
-            },
-            {
-                id: 3,
-                name: "Networking Mixer",
-                category: "Networking",
-                attendees: 55,
-                maxAttendees: 100,
-                organizer: "Vo Minh Khoi",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 67, // percentage
-                date: "May 20, 2025"
-            },
-            {
-                id: 4,
-                name: "AI Conference 2025",
-                category: "Conference",
-                attendees: 75,
-                maxAttendees: 150,
-                organizer: "Alex Johnson",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 72, // percentage
-                date: "Jun 10, 2025"
-            },
-            {
-                id: 5,
-                name: "Startup Pitch Day",
-                category: "Workshop",
-                attendees: 40,
-                maxAttendees: 80,
-                organizer: "Sarah Williams",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 77, // percentage
-                date: "Jul 25, 2025"
-            },
-            {
-                id: 6,
-                name: "Game Development Summit",
-                category: "Conference",
-                attendees: 62,
-                maxAttendees: 100,
-                organizer: "Mike Chen",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 85, // percentage
-                date: "Aug 12, 2025"
-            },
-            {
-                id: 7,
-                name: "UX Design Bootcamp",
-                category: "Workshop",
-                attendees: 32,
-                maxAttendees: 40,
-                organizer: "Emily Taylor",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 90, // percentage
-                date: "Sep 8, 2025"
-            },
-            {
-                id: 8,
-                name: "Web3 Hackathon",
-                category: "Hackathon",
-                attendees: 85,
-                maxAttendees: 120,
-                organizer: "Vo Minh Khoi",
-                organizerAvatar: "/images/avatar.png",
-                rsvpRate: 71, // percentage
-                date: "Oct 15, 2025"
+        const fetchEvents = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch('http://localhost:8800/api/events', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch events');
+                }
+                
+                const eventData = await response.json();
+                setEvents(eventData);
+                setFilteredEvents(eventData);
+                
+                // Calculate stats
+                const totalEvents = eventData.length;
+                
+                // Calculate average RSVP rate
+                let totalRsvpRate = 0;
+                let eventsWithRsvp = 0;
+                
+                eventData.forEach(event => {
+                    if (event.attendees && event.maxAttendees && event.maxAttendees > 0) {
+                        const eventRsvpRate = Math.round((event.attendees.length / event.maxAttendees) * 100);
+                        totalRsvpRate += eventRsvpRate;
+                        eventsWithRsvp++;
+                    }
+                });
+                
+                const averageRsvpRate = eventsWithRsvp > 0 ? Math.round(totalRsvpRate / eventsWithRsvp) : 0;
+                
+                setStats({
+                    totalEvents,
+                    averageRsvpRate
+                });
+                
+            } catch (error) {
+                console.error('Error fetching events:', error);
+            } finally {
+                setIsLoading(false);
             }
-        ];
-
-        setEvents(mockEvents);
-        setFilteredEvents(mockEvents); // Initialize filtered events with all events
+        };
+        
+        fetchEvents();
     }, []);
 
     // Apply filters when APPLIED filters change (not when input filters change)
@@ -169,15 +111,16 @@ const AdminEventsPage = () => {
         if (appliedFilters.searchTerm) {
             const term = appliedFilters.searchTerm.toLowerCase();
             result = result.filter(event => 
-                event.name.toLowerCase().includes(term) ||
-                event.category.toLowerCase().includes(term) ||
-                event.organizer.toLowerCase().includes(term)
+                event.title?.toLowerCase().includes(term) ||
+                event.eventType?.toLowerCase().includes(term) ||
+                event.organizer?.username?.toLowerCase().includes(term) ||
+                event.location?.toLowerCase().includes(term)
             );
         }
         
         // Filter by category
         if (appliedFilters.category && appliedFilters.category !== 'All categories') {
-            result = result.filter(event => event.category === appliedFilters.category);
+            result = result.filter(event => event.eventType === appliedFilters.category);
         }
         
         // Filter by date range
@@ -190,7 +133,7 @@ const AdminEventsPage = () => {
                     const last7Days = new Date(today);
                     last7Days.setDate(last7Days.getDate() - 7);
                     result = result.filter(event => {
-                        const eventDate = new Date(event.date);
+                        const eventDate = new Date(event.startDate);
                         return eventDate >= last7Days && eventDate <= today;
                     });
                     break;
@@ -199,7 +142,7 @@ const AdminEventsPage = () => {
                     const last30Days = new Date(today);
                     last30Days.setDate(last30Days.getDate() - 30);
                     result = result.filter(event => {
-                        const eventDate = new Date(event.date);
+                        const eventDate = new Date(event.startDate);
                         return eventDate >= last30Days && eventDate <= today;
                     });
                     break;
@@ -207,7 +150,7 @@ const AdminEventsPage = () => {
                 case 'This month': {
                     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
                     result = result.filter(event => {
-                        const eventDate = new Date(event.date);
+                        const eventDate = new Date(event.startDate);
                         return eventDate >= firstDayOfMonth && eventDate <= today;
                     });
                     break;
@@ -215,7 +158,7 @@ const AdminEventsPage = () => {
                 case 'This year': {
                     const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
                     result = result.filter(event => {
-                        const eventDate = new Date(event.date);
+                        const eventDate = new Date(event.startDate);
                         return eventDate >= firstDayOfYear && eventDate <= today;
                     });
                     break;
@@ -517,16 +460,6 @@ const AdminEventsPage = () => {
 
                     {/* Events Table */}
                     <div className="bg-white shadow-sm rounded-md border border-gray-200 overflow-x-auto">
-                        <div className="flex justify-between items-center px-6 py-4 border-b">
-                            <h2 className="text-lg font-semibold">
-                                {isFiltered 
-                                    ? `Filtered Events (${filteredEvents.length})` 
-                                    : `All Events (${events.length})`}
-                            </h2>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                                + Add New Event
-                            </button>
-                        </div>
                         
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
@@ -557,69 +490,78 @@ const AdminEventsPage = () => {
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {filteredEvents.length > 0 ? (
                                     filteredEvents.map((event) => (
-                                        <tr key={event.id} className="hover:bg-gray-50">
+                                        <tr key={event._id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {event.name}
+                                                    {event.title}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    {event.category}
+                                                    {event.eventType || 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {event.attendees} / {event.maxAttendees}
+                                                {event.attendees ? event.attendees.length : 0} / {event.maxAttendees || 'Unlimited'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <div className="h-8 w-8 flex-shrink-0">
                                                         <img
                                                             className="h-8 w-8 rounded-full"
-                                                            src={event.organizerAvatar}
-                                                            alt={event.organizer}
+                                                            src={event.organizer?.avatar || '/images/avatar.png'}
+                                                            alt={event.organizer?.username || 'Organizer'}
+                                                            onError={(e) => { e.target.src = '/images/avatar.png' }}
                                                         />
                                                     </div>
                                                     <div className="ml-3">
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {event.organizer}
+                                                            {event.organizer?.username || 'Unknown'}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-[100px]">
-                                                        <div 
-                                                            className={`h-2.5 rounded-full ${
-                                                                event.rsvpRate >= 80 ? 'bg-green-500' : 
-                                                                event.rsvpRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                                            }`} 
-                                                            style={{ width: `${event.rsvpRate}%` }}
-                                                        ></div>
-                                                    </div>
-                                                    <span className="text-sm text-gray-700">{event.rsvpRate}%</span>
+                                                    {event.maxAttendees && event.attendees ? (
+                                                        <>
+                                                            <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-[100px]">
+                                                                <div 
+                                                                    className={`h-2.5 rounded-full ${
+                                                                        (event.attendees.length / event.maxAttendees * 100) >= 80 ? 'bg-green-500' : 
+                                                                        (event.attendees.length / event.maxAttendees * 100) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                                    }`} 
+                                                                    style={{ width: `${Math.min((event.attendees.length / event.maxAttendees * 100), 100)}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <span className="text-sm text-gray-700">
+                                                                {Math.round((event.attendees.length / event.maxAttendees * 100))}%
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-sm text-gray-500">N/A</span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {event.date}
+                                                {new Date(event.startDate).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex items-center space-x-3">
                                                     <button 
-                                                        onClick={() => handleViewEvent(event.id)}
+                                                        onClick={() => handleViewEvent(event._id)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         <FiEye className="h-5 w-5" />
                                                     </button>
                                                     <button 
-                                                        onClick={() => handleEditEvent(event.id)}
+                                                        onClick={() => handleEditEvent(event._id)}
                                                         className="text-yellow-600 hover:text-yellow-900"
                                                     >
                                                         <FiEdit className="h-5 w-5" />
                                                     </button>
                                                     <button 
-                                                        onClick={() => handleDeleteEvent(event.id)}
+                                                        onClick={() => handleDeleteEvent(event._id)}
                                                         className="text-red-600 hover:text-red-900"
                                                     >
                                                         <FiTrash2 className="h-5 w-5" />
