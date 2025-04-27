@@ -1,4 +1,5 @@
 import Event from '../models/Event.js';
+import { logActivity } from '../middleware/logActivity.js';
 
 // GET /api/events
 export const getAllEvent = async (req, res) => {
@@ -34,6 +35,16 @@ export const createEvent = async (req, res) => {
   try {
     const newEvent = new Event(req.body);
     await newEvent.save();
+
+    // Log this activity
+    await logActivity(
+      req.userId,
+      'created',
+      'event',
+      newEvent._id,
+      { eventTitle: newEvent.title }
+    );
+
     res.status(201).json(newEvent);
   } catch (err) {
     res.status(400).json({ error: 'Failed to create event', message: err.message });
@@ -50,6 +61,16 @@ export const updateEvent = async (req, res) => {
     if (!updatedEvent) {
       return res.status(404).json({ error: 'Event not found' });
     }
+
+    await logActivity(
+      req.userId,
+      'updated',
+      'event',
+      updatedEvent._id || updatedEvent.id,
+      { eventTitle: updatedEvent.title }
+    );
+
+
     res.status(200).json(updatedEvent);
   } catch (err) {
     res.status(400).json({ error: 'Failed to update event', message: err.message });
@@ -60,9 +81,20 @@ export const updateEvent = async (req, res) => {
 export const deleteEvent = async (req, res) => {
   try {
     const deletedEvent = await Event.findByIdAndDelete(req.params.id);
+
     if (!deletedEvent) {
       return res.status(404).json({ error: 'Event not found' });
     }
+
+    await logActivity(
+      req.userId,
+      'deleted',
+      'event',
+      deletedEvent._id,
+      { eventTitle: deletedEvent.title }
+    );
+
+
     res.status(200).json({ message: 'Event deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete event', message: err.message });

@@ -129,19 +129,19 @@ const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
             ) : (
                 // Small to Medium Screens (sm - lg): Collapsible sidebar
                 <div
-                    className={`h-screen bg-white shadow-sm fixed top-0 left-0 z-40 transition-all duration-300 flex flex-col ${isSidebarCollapsed ? 'w-16' : 'w-64'
+                    className={`h-screen bg-white shadow-sm fixed top-0 left-0 z-40 transition-all duration-300 flex flex-col ${isSidebarCollapsed ? 'w-14' : 'w-56'
                         }`}
                 >
                     {/* Logo and toggle button */}
-                    <div className={`flex items-center p-4 ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
-                        {!isSidebarCollapsed && <h1 className="text-lg font-bold">Admin Panel</h1>}
+                    <div className={`flex items-center p-3 ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+                        {!isSidebarCollapsed && <h1 className="text-base font-bold">Admin Panel</h1>}
                         <button
                             onClick={toggleSidebar}
-                            className="p-2 rounded-full hover:bg-gray-100"
+                            className="p-1 rounded-full hover:bg-gray-100"
                             aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         >
                             <svg
-                                className={`h-5 w-5 transform transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`}
+                                className={`h-4 w-4 transform transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`}
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -152,12 +152,12 @@ const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 mt-6">
+                    <nav className="flex-1 mt-4">
                         {navItems.map((item) => (
                             <div
                                 key={item.menu}
-                                className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-6'
-                                    } py-4 my-1 mx-2 cursor-pointer ${activeMenu === item.menu ? 'bg-[#E0E0E0] rounded-lg' : 'hover:bg-[#F5F5F5] hover:rounded-lg'
+                                className={`flex items-center ${isSidebarCollapsed ? 'justify-center px-2' : 'px-4'
+                                    } py-3 my-1 mx-2 cursor-pointer ${activeMenu === item.menu ? 'bg-[#E0E0E0] rounded-lg' : 'hover:bg-[#F5F5F5] hover:rounded-lg'
                                     } transition-all`}
                                 onClick={() => handleNavigation(item.path, item.menu)}
                             >
@@ -166,11 +166,11 @@ const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
                                     alt={item.name}
                                     className="h-5 w-5"
                                 />
-                                {!isSidebarCollapsed && <span className="ml-4 font-medium">{item.name}</span>}
+                                {!isSidebarCollapsed && <span className="ml-3 text-sm font-medium">{item.name}</span>}
 
                                 {/* Tooltip for collapsed mode */}
                                 {isSidebarCollapsed && (
-                                    <div className="absolute left-16 bg-gray-800 text-white px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                                    <div className="absolute left-14 bg-gray-800 text-white px-2 py-1 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
                                         {item.name}
                                     </div>
                                 )}
@@ -180,16 +180,16 @@ const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
 
                     {/* Bottom section for profile/logout (optional) */}
                     {!isSidebarCollapsed && (
-                        <div className="p-4 border-t">
-                            <div className="text-sm text-gray-500">Logged in as:</div>
-                            <div className="font-medium">Admin</div>
+                        <div className="p-3 border-t">
+                            <div className="text-xs text-gray-500">Logged in as:</div>
+                            <div className="text-sm font-medium">Admin</div>
                         </div>
                     )}
                 </div>
             )}
 
             {/* Spacer div to push content to the right */}
-            <div className={`transition-all duration-300 ${windowWidth < 640 ? 'w-0' : (isSidebarCollapsed ? 'w-16' : 'w-64')
+            <div className={`transition-all duration-300 ${windowWidth < 640 ? 'w-0' : (isSidebarCollapsed ? 'w-14' : 'w-56')
                 }`}></div>
         </>
     );
