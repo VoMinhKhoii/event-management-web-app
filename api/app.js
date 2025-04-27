@@ -8,6 +8,7 @@ import userRoute from './routes/userRoute.js';
 import eventRoute from './routes/eventRoute.js';
 import adminRoute from './routes/adminRoute.js';
 import cookieParser from 'cookie-parser';
+import notificationRoute from './routes/notificationRoute.js';
 
 // Log that we're starting
 console.log('Starting API server...');
