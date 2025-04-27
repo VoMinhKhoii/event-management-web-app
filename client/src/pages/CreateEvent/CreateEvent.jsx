@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const CreateEvent = () => {
   const [imagePreview, setImagePreview] = useState(null);
@@ -155,7 +157,8 @@ const CreateEvent = () => {
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
       <NavPane/>
-
+      
+      {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
         {/* Header with responsive layout */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -330,14 +333,58 @@ const CreateEvent = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="8"
-                className="w-full h-[180px] md:h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
-                placeholder="Enter event description"
-              />
+              <div className="quill-wrapper">
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Enter event description"
+                  modules={{
+                    toolbar: [
+                      ['bold', 'italic', 'underline'],
+                      [{'list': 'ordered'}, {'list': 'bullet'}],
+                      ['link'],
+                      ['clean']
+                    ],
+                  }}
+                />
+                <style jsx="true">{`
+                  .quill-wrapper {
+                    height: 180px;
+                  }
+                  .quill-wrapper .ql-container {
+                    height: calc(100% - 42px);
+                    font-size: 14px;
+                    font-family: inherit;
+                    border-color: #d1d5db;
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                    background-color: white;
+                  }
+                  .quill-wrapper .ql-toolbar {
+                    border-color: #d1d5db;
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                  }
+                  .quill-wrapper .ql-editor {
+                    padding: 0.5rem 0.75rem;
+                    min-height: 138px;
+                  }
+                  .quill-wrapper .ql-editor.ql-blank::before {
+                    font-style: normal;
+                    color: #9ca3af;
+                    font-size: 14px;
+                  }
+                  @media (min-width: 768px) {
+                    .quill-wrapper {
+                      height: 240px;
+                    }
+                    .quill-wrapper .ql-editor {
+                      min-height: 198px;
+                    }
+                  }
+                `}</style>
+              </div>
             </div>
 
             {/* Upload Image Section */}
