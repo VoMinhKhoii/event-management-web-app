@@ -32,6 +32,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/comments', commentRoute);
 app.use('/api/users', userRoute);
 app.use('/api/events', eventRoute);
+app.use('/api/notifications', notificationRoute);
 app.use('/api/admin', adminRoute)
 
 app.listen(8800, () => {
