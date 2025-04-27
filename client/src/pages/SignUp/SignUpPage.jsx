@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 
 const SignUpPage = () => {
 
-    
+
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-       
+
         const formData = new FormData(e.target);
 
         const firstName = formData.get('firstName');
@@ -21,7 +21,7 @@ const SignUpPage = () => {
         const password = formData.get('password');
 
 
-        console.log("Register:", {firstName, lastName, username, email, password});
+        console.log("Register:", { firstName, lastName, username, email, password });
 
         const res = await fetch('http://localhost:8800/api/auth/signup', {
             method: 'POST',
