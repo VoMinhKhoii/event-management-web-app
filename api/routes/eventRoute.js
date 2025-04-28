@@ -1,8 +1,9 @@
 import express from 'express';
-import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent } from '../controllers/eventController.js';
+import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent, requestToJoinEvent, handleJoinRequest } from '../controllers/eventController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
+
 
 router.get('/', verifyToken, getAllEvent);
 router.get('/:id',verifyToken, getEvent);
