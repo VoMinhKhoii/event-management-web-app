@@ -217,6 +217,13 @@ const CreateEvent = () => {
     setPrivacy((prev) => !prev);
   };
 
+  const handleDescriptionChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      description: content
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
@@ -362,11 +369,11 @@ const CreateEvent = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 >
                   <option value="">Select event type</option>
-                  <option value="conference">Conference</option>
-                  <option value="workshop">Workshop</option>
-                  <option value="seminar">Seminar</option>
-                  <option value="networking">Networking</option>
-                  <option value="other">Other</option>
+                  <option value="tech">Tech</option>
+                  <option value="business">Business</option>
+                  <option value="game">Game</option>
+                  <option value="music">Music</option>
+                  <option value="sports">Sports</option>
                 </select>
               </div>
               <div>
@@ -405,7 +412,7 @@ const CreateEvent = () => {
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
-                  onChange={handleChange}
+                  onChange={handleDescriptionChange}
                   placeholder="Enter event description"
                   modules={{
                     toolbar: [
