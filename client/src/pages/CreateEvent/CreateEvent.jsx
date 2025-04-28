@@ -114,7 +114,7 @@ const CreateEvent = () => {
           credentials: 'include',
           body: JSON.stringify({
             ...formData,
-            organizer: currentUser
+            organizer: currentUser._id
           }),
         });
 
