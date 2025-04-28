@@ -90,6 +90,13 @@ const SearchBar = ({ events = [], onSearch, currentFilters = {} }) => {
         }
     }, [currentFilters]);
 
+    // Helper function to format event date
+    const formatEventDate = (event) => {
+        const dateString = event.startDate || event.date;
+        if (!dateString) return "Date TBD";
+        return new Date(dateString).toLocaleDateString();
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 sm:-mt-8">
             <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 flex flex-col md:flex-row gap-3 md:gap-4">
@@ -118,12 +125,14 @@ const SearchBar = ({ events = [], onSearch, currentFilters = {} }) => {
                         >
                             {filteredEvents.map((event) => (
                                 <div
-                                    key={event.id}
+                                    key={event._id || event.id} // Support both types of IDs
                                     onClick={() => handleEventSelect(event)}
                                     className="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
                                 >
                                     <div className="font-medium">{event.title}</div>
-                                    <div className="text-sm text-gray-500">{event.date} • {event.location}</div>
+                                    <div className="text-sm text-gray-500">
+                                        {formatEventDate(event)} • {event.location}
+                                    </div>
                                 </div>
                             ))}
                         </div>

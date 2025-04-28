@@ -292,36 +292,36 @@ const EventDetails = () => {
     );
   }
 
-  // Format date and time for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  // // Format date and time for display
+  // const formatDate = (dateString) => {
+  //   if (!dateString) return '';
+  //   const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  //   return new Date(dateString).toLocaleDateString(undefined, options);
+  // };
 
-  const formatTime = (startTime, endTime) => {
-    if (!startTime) return '';
+  // const formatTime = (startTime, endTime) => {
+  //   if (!startTime) return '';
     
-    const formatTimeString = (timeString) => {
-      if (!timeString) return '';
+  //   const formatTimeString = (timeString) => {
+  //     if (!timeString) return '';
       
-      if (typeof timeString === 'string' && timeString.includes(':')) {
-        return timeString;
-      }
+  //     if (typeof timeString === 'string' && timeString.includes(':')) {
+  //       return timeString;
+  //     }
       
-      try {
-        const date = new Date(timeString);
-        return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-      } catch (e) {
-        return timeString;
-      }
-    };
+  //     try {
+  //       const date = new Date(timeString);
+  //       return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  //     } catch (e) {
+  //       return timeString;
+  //     }
+  //   };
 
-    const formattedStartTime = formatTimeString(startTime);
-    const formattedEndTime = endTime ? formatTimeString(endTime) : '';
+  //   const formattedStartTime = formatTimeString(startTime);
+  //   const formattedEndTime = endTime ? formatTimeString(endTime) : '';
 
-    return formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : formattedStartTime;
-  };
+  //   return formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : formattedStartTime;
+  // };
 
   // Ensure we have an array of images, even if there's just one or none
   const images = eventData.images && eventData.images.length 
@@ -355,8 +355,8 @@ const EventDetails = () => {
               </svg>
               <span className="font-regular text-black text-[18px]">Date and time</span>
             </div>
-            <p className="text-[#6B7280]">{formatDate(eventData.startDate || eventData.date)}</p>
-            <p className="text-[#6B7280]">{formatTime(eventData.startTime || eventData.time, eventData.endTime)}</p>
+            <p className="text-[#6B7280]">{eventData.startDate}</p>
+            <p className="text-[#6B7280]">{eventData.startTime} - {eventData.endTime}</p>
           </div>
 
           <div>
@@ -507,8 +507,8 @@ const EventDetails = () => {
               </svg>
               <span className="font-medium text-gray-900">Date and time</span>
             </div>
-            <p className="text-gray-600">{formatDate(eventData.startDate || eventData.date)}</p>
-            <p className="text-gray-600">{formatTime(eventData.startTime || eventData.time, eventData.endTime)}</p>
+            <p className="text-gray-600">{eventData.startDate}</p>
+            <p className="text-gray-600">{eventData.startTime} - {eventData.endTime}</p>
           </div>
 
           <div>
@@ -608,13 +608,13 @@ const EventDetails = () => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span>{formatDate(eventData.startDate || eventData.date)}</span>
+                <span>{eventData.startDate}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{formatTime(eventData.startTime || eventData.time, eventData.endTime)}</span>
+                <span>{eventData.startTime} - {eventData.endTime}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -628,7 +628,6 @@ const EventDetails = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-
               {expectations.length > 0 && (
                 <>
                   <h3 className="text-xl font-semibold mb-4">What to expect</h3>

@@ -23,7 +23,7 @@ export const getAllEvent = async (req, res) => {
 // GET /api/events/:eventId
 export const getEvent = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.eventId).populate('organizer');
+    const event = await Event.findById(req.params.id).populate('organizer');
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
