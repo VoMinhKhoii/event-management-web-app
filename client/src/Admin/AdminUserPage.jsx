@@ -4,16 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical } from 'react-icons/fi';
 
 // Import custom icons
-import homeActive from '../assets/home-2.png';
-import homeInactive from '../assets/home-2-inactive.png';
-import userActive from '../assets/user-active.png';
-import userInactive from '../assets/user-inactive.png';
-import calendarActive from '../assets/calendar-active.png';
-import calendarInactive from '../assets/calendar-inactive.png';
-import settingActive from '../assets/setting-active.png';
-import settingInactive from '../assets/setting-inactive.png';
-import chartInactive from '../assets/chart-inactive.png';
-import chartActive from '../assets/chart-active.png';
 import totalUsers from '../assets/total-users.png';
 import newUser from '../assets/new-user.png';
 import AdminNavPane from '../components/AdminNavPane';
@@ -25,31 +15,54 @@ const AdminUserPage = () => {
     const [statusFilter, setStatusFilter] = useState('All status');
     const [users, setUsers] = useState([]);
     const [stats, setStats] = useState({
-        totalUsers: 1234,
-        newUsersLastWeek: 12
+        totalUsers: 0,
+        newUsersLastWeek: 0
     });
     const [activeMenu, setActiveMenu] = useState('users'); // Track which menu is active
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Simulating data fetch on component mount
+    // Fetch real users data on component mount
     useEffect(() => {
-        // This would be an API call in a real application
-        const mockUsers = Array(10).fill().map((_, index) => ({
-            id: index + 1,
-            username: 'vominhkhoi',
-            firstName: 'Khoi',
-            lastName: 'Vo',
-            email: 'minhkhoitdn@gmail.com',
-            status: 'Online',
-            avatar: `https://randomuser.me/api/portraits/men/${index + 10}.jpg`
-        }));
-
-        setUsers(mockUsers);
+        const fetchUsers = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch('http://localhost:8800/api/users', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+                
+                const userData = await response.json();
+                setUsers(userData);
+                
+                // Calculate stats
+                const totalUsers = userData.length;
+                
+                // Calculate users created in the last 7 days
+                const lastWeek = new Date();
+                lastWeek.setDate(lastWeek.getDate() - 7);
+                
+                const newUsers = userData.filter(user => {
+                    const userCreatedAt = new Date(user.createdAt);
+                    return userCreatedAt >= lastWeek;
+                }).length;
+                
+                setStats({
+                    totalUsers,
+                    newUsersLastWeek: newUsers
+                });
+                
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        fetchUsers();
     }, []);
-
-    const handleSearch = () => {
-        console.log('Searching for:', searchTerm, 'with filters:', dateRange, statusFilter);
-        // Implement search functionality
-    };
 
     const handleNavigation = (path, menu) => {
         setActiveMenu(menu);
@@ -62,11 +75,12 @@ const AdminUserPage = () => {
             <AdminNavPane activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
 
             {/* Main Content */}
-            <div className="flex-1 overflow-auto px-6 py-8">
+            <div className="flex-1 overflow-auto px-4 py-6">
                 <div className="flex flex-col">
+
                     {/* Search and Filter Bar */}
-                    <div className="flex items-center mb-8 space-x-4">
-                        <div className="relative flex-grow">
+                    <div className="flex flex-wrap items-center mb-6 gap-3">
+                        <div className="relative flex-grow min-w-[200px]">
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                                 <FiSearch className="h-5 w-5 text-gray-400" />
                             </span>
@@ -81,7 +95,7 @@ const AdminUserPage = () => {
 
                         <div className="relative">
                             <select
-                                className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 value={dateRange}
                                 onChange={(e) => setDateRange(e.target.value)}
                             >
@@ -94,7 +108,7 @@ const AdminUserPage = () => {
 
                         <div className="relative">
                             <select
-                                className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
@@ -106,8 +120,7 @@ const AdminUserPage = () => {
                         </div>
 
                         <button
-                            className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            onClick={handleSearch}
+                            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             Search
                         </button>
@@ -141,70 +154,78 @@ const AdminUserPage = () => {
                     </div>
 
                     {/* Users Table */}
-                    <div className="bg-white shadow-sm rounded-md border border-gray-200">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-msemibold text-gray-500 uppercase tracking-wider">
-                                        User
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-msemibold text-gray-500 uppercase tracking-wider">
-                                        First name
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-msemibold text-gray-500 uppercase tracking-wider">
-                                        Last name
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-msemibold text-gray-500 uppercase tracking-wider">
-                                        Email
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-msemibold text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-msemibold text-gray-500 uppercase tracking-wider">
-                                        Action
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {users.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 flex-shrink-0">
-                                                    <img
-                                                        className="h-10 w-10 rounded-full"
-                                                        src={user.avatar}
-                                                        alt={user.username}
-                                                    />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {user.username}
+                    <div className="bg-white shadow-sm rounded-md border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                            User
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                            First Name
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                            Last Name
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                            Email
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                            Status
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {users.map((user) => (
+                                        <tr key={user.id} className="hover:bg-gray-50">
+                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <div className="h-8 w-8 flex-shrink-0">
+                                                        <img
+                                                            className="h-8 w-8 rounded-full"
+                                                            src={user.avatar}
+                                                            alt={user.username}
+                                                        />
+                                                    </div>
+                                                    <div className="ml-3">
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            {user.username}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {user.firstName}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {user.lastName}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {user.email}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                {user.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <FiMoreVertical className="h-5 w-5 cursor-pointer hover:text-gray-700" />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {user.firstName}
+                                            </td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {user.lastName}
+                                            </td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {user.email}
+                                            </td>
+                                            <td className="px-4 py-4 whitespace-nowrap">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                    user.status === 'online' 
+                                                        ? 'bg-blue-100 text-blue-800' 
+                                                        : user.status === 'away'
+                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                        : 'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                    {user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Offline'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <FiMoreVertical className="h-5 w-5 cursor-pointer hover:text-gray-700" />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

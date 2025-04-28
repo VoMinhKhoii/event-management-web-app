@@ -13,8 +13,9 @@ import AdminUserPage from './Admin/AdminUserPage.jsx';
 import AdminEventsPage from './Admin/AdminEventsPage.jsx';
 import AdminDashboard from './Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
+import { eventCommentsLoader } from "./lib/loaders";
 
-function App () {
+function App() {
   const router = createBrowserRouter([
     {
       path: "/",
@@ -49,7 +50,7 @@ function App () {
       element: <Calendar />
     },
     {
-      path: "/event/:id",
+      path: "/event/:eventId",
       element: <EventDetails />,
       loader: singleEventLoader
     },

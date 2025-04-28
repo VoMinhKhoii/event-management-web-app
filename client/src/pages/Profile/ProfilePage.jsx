@@ -110,7 +110,7 @@ const ProfilePage = () => {
       
 
       // Send request to API to update the user's profile
-      const res = await fetch('http://localhost:8800/api/users/${currentUser._id}', {
+      const res = await fetch(`http://localhost:8800/api/users/${currentUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -154,7 +154,7 @@ const ProfilePage = () => {
     try {
       setIsLoggingOut(true);
       
-      const res = await fetch('http://localhost:8800/api/auth/logout', {
+      const res = await fetch(`http://localhost:8800/api/auth/logout`, {
         method: 'POST',
         credentials: 'include' // Important for cookie handling
       });
@@ -209,7 +209,7 @@ const ProfilePage = () => {
             
             // Update avatar in the database
             try {
-              const res = await fetch('http://localhost:8800/api/users/updateAvatar', {
+              const res = await fetch(`http://localhost:8800/api/users/${currentUser._id}/avatar`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -391,14 +391,14 @@ const ProfilePage = () => {
                 </div>
               ) : (
                 <button 
-                  onClick={handleEditToggle}
-                  className="mt-2 px-4 py-2 bg-[#569DBA] text-white rounded hover:bg-opacity-90 transition-colors flex items-center gap-1"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                  </svg>
-                  Update Profile
-                </button>
+                onClick={handleEditToggle}
+                className="w-full md:w-auto mt-4 px-6 py-3 md:py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center md:justify-start gap-2 text-base md:text-sm"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                </svg>
+                Update Profile
+              </button>
               )}
             </div>
           </div>
