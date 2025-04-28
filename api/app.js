@@ -6,6 +6,7 @@ import authRoute from './routes/authRoute.js';
 import commentRoute from './routes/commentRoute.js';
 import userRoute from './routes/userRoute.js';
 import eventRoute from './routes/eventRoute.js';
+import notificationRoute from './routes/notificationRoute.js';
 import cookieParser from 'cookie-parser';
 
 // Log that we're starting
@@ -37,3 +38,5 @@ app.listen(8800, () => {
     console.log('Server is running on port 8800');
     console.log(`CORS enabled for origin: ${process.env.CLIENT_URL}`);
 });
+
+
