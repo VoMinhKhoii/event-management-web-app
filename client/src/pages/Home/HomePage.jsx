@@ -83,9 +83,13 @@ const HomePage = () => {
     };
 
   
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+    useEffect(() => {
+      const isReload = window.performance
+        .getEntriesByType('navigation')
+        .some((nav) => nav.type === 'reload');
+    
+      fetchEvents(isReload); // Force refresh if the page was reloaded
+    }, []);
 
  
   useEffect(() => {
