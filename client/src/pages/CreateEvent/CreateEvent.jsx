@@ -227,6 +227,13 @@ const CreateEvent = () => {
     });
   };
 
+  const handleDescriptionChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      description: content
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
@@ -415,12 +422,9 @@ const CreateEvent = () => {
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
-                  onChange={(value) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: value, // Update the description field
-                    }));
-                  }}
+
+                  onChange={handleDescriptionChange}
+
                   placeholder="Enter event description"
                   modules={{
                     toolbar: [
