@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
@@ -13,64 +14,82 @@ const HomePage = () => {
     date: ''
   });
   const [isFiltered, setIsFiltered] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]); // Store filtered events
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Sample event data
-  const events = [
-    {
-      id: 1,
-      title: "Tech Summit 2025",
-      date: "Mar 15, 2025",
-      time: "9:00 AM",
-      location: "Convention Center, New York",
-      description: "Join industry leaders for a day of insights into emerging technologies and digital transformation.",
-      category: "Tech",
-      image: "/images/tech.png",
-      attendees: 45,
-      maxAttendees: 120
-    },
-    {
-      id: 2,
-      title: "VK Fest 2024",
-      date: "Apr 15, 2025",
-      time: "10:00 AM",
-      location: "Convention Center, New York",
-      description: "The biggest music festival of the year.",
-      category: "Business",
-      image: "/images/business.png",
-      attendees: 45,
-      maxAttendees: 120
-    },
-    {
-      id: 3,
-      title: "Tech Development Conference",
-      date: "Mar 15, 2025",
-      time: "10:00 AM",
-      location: "Convention Center, New York",
-      description: "The biggest game development conference of the year.",
-      category: "Tech",
-      image: "/images/business.png",
-      attendees: 45,
-      maxAttendees: 120
-    },
-    {
-      id: 4,
-      title: "Gaming Expo 2024",
-      date: "Apr 22, 2025",
-      time: "10:00 AM",
-      location: "Convention Center, New York",
-      description: "The biggest game event of the year.",
-      category: "Game",
-      image: "/images/game.png",
-      attendees: 45,
-      maxAttendees: 120
-    },
-  ];
+
+    // Fetch events with caching - similar to AdminDashboard
+  const fetchEvents = async (forceRefresh = false) => {
+    setLoading(true);
+  
+    // Try to get cached data first
+    const cachedData = localStorage.getItem('homePageEvents');
+    const cacheTimestamp = localStorage.getItem('homePageEventsTimestamp');
+    const THIRTY_MINUTES = 30 * 60 * 1000; // 30 minutes in milliseconds
+  
+    // Use cached data if it exists, is not expired, and force refresh is not requested
+    if (
+        cachedData &&
+        cacheTimestamp &&
+        Date.now() - parseInt(cacheTimestamp) < THIRTY_MINUTES &&
+        !forceRefresh
+      ) {
+        const events = JSON.parse(cachedData);
+        setEvents(events);
+        setFilteredEvents(applyAllFilters(events)); // Apply any current filters
+        setLastUpdated(new Date(parseInt(cacheTimestamp)));
+        setLoading(false);
+        return; // Exit early - no need to fetch
+      }
+      try {
+        // Fetch fresh data
+        const response = await fetch('http://localhost:8800/api/events', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+  
+        const eventData = await response.json();
+        
+        // Update all events
+        setEvents(eventData);
+        // Apply any filters to the new data
+        setFilteredEvents(applyAllFilters(eventData)); // Apply filters to the new data
+        
+        // Cache the data
+        localStorage.setItem('homePageEvents', JSON.stringify(eventData));
+        localStorage.setItem('homePageEventsTimestamp', Date.now().toString());
+        setLastUpdated(new Date());
+  
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        
+        // If there's cached data, use it as fallback on error
+        if (cachedData) {
+          const events = JSON.parse(cachedData);
+          setEvents(events);
+          setFilteredEvents(applyAllFilters(events));
+          setLastUpdated(new Date(parseInt(cacheTimestamp)));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  // You're missing this critical effect to trigger data loading on component mount
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   // Apply all filters to the events list
-  const applyAllFilters = () => {
-    if (!isFiltered) return events;
-
-    let result = [...events];
+  const applyAllFilters = (result) => {
+    if (!isFiltered) return result;
 
     // Filter by search term
     if (filters.searchTerm) {
@@ -79,12 +98,12 @@ const HomePage = () => {
       );
     }
 
-    // Filter by category
+    // Filter by category - use eventType
     if (filters.category) {
-      result = result.filter(event => event.category === filters.category);
+      result = result.filter(event => event.eventType === filters.category);
     }
 
-    // Filter by date
+    // Filter by date - use startDate
     if (filters.date) {
       const today = new Date();
       const tomorrow = new Date(today);
@@ -93,27 +112,28 @@ const HomePage = () => {
       switch (filters.date) {
         case 'today':
           result = result.filter(event => {
-            const eventDate = new Date(event.date);
+            const eventDate = new Date(event.startDate);
             return eventDate.toDateString() === today.toDateString();
           });
           break;
         case 'tomorrow':
           result = result.filter(event => {
-            const eventDate = new Date(event.date);
+            const eventDate = new Date(event.startDate);
             return eventDate.toDateString() === tomorrow.toDateString();
           });
           break;
-        case 'week':
+        case 'week': {
           const nextWeek = new Date(today);
-          nextWeek.setDate(today.getDate() + 7);
+          nextWeek.setDate(today.getDay() + 7);
           result = result.filter(event => {
-            const eventDate = new Date(event.date);
+            const eventDate = new Date(event.startDate);
             return eventDate >= today && eventDate <= nextWeek;
           });
           break;
+        }
         case 'month':
           result = result.filter(event => {
-            const eventDate = new Date(event.date);
+            const eventDate = new Date(event.startDate);
             return eventDate.getMonth() === today.getMonth() &&
               eventDate.getFullYear() === today.getFullYear();
           });
@@ -123,9 +143,6 @@ const HomePage = () => {
 
     return result;
   };
-
-  // Filter events based on all criteria
-  const filteredEvents = applyAllFilters();
 
   // Handle search and filter updates from SearchBar
   const handleSearchAndFilter = (term, category, date) => {
@@ -162,6 +179,10 @@ const HomePage = () => {
   };
 
   const handleEventClick = (eventId) => {
+    if (!eventId) {
+      console.error("Invalid event ID:", eventId);
+      return;
+    }
     navigate(`/event/${eventId}`);
   };
 
@@ -205,7 +226,7 @@ const HomePage = () => {
                   onClick={() => clearFilter('searchTerm')}
                   className="ml-2 text-blue-500 hover:text-blue-700"
                 >
-                  ×
+                  
                 </button>
               </div>
             )}
@@ -252,11 +273,11 @@ const HomePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEvents.map((event) => (
               <EventCard
-                key={event.id}
+                key={event._id}
                 {...event}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleEventClick(event.id);
+                  handleEventClick(event._id);
                 }}
               />
             ))}
