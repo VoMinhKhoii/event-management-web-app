@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const CreateEvent = () => {
   const [imagePreview, setImagePreview] = useState(null);
@@ -10,6 +12,8 @@ const CreateEvent = () => {
   const widgetRef = useRef(null); 
   const { currentUser } = useContext(AuthContext);
 
+  const [errors, setErrors] = useState({});
+  const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -18,16 +22,13 @@ const CreateEvent = () => {
     endTime: '',
     startDate: '',
     endDate: '',
-    location: '',
+    location: null,
     eventType: '',
     image: null,
     maxAttendees: '',
-    publicity: true,
-    
-    
+    publicity: !privacy
   });
-  const [errors, setErrors] = useState({});
-  const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
+
 
   useEffect(() => {
     // Load the Cloudinary upload widget script
@@ -54,7 +55,7 @@ const CreateEvent = () => {
             console.log('Upload successful:', result.info);
             setFormData((prev) => ({
               ...prev,
-              image: result.info.public_id,
+              image: result.info.secure_url,
             }));
             setImagePreview(result.info.secure_url);
           } else if (error) {
@@ -104,10 +105,11 @@ const CreateEvent = () => {
 
     if (validateForm()) {
       try {
-        const response = await fetch('http://localhost:8800/api/event', { 
+        const response = await fetch('http://localhost:8800/api/events', { 
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
+            
           },
           credentials: 'include',
           body: JSON.stringify({
@@ -219,12 +221,14 @@ const CreateEvent = () => {
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
       <NavPane/>
-
-      <div className="max-w-7xl mx-auto px-2 pt-16">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-[28px] font-semibold mb-4 text-center">New Event</h1>
+      
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
+        {/* Header with responsive layout */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-[24px] sm:text-[28px] font-semibold">New Event</h1>
           {/* Privacy Toggle */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 self-end sm:self-auto">
             <span className="text-sm font-medium text-gray-700">
               {privacy ? 'Private' : 'Public'}
             </span>
@@ -240,9 +244,10 @@ const CreateEvent = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-12 gap-[16px]">
-          {/* Left Column: Event Form */}
-          <form onSubmit={handleSubmit} className="col-span-5 space-y-4">
+        {/* Responsive grid layout that adapts to screen size */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+          {/* Left Column: Event Form - Full width on mobile, appropriate size on larger screens */}
+          <form onSubmit={handleSubmit} className="md:col-span-1 lg:col-span-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -271,7 +276,7 @@ const CreateEvent = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start time
@@ -283,7 +288,7 @@ const CreateEvent = () => {
                   value={formData.startTime}
                   onChange={handleChange}
                   step="60"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none "
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
 
               </div>
@@ -304,7 +309,7 @@ const CreateEvent = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start date
@@ -344,66 +349,110 @@ const CreateEvent = () => {
                 placeholder="Enter location"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category
                 </label>
                 <select
-                name="eventType"
-                value={formData.eventType}
-                onChange={handleChange}
-                placeHolder="Select event type"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
+                  name="eventType"
+                  value={formData.eventType}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 >
-                <option value="">Select event type</option>
-                <option value="conference">Conference</option>
-                <option value="workshop">Workshop</option>
-                <option value="seminar">Seminar</option>
-                <option value="networking">Networking</option>
-                <option value="other">Other</option>
-              </select>
+                  <option value="">Select event type</option>
+                  <option value="conference">Conference</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="networking">Networking</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Capacity
                 </label>
                 <input
-                type="number"
-                name="maxAttendees"
-                value={formData.maxAttendees}
-                onChange={handleChange}
-                min="1"
-                max="1000"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 ${
-                  errors.maxAttendees 
-                    ? 'border-red-500 focus:ring-red-500' 
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
-                placeholder="Enter maximum attendees"
-              />
-              {errors.maxAttendees && (
-                <p className="mt-1 text-sm text-red-500">{errors.maxAttendees}</p>
-              )}
+                  type="number"
+                  name="maxAttendees"
+                  value={formData.maxAttendees}
+                  onChange={handleChange}
+                  min="1"
+                  max="1000"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 ${
+                    errors.maxAttendees 
+                      ? 'border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 focus:ring-blue-500'
+                  }`}
+                  placeholder="Enter maximum attendees"
+                />
+                {errors.maxAttendees && (
+                  <p className="mt-1 text-sm text-red-500">{errors.maxAttendees}</p>
+                )}
               </div>
             </div>
           </form>
 
           {/* Middle Column: Description and Image Upload */}
-          <div className="col-span-4 space-y-6">
+          <div className="md:col-span-1 lg:col-span-4 space-y-6">
             {/* Description Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="8"
-                className="w-full h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
-                placeholder="Enter event description"
-              />
+              <div className="quill-wrapper">
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Enter event description"
+                  modules={{
+                    toolbar: [
+                      ['bold', 'italic', 'underline'],
+                      [{'list': 'ordered'}, {'list': 'bullet'}],
+                      ['link'],
+                      ['clean']
+                    ],
+                  }}
+                />
+                <style jsx="true">{`
+                  .quill-wrapper {
+                    height: 180px;
+                  }
+                  .quill-wrapper .ql-container {
+                    height: calc(100% - 42px);
+                    font-size: 14px;
+                    font-family: inherit;
+                    border-color: #d1d5db;
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                    background-color: white;
+                  }
+                  .quill-wrapper .ql-toolbar {
+                    border-color: #d1d5db;
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                  }
+                  .quill-wrapper .ql-editor {
+                    padding: 0.5rem 0.75rem;
+                    min-height: 138px;
+                  }
+                  .quill-wrapper .ql-editor.ql-blank::before {
+                    font-style: normal;
+                    color: #9ca3af;
+                    font-size: 14px;
+                  }
+                  @media (min-width: 768px) {
+                    .quill-wrapper {
+                      height: 240px;
+                    }
+                    .quill-wrapper .ql-editor {
+                      min-height: 198px;
+                    }
+                  }
+                `}</style>
+              </div>
             </div>
 
             {/* Upload Image Section */}
@@ -415,7 +464,7 @@ const CreateEvent = () => {
                 onClick={handleImageClick}
                 onDrop={handleImageDrop}
                 onDragOver={(e) => e.preventDefault()}
-                className="w-full h-[252px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
+                className="w-full h-[200px] md:h-[252px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400"
               >
                 {imagePreview ? (
                   <div className="relative w-full h-full">
@@ -477,14 +526,14 @@ const CreateEvent = () => {
           </div>
 
           {/* Right Column: Invite Participants */}
-          <div className="col-span-3 space-y-2">
+          <div className="md:col-span-2 lg:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Invite Participants
             </label>
             
             {privacy ? (
               // Public event - Show invitation form
-              <div className="bg-[#569DBA] text-white p-6 rounded-lg">
+              <div className="bg-[#569DBA] text-white p-4 md:p-6 rounded-lg">
                 {/* Invite Form */}
                 <form onSubmit={(e) => e.preventDefault()} className="mb-6">
                   <label className="block text-sm font-medium mb-2">Email</label>
@@ -503,10 +552,10 @@ const CreateEvent = () => {
               </div>
             ) : (
               // Private event - Show message
-              <div className="bg-gray-100 text-gray-700 p-6 rounded-lg h-full">
-                <div className="flex flex-col items-center justify-center h-full">
+              <div className="bg-gray-100 text-gray-700 p-4 md:p-6 rounded-lg h-full min-h-[200px] flex items-center">
+                <div className="flex flex-col items-center justify-center w-full">
                   <svg 
-                    className="w-16 h-16 text-gray-400 mb-4" 
+                    className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mb-4" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -520,7 +569,7 @@ const CreateEvent = () => {
                   </svg>
                   <p className="text-center font-medium mb-2">Private Event</p>
                   <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for public events. Switch to private mode to enable invitations.
+                    Invitations are disabled for private events. Switch to public mode to enable invitations.
                   </p>
                 </div>
               </div>
@@ -529,10 +578,10 @@ const CreateEvent = () => {
         </div>
       </div>
 
-      <div className="flex justify-center mt-8 pb-8">
+      <div className="flex justify-center mt-4 sm:mt-8 pb-8 px-4">
         <button
           type="submit"
-          className="w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
+          className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
           onClick={handleSubmit}
         >
           Create

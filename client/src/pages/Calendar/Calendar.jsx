@@ -112,6 +112,78 @@ const Calendar = () => {
     navigate(`/event/${eventId}`);
   };
 
+  // NEW: Add a state for mobile view
+  const [isListView, setIsListView] = useState(window.innerWidth < 768);
+
+  // Generate list view of events for mobile
+  const renderEventsList = () => {
+    // Combine all events into a single array with dates
+    const allEvents = [];
+    Object.keys(events).forEach(day => {
+      if (events[day] && events[day].length) {
+        events[day].forEach(event => {
+          allEvents.push({
+            ...event,
+            date: new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+          });
+        });
+      }
+    });
+    
+    // Sort events by date
+    allEvents.sort((a, b) => a.date - b.date);
+    
+    if (allEvents.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          No events found for this month
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-4 px-2">
+        {allEvents.map((event) => (
+          <div 
+            key={event.id}
+            className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"
+            onClick={() => handleEventClick(event.id)}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-medium text-gray-900">{event.title}</h3>
+                <div className="text-sm text-gray-600 mt-1">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{new Date(event.date).getDate()} {new Intl.DateTimeFormat('en-US', { month: 'short' }).format(event.date)}</span>
+                  </div>
+                  <div className="flex items-center mt-1">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{event.time}</span>
+                  </div>
+                  <div className="flex items-center mt-1">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{event.location}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-[#BFDAE5] rounded-full w-10 h-10 flex items-center justify-center text-xs font-medium text-gray-700">
+                {new Date(event.date).getDate()}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // Generate calendar grid
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentDate);
@@ -206,6 +278,25 @@ const Calendar = () => {
     );
   };
 
+  // Toggle between grid and list view
+  const toggleView = () => {
+    setIsListView(!isListView);
+  };
+
+  // Check window resize for responsive views
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsListView(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Check on initial render
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-white font-['Poppins']">
       {/* Top Navigation */}
@@ -238,35 +329,65 @@ const Calendar = () => {
             </button>
           </div>
 
-          {/* Create Event Button */}
-          <button
-            onClick={() => navigate('/create-event')}
-            className="bg-[#569DBA] text-white px-2 py-2 md:px-4 text-sm md:text-base rounded-full hover:bg-[#6ba9c2] transition-colors flex items-center justify-center"
-          >
-            Create event
-          </button>
-        </div>
+          <div className="flex items-center space-x-2">
+            {/* Toggle View Button - only show on tablet and larger screens */}
+            <button
+              onClick={toggleView}
+              className="hidden md:flex bg-gray-100 text-gray-700 px-2 py-2 md:px-3 text-sm rounded-full hover:bg-gray-200 transition-colors items-center justify-center mr-2"
+            >
+              {isListView ? 
+                <span className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  Grid View
+                </span> : 
+                <span className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                  </svg>
+                  List View
+                </span>
+              }
+            </button>
 
-        {/* Calendar container with horizontal scroll on mobile */}
-        <div className="flex-1 overflow-x-auto">
-          <div className="min-w-[700px] md:min-w-0 h-full">
-            <table className="w-full table-fixed border-collapse h-[600px] md:h-full">
-              {/* Responsive headers */}
-              <thead>
-                <tr className="text-left">
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Mon</th>
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Tue</th>
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Wed</th>
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Thu</th>
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Fri</th>
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Sat</th>
-                  <th className="font-extralight text-[16px] md:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Sun</th>
-                </tr>
-              </thead>
-              {renderCalendar()}
-            </table>
+            {/* Create Event Button */}
+            <button
+              onClick={() => navigate('/create-event')}
+              className="bg-[#569DBA] text-white px-2 py-2 md:px-4 text-sm md:text-base rounded-full hover:bg-[#6ba9c2] transition-colors flex items-center justify-center"
+            >
+              Create event
+            </button>
           </div>
         </div>
+
+        {/* Conditional rendering based on view type */}
+        {isListView ? (
+          <div className="flex-1 overflow-y-auto">
+            {renderEventsList()}
+          </div>
+        ) : (
+          /* Calendar container with horizontal scroll on mobile */
+          <div className="flex-1 overflow-x-auto">
+            <div className="min-w-[700px] md:min-w-0 h-full">
+              <table className="w-full table-fixed border-collapse h-[600px] md:h-full">
+                {/* Responsive headers */}
+                <thead>
+                  <tr className="text-left">
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Mon</th>
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Tue</th>
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Wed</th>
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Thu</th>
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Fri</th>
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Sat</th>
+                    <th className="font-extralight text-[14px] md:text-[18px] lg:text-[22px] py-2 pl-1 md:pl-2 w-[14.28%]">Sun</th>
+                  </tr>
+                </thead>
+                {renderCalendar()}
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

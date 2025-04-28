@@ -26,18 +26,22 @@ const userSchema = mongoose.Schema({
             'Please provide a valid email',
         ],
     },
-
     password: {
         type: String,
         required: [true, "Please add a password"]
     },
     avatar: {
+        type: String
+    },
+    status: {
         type: String,
-    }
+        enum: ['online', 'offline', 'away'],
+        default: 'offline'
+    },
 },
 {
     timestamps: true,
 })
 
-const User = mongoose.model("User", userSchema);
+const User =  mongoose.models.User||mongoose.model("User", userSchema);
 export default User;
