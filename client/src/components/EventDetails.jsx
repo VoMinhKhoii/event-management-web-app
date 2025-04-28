@@ -9,7 +9,9 @@ import { AuthContext } from '../context/authContext.jsx';
 const EventDetails = () => {
   const { id } = useParams();
   const eventData = useLoaderData(); // Get event data from loader
+
   const { currentUser } = useContext(AuthContext);
+  
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -20,6 +22,9 @@ const EventDetails = () => {
 
   // Organizer statistics
   const [rsvpRate, setRsvpRate] = useState(0);
+
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
 
   useEffect(() => {
     // Check if user is the organizer of this event
@@ -52,33 +57,33 @@ const EventDetails = () => {
     fetchComments();
   }, [id]);
 
-  // If the user is an organizer, fetch invitations and calculate RSVP stats
-  useEffect(() => {
-    if (!id || !isOrganizer) return;
+  // // If the user is an organizer, fetch invitations and calculate RSVP stats
+  // useEffect(() => {
+  //   if (!id || !isOrganizer) return;
 
-    const fetchInvitationsAndStats = async () => {
-      try {
-        const response = await fetch(`/api/events/${id}/invitations`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch invitations');
-        }
-        const data = await response.json();
-        setInvitations(data);
+  //   const fetchInvitationsAndStats = async () => {
+  //     try {
+  //       const response = await fetch(`/api/events/${id}/invitations`);
+  //       if (!response.ok) {
+  //         throw new Error('Failed to fetch invitations');
+  //       }
+  //       const data = await response.json();
+  //       setInvitations(data);
 
-        // Calculate RSVP rate (percentage of accepted invitations)
-        if (data.length > 0) {
-          const acceptedCount = data.filter(inv => inv.status === 'accepted').length;
-          setRsvpRate(Math.round((acceptedCount / data.length) * 100));
-        }
-      } catch (err) {
-        console.error('Error fetching invitations:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       // Calculate RSVP rate (percentage of accepted invitations)
+  //       if (data.length > 0) {
+  //         const acceptedCount = data.filter(inv => inv.status === 'accepted').length;
+  //         setRsvpRate(Math.round((acceptedCount / data.length) * 100));
+  //       }
+  //     } catch (err) {
+  //       console.error('Error fetching invitations:', err);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchInvitationsAndStats();
-  }, [id, isOrganizer]);
+  //   fetchInvitationsAndStats();
+  // }, [id, isOrganizer]);
 
   // Set loading to false once event data is loaded
   useEffect(() => {
@@ -105,6 +110,7 @@ const EventDetails = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ text: comment }),
       });
 
@@ -113,7 +119,7 @@ const EventDetails = () => {
       }
 
       const newComment = await response.json();
-      setComments(prev => [...prev, newComment]);
+      setComments(prev => [newComment, ...prev]);
       setComment('');
     } catch (err) {
       console.error('Error posting comment:', err);
@@ -121,69 +127,143 @@ const EventDetails = () => {
     }
   };
 
-  const handleSendReminder = async (invitationId) => {
-    if (!isOrganizer) return;
+  const handleReplyClick = (commentId) => {
+    setReplyingTo(commentId);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+    setReplyText('');
+  };
+
+  const handleReplySubmit = async (commentId) => {
+    if (!replyText.trim() || !currentUser) return;
 
     try {
-      const response = await fetch(`/api/events/${id}/invitations/${invitationId}/reminder`, {
+      const response = await fetch(`http://localhost:8800/api/comments/${commentId}/replies`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ text: replyText}),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send reminder');
+        throw new Error('Failed to post reply');
       }
 
-      // Show notification or success message
-      alert('Reminder sent successfully');
+      // This is the updated comment with the new reply already included
+      const updatedComment = await response.json();
+      
+      // Replace the entire comment object in the comments array
+      setComments(prevComments => 
+        prevComments.map(comment => 
+          comment._id === commentId ? updatedComment : comment
+        )
+      );
+      setReplyingTo(null);
+      setReplyText('');
     } catch (err) {
-      console.error('Error sending reminder:', err);
-      setError('Failed to send reminder. Please try again.');
+      console.error('Error posting reply:', err);
+      setError('Failed to post reply. Please try again.');
     }
   };
 
-  const handleResendInvite = async (invitationId) => {
-    if (!isOrganizer) return;
-
-    try {
-      const response = await fetch(`/api/events/${id}/invitations/${invitationId}/resend`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to resend invitation');
-      }
-
-      // Show notification or success message
-      alert('Invitation resent successfully');
-    } catch (err) {
-      console.error('Error resending invitation:', err);
-      setError('Failed to resend invitation. Please try again.');
-    }
-  };
-
-  const handleJoinRequest = async () => {
-    if (!currentUser) {
-      // Redirect to login if not logged in
-      window.location.href = '/login';
+  const handleDeleteClick = async (commentId) => {
+    if (!currentUser) return;
+    
+    // Confirm before deleting
+    if (!window.confirm('Are you sure you want to delete this comment?')) {
       return;
     }
-
+  
     try {
-      const response = await fetch(`/api/events/${id}/join`, {
-        method: 'POST',
+      const response = await fetch(`http://localhost:8800/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to request to join');
+        throw new Error('Failed to delete comment');
       }
-
-      // Show success message
-      alert('Your request to join has been submitted');
+  
+      // Remove the comment from state
+      setComments(prevComments => 
+        prevComments.filter(comment => comment._id !== commentId)
+      );
     } catch (err) {
-      console.error('Error requesting to join:', err);
-      setError('Failed to send join request. Please try again.');
+      console.error('Error deleting comment:', err);
+      setError('Failed to delete comment. Please try again.');
     }
   };
+
+  // const handleSendReminder = async (invitationId) => {
+  //   if (!isOrganizer) return;
+
+  //   try {
+  //     const response = await fetch(`/api/events/${id}/invitations/${invitationId}/reminder`, {
+  //       method: 'POST',
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to send reminder');
+  //     }
+
+  //     // Show notification or success message
+  //     alert('Reminder sent successfully');
+  //   } catch (err) {
+  //     console.error('Error sending reminder:', err);
+  //     setError('Failed to send reminder. Please try again.');
+  //   }
+  // };
+
+  // const handleResendInvite = async (invitationId) => {
+  //   if (!isOrganizer) return;
+
+  //   try {
+  //     const response = await fetch(`/api/events/${id}/invitations/${invitationId}/resend`, {
+  //       method: 'POST',
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to resend invitation');
+  //     }
+
+  //     // Show notification or success message
+  //     alert('Invitation resent successfully');
+  //   } catch (err) {
+  //     console.error('Error resending invitation:', err);
+  //     setError('Failed to resend invitation. Please try again.');
+  //   }
+  // };
+
+  // const handleJoinRequest = async () => {
+  //   if (!currentUser) {
+  //     // Redirect to login if not logged in
+  //     window.location.href = '/login';
+  //     return;
+  //   }
+
+  //   try {
+  //     const response = await fetch(`/api/events/${id}/join`, {
+  //       method: 'POST',
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to request to join');
+  //     }
+
+  //     // Show success message
+  //     alert('Your request to join has been submitted');
+  //   } catch (err) {
+  //     console.error('Error requesting to join:', err);
+  //     setError('Failed to send join request. Please try again.');
+  //   }
+  // };
 
   if (isLoading) {
     return (
@@ -212,36 +292,36 @@ const EventDetails = () => {
     );
   }
 
-  // Format date and time for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  // // Format date and time for display
+  // const formatDate = (dateString) => {
+  //   if (!dateString) return '';
+  //   const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  //   return new Date(dateString).toLocaleDateString(undefined, options);
+  // };
 
-  const formatTime = (startTime, endTime) => {
-    if (!startTime) return '';
+  // const formatTime = (startTime, endTime) => {
+  //   if (!startTime) return '';
     
-    const formatTimeString = (timeString) => {
-      if (!timeString) return '';
+  //   const formatTimeString = (timeString) => {
+  //     if (!timeString) return '';
       
-      if (typeof timeString === 'string' && timeString.includes(':')) {
-        return timeString;
-      }
+  //     if (typeof timeString === 'string' && timeString.includes(':')) {
+  //       return timeString;
+  //     }
       
-      try {
-        const date = new Date(timeString);
-        return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-      } catch (e) {
-        return timeString;
-      }
-    };
+  //     try {
+  //       const date = new Date(timeString);
+  //       return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  //     } catch (e) {
+  //       return timeString;
+  //     }
+  //   };
 
-    const formattedStartTime = formatTimeString(startTime);
-    const formattedEndTime = endTime ? formatTimeString(endTime) : '';
+  //   const formattedStartTime = formatTimeString(startTime);
+  //   const formattedEndTime = endTime ? formatTimeString(endTime) : '';
 
-    return formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : formattedStartTime;
-  };
+  //   return formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : formattedStartTime;
+  // };
 
   // Ensure we have an array of images, even if there's just one or none
   const images = eventData.images && eventData.images.length 
@@ -262,7 +342,7 @@ const EventDetails = () => {
       <div className="bg-white rounded-lg border border-gray-200 p-[12px] sticky top-24">
         <button 
           className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8"
-          onClick={handleJoinRequest}
+          // onClick={handleJoinRequest}
         >
           Request to join
         </button>
@@ -275,8 +355,8 @@ const EventDetails = () => {
               </svg>
               <span className="font-regular text-black text-[18px]">Date and time</span>
             </div>
-            <p className="text-[#6B7280]">{formatDate(eventData.startDate || eventData.date)}</p>
-            <p className="text-[#6B7280]">{formatTime(eventData.startTime || eventData.time, eventData.endTime)}</p>
+            <p className="text-[#6B7280]">{eventData.startDate}</p>
+            <p className="text-[#6B7280]">{eventData.startTime} - {eventData.endTime}</p>
           </div>
 
           <div>
@@ -390,7 +470,7 @@ const EventDetails = () => {
 
                     {invitation.status === 'pending' && (
                       <button
-                        onClick={() => handleSendReminder(invitation._id || invitation.id)}
+                        // onClick={() => handleSendReminder(invitation._id || invitation.id)}
                         className="ml-2 p-1 text-gray-400 hover:text-gray-600"
                         title="Send reminder"
                       >
@@ -402,7 +482,7 @@ const EventDetails = () => {
 
                     {invitation.status === 'declined' && (
                       <button
-                        onClick={() => handleResendInvite(invitation._id || invitation.id)}
+                        // onClick={() => handleResendInvite(invitation._id || invitation.id)}
                         className="ml-2 p-1 text-gray-400 hover:text-gray-600"
                         title="Resend invitation"
                       >
@@ -427,8 +507,8 @@ const EventDetails = () => {
               </svg>
               <span className="font-medium text-gray-900">Date and time</span>
             </div>
-            <p className="text-gray-600">{formatDate(eventData.startDate || eventData.date)}</p>
-            <p className="text-gray-600">{formatTime(eventData.startTime || eventData.time, eventData.endTime)}</p>
+            <p className="text-gray-600">{eventData.startDate}</p>
+            <p className="text-gray-600">{eventData.startTime} - {eventData.endTime}</p>
           </div>
 
           <div>
@@ -528,13 +608,13 @@ const EventDetails = () => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span>{formatDate(eventData.startDate || eventData.date)}</span>
+                <span>{eventData.startDate}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{formatTime(eventData.startTime || eventData.time, eventData.endTime)}</span>
+                <span>{eventData.startTime} - {eventData.endTime}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -548,7 +628,6 @@ const EventDetails = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-
               {expectations.length > 0 && (
                 <>
                   <h3 className="text-xl font-semibold mb-4">What to expect</h3>
@@ -620,24 +699,97 @@ const EventDetails = () => {
               <div className="space-y-6">
                 {comments.length > 0 ? (
                   comments.map((comment) => (
-                    <div key={comment._id || comment.id} className="flex">
-                      <img
-                        src={comment.user?.avatar || '/images/avatar.png'}
-                        alt={comment.user?.name || 'User'}
-                        className="w-10 h-10 rounded-full mr-3"
-                      />
-                      <div>
-                        <div className="flex items-center mb-1">
-                          <span className="font-medium mr-2">{comment.user?.name || 'Anonymous'}</span>
-                          <span className="text-gray-500 text-sm">
-                            {new Date(comment.createdAt || comment.time).toLocaleDateString()}
-                          </span>
+                    <div key={comment._id || comment.id} className="flex flex-col">
+                      <div className="flex">
+                        <img
+                          src={comment.user?.avatar || '/images/avatar.png'}
+                          alt={comment.user?.name || 'User'}
+                          className="w-10 h-10 rounded-full mr-3"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center mb-1">
+                            <span className="font-medium mr-2">{comment.user?.username || 'Anonymous'}</span>
+                            <span className="text-gray-500 text-sm">
+                              {new Date(comment.createdAt || comment.time).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-gray-700">{comment.text}</p>
+                          <button 
+                            className="mr-[16px] text-gray-500 text-sm mt-1 hover:text-gray-700"
+                            onClick={() => handleReplyClick(comment._id || comment.id)}
+                          >
+                            Reply
+                          </button>
+                          {comment.user?._id === currentUser?._id && (
+                            <button 
+                              className="mr-[16px] text-gray-500 text-sm mt-1 hover:text-gray-700"
+                              onClick={() => handleDeleteClick(comment._id || comment.id)}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
-                        <p className="text-gray-700">{comment.text}</p>
-                        <button className="text-gray-500 text-sm mt-1 hover:text-gray-700">
-                          Reply
-                        </button>
                       </div>
+
+                      {/* Reply form */}
+                      {replyingTo === (comment._id || comment.id) && (
+                        <div className="ml-12 mt-3">
+                          <div className="flex">
+                            <img
+                              src={currentUser?.avatar || '/images/avatar.png'}
+                              alt="Your avatar"
+                              className="w-8 h-8 rounded-full mr-3"
+                            />
+                            <div className="flex-1">
+                              <textarea
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                                placeholder="Write a reply..."
+                                rows="2"
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                              />
+                              <div className="flex gap-2 mt-1">
+                                <button
+                                  className="px-4 py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
+                                  onClick={() => handleReplySubmit(comment._id || comment.id)}
+                                >
+                                  Reply
+                                </button>
+                                <button
+                                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                                  onClick={handleCancelReply}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Display existing replies */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <div className="ml-12 mt-4 space-y-4">
+                          {comment.replies.map((reply) => (
+                            <div key={reply._id} className="flex">
+                              <img
+                                src={reply.user?.avatar || '/images/avatar.png'}
+                                alt={reply.user?.username || 'User'}
+                                className="w-8 h-8 rounded-full mr-3"
+                              />
+                              <div>
+                                <div className="flex items-center mb-1">
+                                  <span className="font-medium mr-2 text-sm">{reply.user?.username || 'Anonymous'}</span>
+                                  <span className="text-gray-500 text-xs">
+                                    {new Date(reply.createdAt || reply.time).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-gray-700 text-sm">{reply.text}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (

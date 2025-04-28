@@ -6,8 +6,12 @@
  */
 export const singleEventLoader = async ({ params }) => {
     try {
-        const eventId = params.id;
-        const response = await fetch(`http://localhost:8800/api/events/${eventId}`);
+        const eventId = params.eventId;
+        const response = await fetch(`http://localhost:8800/api/events/${eventId}`,{
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include' // This is critical for sending cookies/session
+        });
 
         if (!response.ok) {
             throw new Error(`Failed to fetch event with ID: ${eventId}`);
