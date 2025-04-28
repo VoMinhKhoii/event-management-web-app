@@ -93,7 +93,7 @@ const AdminDashboard = () => {
                 upcomingEvents: eventData.filter(event =>
                     new Date(event.startDate) > new Date()
                 ).length,
-                onlineUsers: userData.filter(user => user.isOnline).length,
+                onlineUsers: userData.filter(user => user.status == "online").length,
                 newUsersToday: userData.filter(user => {
                     const today = new Date();
                     const userDate = new Date(user.createdAt);
@@ -131,12 +131,12 @@ const AdminDashboard = () => {
 
             const data = await response.json();
             console.log("Activities data:", data);
-            data.forEach(activity => {
-                console.log(`Activity ID: ${activity.id}`);
-                console.log(`Timestamp value: ${activity.timestamp}`);
-                console.log(`Timestamp type: ${typeof activity.timestamp}`);
-                console.log(`Is valid date: ${activity.timestamp && !isNaN(new Date(activity.timestamp).getTime())}`);
-            });
+            // data.forEach(activity => {
+            //     console.log(`Activity ID: ${activity.id}`);
+            //     console.log(`Timestamp value: ${activity.timestamp}`);
+            //     console.log(`Timestamp type: ${typeof activity.timestamp}`);
+            //     console.log(`Is valid date: ${activity.timestamp && !isNaN(new Date(activity.timestamp).getTime())}`);
+            // });
             setActivities(data);
         } catch (error) {
             console.error('Error fetching activities:', error);

@@ -8,6 +8,7 @@ import userRoute from './routes/userRoute.js';
 import eventRoute from './routes/eventRoute.js';
 import adminRoute from './routes/adminRoute.js';
 import cookieParser from 'cookie-parser';
+import notificationRoute from './routes/notificationRoute.js';
 
 // Log that we're starting
 console.log('Starting API server...');
@@ -32,7 +33,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/comments', commentRoute);
 app.use('/api/users', userRoute);
 app.use('/api/events', eventRoute);
-app.use('/api/notifications', notificationRoute);
+// app.use('/api/notifications', notificationRoute);
 app.use('/api/admin', adminRoute)
 
 app.listen(8800, () => {
