@@ -628,7 +628,6 @@ const EventDetails = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-
               {expectations.length > 0 && (
                 <>
                   <h3 className="text-xl font-semibold mb-4">What to expect</h3>

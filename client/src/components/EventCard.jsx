@@ -43,9 +43,9 @@ const EventCard = ({ title, image, startDate, startTime, endTime, location, desc
         
         {/* Description with fixed height and overflow handling */}
         <div className=" mt-4 h-[82px] overflow-hidden">
-          <p className="text-[#4B5563] text-[18px] line-clamp-3" 
-             dangerouslySetInnerHTML={{ __html: description }}>
-          </p>
+        <p className="text-[#4B5563] text-[18px] line-clamp-3">
+        {description}
+        </p>
         </div>
         
         

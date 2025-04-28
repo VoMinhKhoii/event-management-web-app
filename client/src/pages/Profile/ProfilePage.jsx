@@ -195,8 +195,9 @@ const ProfilePage = () => {
     function initWidget() {
       widgetRef.current = window.cloudinary.createUploadWidget(
         {
-          cloudName: 'hzxyensd5',
-          uploadPreset: 'aoh4fpwm',
+          cloudName: 'dtc1fgnvp',
+          uploadPreset: 'ml_default',    
+          folder: 'permanent_assets', 
         },
         async (error, result) => {
           if (!error && result && result.event === 'success') {
