@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 
@@ -7,6 +7,81 @@ const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const navigate = useNavigate();
+  
+  // Add states for events
+  const [isLoading, setIsLoading] = useState(true);
+  const [allEvents, setAllEvents] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState({});
+  
+  // NEW: Add a state for mobile view
+  const [isListView, setIsListView] = useState(window.innerWidth < 768);
+
+  // Fetch events from API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('http://localhost:8800/api/events', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch events');
+        }
+  
+        const eventData = await response.json();
+        setAllEvents(eventData);
+        
+        // Process events for calendar view
+        processEventsForCalendar(eventData);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [currentDate]); // Refetch when month changes
+  
+  // Function to process events for calendar
+  const processEventsForCalendar = (events) => {
+    const eventsMap = {};
+    
+    events.forEach(event => {
+      // Parse the start date to get the day
+      const eventDate = new Date(event.startDate);
+      
+      // Only include events from current month
+      if (eventDate.getMonth() === currentDate.getMonth() && 
+          eventDate.getFullYear() === currentDate.getFullYear()) {
+        
+        const day = eventDate.getDate();
+        
+        // Format the event for calendar display
+        const calendarEvent = {
+          id: event._id,
+          title: event.title,
+          time: `${event.startTime} - ${event.endTime}`,
+          location: event.location,
+          description: event.description,
+          organizer: event.organizer?.username || 'Unknown',
+          date: eventDate,
+          accepted: true // Assuming all events are accepted by default
+        };
+        
+        // Add to events map
+        if (!eventsMap[day]) {
+          eventsMap[day] = [];
+        }
+        eventsMap[day].push(calendarEvent);
+      }
+    });
+    
+    setCalendarEvents(eventsMap);
+  };
 
   // Calendar navigation functions
   const nextMonth = () => {
@@ -28,154 +103,129 @@ const Calendar = () => {
 
   // Format date for display
   const formatDate = (date) => {
-    // eslint-disable-next-line no-undef
     return new Intl.DateTimeFormat('en-US', {
       month: 'long',
       year: 'numeric'
     }).format(date);
   };
 
-  // Sample event data
-  const events = {
-    5: [
-      {
-        id: 1,
-        title: "EEET2205 Online lecture",
-        time: "8:30 AM - 10:00 AM",
-        location: "Microsoft Teams",
-        description: "Intro to Embedded System course.",
-        accepted: true
-      },
-      {
-        id: 2,
-        title: "Project Meeting",
-        time: "2:00 PM - 3:00 PM",
-        location: "Zoom",
-        description: "Weekly team sync-up.",
-        accepted: true
-      }
-    ],
-    15: [
-      {
-        id: 3,
-        title: "Tech Conference",
-        time: "10:00 AM - 12:00 PM",
-        location: "Convention Center",
-        description: "Emerging technologies discussion.",
-        accepted: true
-      },
-      {
-        id: 4,
-        title: "Lunch with Tai",
-        time: "12:30 PM - 1:30 PM",
-        location: "Cafe",
-        description: "Catch up over lunch.",
-        accepted: true
-      },
-      {
-        id: 5,
-        title: "Project Deadline",
-        time: "All Day",
-        location: "RMIT University",
-        description: "Submit project report.",
-        accepted: true
-      },
-      // Adding more events to test scrolling
-      {
-        id: 6,
-        title: "Team Meeting",
-        time: "3:00 PM - 4:00 PM",
-        location: "Conference Room",
-        description: "Weekly update",
-        accepted: true
-      },
-      {
-        id: 7,
-        title: "Client Call",
-        time: "4:30 PM - 5:30 PM",
-        location: "Zoom",
-        description: "Project progress review",
-        accepted: true
-      },
-      {
-        id: 8,
-        title: "Evening Workshop",
-        time: "6:00 PM - 8:00 PM",
-        location: "Innovation Lab",
-        description: "Hands-on session",
-        accepted: true
-      }
-    ]
-  };
-
   const handleEventClick = (eventId) => {
     navigate(`/event/${eventId}`);
   };
 
-  // NEW: Add a state for mobile view
-  const [isListView, setIsListView] = useState(window.innerWidth < 768);
-
   // Generate list view of events for mobile
   const renderEventsList = () => {
     // Combine all events into a single array with dates
-    const allEvents = [];
-    Object.keys(events).forEach(day => {
-      if (events[day] && events[day].length) {
-        events[day].forEach(event => {
-          allEvents.push({
-            ...event,
-            date: new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-          });
+    const displayEvents = [];
+    
+    // Use real events from API
+    allEvents.forEach(event => {
+      const eventDate = new Date(event.startDate);
+      
+      // Only include events from current month
+      if (eventDate.getMonth() === currentDate.getMonth() && 
+          eventDate.getFullYear() === currentDate.getFullYear()) {
+        
+        displayEvents.push({
+          id: event._id,
+          title: event.title,
+          time: `${event.startTime} - ${event.endTime}`,
+          location: event.location,
+          description: event.description,
+          organizer: event.organizer?.username || 'Unknown',
+          date: eventDate,
+          image: event.image,
+          curAttendees: event.curAttendees,
+          maxAttendees: event.maxAttendees
         });
       }
     });
     
     // Sort events by date
-    allEvents.sort((a, b) => a.date - b.date);
+    displayEvents.sort((a, b) => a.date - b.date);
     
-    if (allEvents.length === 0) {
+    if (isLoading) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading events...</p>
+        </div>
+      );
+    }
+    
+    if (displayEvents.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500">
-          No events found for this month
+          <p>No events found for this month</p>
+          <button 
+            onClick={() => navigate('/create-event')}
+            className="mt-4 px-4 py-2 bg-[#569DBA] text-white rounded-full hover:bg-opacity-90"
+          >
+            Create an event
+          </button>
         </div>
       );
     }
     
     return (
-      <div className="space-y-4 px-2">
-        {allEvents.map((event) => (
+      <div className="space-y-4 px-2 pb-4">
+        {displayEvents.map((event) => (
           <div 
             key={event.id}
-            className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"
+            className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"
             onClick={() => handleEventClick(event.id)}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium text-gray-900">{event.title}</h3>
-                <div className="text-sm text-gray-600 mt-1">
+            <div className="flex gap-3 items-start">
+              {event.image && (
+                <div className="w-16 h-16 flex-shrink-0">
+                  <img 
+                    src={event.image} 
+                    alt={event.title}
+                    className="w-full h-full object-cover rounded"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-900 text-lg">{event.title}</h3>
+                <div className="text-sm text-gray-600 mt-2 space-y-1">
                   <div className="flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>{new Date(event.date).getDate()} {new Intl.DateTimeFormat('en-US', { month: 'short' }).format(event.date)}</span>
+                    <span>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                   </div>
-                  <div className="flex items-center mt-1">
+                  <div className="flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{event.time}</span>
                   </div>
-                  <div className="flex items-center mt-1">
+                  <div className="flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <span>{event.location}</span>
                   </div>
+                  {event.organizer && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span>Organized by {event.organizer}</span>
+                    </div>
+                  )}
+                  {event.curAttendees !== undefined && event.maxAttendees !== undefined && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span>{event.curAttendees} / {event.maxAttendees} attending</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="bg-[#BFDAE5] rounded-full w-10 h-10 flex items-center justify-center text-xs font-medium text-gray-700">
-                {new Date(event.date).getDate()}
+              <div className="bg-[#BFDAE5] rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center text-xs font-medium text-gray-700">
+                {event.date.getDate()}
               </div>
             </div>
           </div>
@@ -217,7 +267,7 @@ const Calendar = () => {
       ...Array.from({ length: daysInMonth }, (_, i) => ({
         day: i + 1,
         isCurrentMonth: true,
-        events: events[i + 1]
+        events: calendarEvents[i + 1] || [] // Use real events from API
       })),
       ...nextMonthDays.map(day => ({
         day,
@@ -254,8 +304,7 @@ const Calendar = () => {
                   )}
                 </div>
 
-
-                <div className=" h-2/3 overflow-y-auto space-y-1">
+                <div className="h-2/3 overflow-y-auto space-y-1">
                   {dayData.events && dayData.events.map((event, index) => (
                     <div
                       key={index}
@@ -266,6 +315,7 @@ const Calendar = () => {
                       }}
                     >
                       <div className="font-medium truncate">{event.title}</div>
+                      <div className="hidden md:block text-[10px] md:text-xs truncate">{event.time}</div>
                       {event.organizer && <div className="hidden md:block text-[10px] md:text-xs truncate">{event.organizer}</div>}
                     </div>
                   ))}
@@ -296,6 +346,17 @@ const Calendar = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Automatically switch to list view when there is data
+  useEffect(() => {
+    if (!isLoading) {
+      // If there are many events, list view is easier to see on mobile
+      const eventCount = Object.values(calendarEvents).reduce((count, events) => count + events.length, 0);
+      if (eventCount > 10 && window.innerWidth < 1024) {
+        setIsListView(true);
+      }
+    }
+  }, [isLoading, calendarEvents]);
 
   return (
     <div className="flex flex-col h-screen bg-white font-['Poppins']">
