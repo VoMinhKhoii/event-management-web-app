@@ -9,7 +9,7 @@ export const getNotifications = async (req, res) => {
         const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
         res.status(200).json(notifications);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ error: "Server error", error });
     }
 };
 
@@ -25,11 +25,11 @@ export const markAsRead = async (req, res) => {
             { new: true }
         );
         if (!notification) {
-            return res.status(404).json({ message: "Notification not found" });
+            return res.status(404).json({ error: "Notification not found" });
         }
         res.status(200).json(notification);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ error: "Server error", error });
     }
 };
 
@@ -41,8 +41,9 @@ export const createNotification = async (req, res) => {
         const newNotification = new Notification(req.body);
         await newNotification.save();
         res.status(201).json(newNotification);
+        console.log("Successfully create notification: ", newNotification);
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ error: "Server error", error });
     }
 };
 
@@ -54,10 +55,36 @@ export const deleteNotification = async (req, res) => {
         const { id } = req.params;
         const notification = await Notification.findByIdAndDelete(id);
         if (!notification) {
-            return res.status(404).json({ message: "Notification not found" });
+            return res.status(404).json({ error: "Notification not found" });
         }
         res.status(200).json({ message: "Notification deleted successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ error: "Server error", error });
     }
+};
+
+export const getEventInfoFromNotification = async (req, res) => {
+
+    try {
+        const {id} = req.params;
+        const notification = await Notification.findById(id).populate('relatedId').model('request');
+        if (!notification){
+            notification = await Notification.findById(id).populate('relatedId').model('invitation');
+            if (!notification){
+                return res.status(404).json({ error: "Notification not found" });
+            }
+        }
+
+        const eventInfo = await notification.relatedId.populate('eventId').model('event');
+        if (!eventInfo) {
+            return res.status(404).json({ error: "Event not found" });
+        }
+
+        res.status(200).json(eventInfo);
+        console.log("Successfully retrieve event info: ", eventInfo);
+    }
+    catch (error) {
+        res.status(500).json({ error: "Server error", error });
+    }
+
 };

@@ -6,7 +6,7 @@
  */
 export const singleEventLoader = async ({ params }) => {
     try {
-        const eventId = params.id;
+        const eventId = params.eventId;
         const response = await fetch(`http://localhost:8800/api/events/${eventId}`,{
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },

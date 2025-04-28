@@ -1,169 +1,180 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
-
+import { useContext } from 'react';
+import { notificationContext } from '../../context/notificationContext.jsx'; // adjust path if needed
 const NotificationPage = () => {
     // State to keep track of selected notification/event
+    const {notifications, markAsRead, deleteNotification, getEventInfoFromNotification} = useContext(notificationContext);
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: 'invitation',
-            message: 'You have been invited to an event',
-            read: false,
-            event: {
-                id: 101,
-                title: "Tech Summit 2025",
-                date: "Mar 15, 2025",
-                time: "9:00 AM - 1:00 PM",
-                location: "Convention Center, New York",
-                attendees: 45,
-                maxAttendees: 120,
-                description: "Join industry leaders for a day of insights into emerging technologies and digital transformation.",
-                organizer: {
-                    name: "Vo Minh Khoi",
-                    email: "minhkhoitdn@gmail.com",
-                    avatar: "/images/avatar.png"
-                },
-                expectations: [
-                    "Keynote presentations from industry experts",
-                    "Interactive workshops and hands-on sessions",
-                    "Networking opportunities with tech professionals",
-                    "Product demonstrations and exhibitions",
-                    "Catered lunch and refreshments"
-                ],
-                image: "/images/tech.png"
-            }
-        },
-        {
-            id: 2,
-            type: 'invitation',
-            message: 'You have been invited to an event',
-            read: false,
-            event: {
-                id: 102,
-                title: "Design Workshop 2025",
-                date: "Apr 5, 2025",
-                time: "10:00 AM - 3:00 PM",
-                location: "Design Hub, San Francisco",
-                attendees: 30,
-                maxAttendees: 60,
-                description: "A hands-on workshop focused on the latest UI/UX design trends and techniques.",
-                organizer: {
-                    name: "Vo Minh Khoi",
-                    email: "minhkhoitdn@gmail.com",
-                    avatar: "/images/avatar.png"
-                },
-                expectations: [
-                    "Design thinking methodology sessions",
-                    "Portfolio reviews and feedback",
-                    "Networking with design professionals",
-                    "Tool demonstrations and tutorials",
-                    "Lunch and coffee provided"
-                ],
-                image: "/images/design.png"
-            }
-        },
-        {
-            id: 3,
-            type: 'invitation',
-            message: 'You have been invited to an event',
-            read: false,
-            event: {
-                id: 103,
-                title: "Networking Mixer",
-                date: "May 20, 2025",
-                time: "6:00 PM - 9:00 PM",
-                location: "Skyline Lounge, Chicago",
-                attendees: 55,
-                maxAttendees: 100,
-                description: "Connect with professionals from various tech industries in a relaxed social setting.",
-                organizer: {
-                    name: "Vo Minh Khoi",
-                    email: "minhkhoitdn@gmail.com",
-                    avatar: "/images/avatar.png"
-                },
-                expectations: [
-                    "Speed networking sessions",
-                    "Industry discussion groups",
-                    "Career opportunity conversations",
-                    "Appetizers and drinks provided",
-                    "Business card exchange"
-                ],
-                image: "/images/networking.png"
-            }
-        },
-        {
-            id: 4,
-            type: 'invitation',
-            message: 'You have been invited to an event',
-            read: false,
-            event: {
-                id: 104,
-                title: "AI Conference 2025",
-                date: "Jun 10, 2025",
-                time: "8:30 AM - 4:30 PM",
-                location: "Tech Center, Boston",
-                attendees: 75,
-                maxAttendees: 150,
-                description: "Explore the latest advancements in artificial intelligence and machine learning.",
-                organizer: {
-                    name: "Vo Minh Khoi",
-                    email: "minhkhoitdn@gmail.com",
-                    avatar: "/images/avatar.png"
-                },
-                expectations: [
-                    "Research presentations from AI experts",
-                    "Demo sessions of cutting-edge AI applications",
-                    "Panel discussions on AI ethics and future",
-                    "Networking with AI researchers and developers",
-                    "Full catering including breakfast and lunch"
-                ],
-                image: "/images/ai.png"
-            }
-        },
-        {
-            id: 5,
-            type: 'invitation',
-            message: 'You have been invited to an event',
-            read: false,
-            event: {
-                id: 105,
-                title: "Startup Pitch Day",
-                date: "Jul 25, 2025",
-                time: "1:00 PM - 5:00 PM",
-                location: "Innovation Hub, Austin",
-                attendees: 40,
-                maxAttendees: 80,
-                description: "Watch innovative startups pitch their ideas to investors and industry leaders.",
-                organizer: {
-                    name: "Vo Minh Khoi",
-                    email: "minhkhoitdn@gmail.com",
-                    avatar: "/images/avatar.png"
-                },
-                expectations: [
-                    "Live pitch presentations from selected startups",
-                    "Q&A sessions with founders",
-                    "Networking with entrepreneurs and investors",
-                    "Feedback sessions with industry mentors",
-                    "Refreshments and snacks provided"
-                ],
-                image: "/images/startup.png"
-            }
-        }
-    ]);
+    // const [notifications, setNotifications] = useState([
+    //     {
+    //         id: 1,
+    //         type: 'invitation',
+    //         message: 'You have been invited to an event',
+    //         read: false,
+    //         event: {
+    //             id: 101,
+    //             title: "Tech Summit 2025",
+    //             date: "Mar 15, 2025",
+    //             time: "9:00 AM - 1:00 PM",
+    //             location: "Convention Center, New York",
+    //             attendees: 45,
+    //             maxAttendees: 120,
+    //             description: "Join industry leaders for a day of insights into emerging technologies and digital transformation.",
+    //             organizer: {
+    //                 name: "Vo Minh Khoi",
+    //                 email: "minhkhoitdn@gmail.com",
+    //                 avatar: "/images/avatar.png"
+    //             },
+    //             expectations: [
+    //                 "Keynote presentations from industry experts",
+    //                 "Interactive workshops and hands-on sessions",
+    //                 "Networking opportunities with tech professionals",
+    //                 "Product demonstrations and exhibitions",
+    //                 "Catered lunch and refreshments"
+    //             ],
+    //             image: "/images/tech.png"
+    //         }
+    //     },
+    //     {
+    //         id: 2,
+    //         type: 'invitation',
+    //         message: 'You have been invited to an event',
+    //         read: false,
+    //         event: {
+    //             id: 102,
+    //             title: "Design Workshop 2025",
+    //             date: "Apr 5, 2025",
+    //             time: "10:00 AM - 3:00 PM",
+    //             location: "Design Hub, San Francisco",
+    //             attendees: 30,
+    //             maxAttendees: 60,
+    //             description: "A hands-on workshop focused on the latest UI/UX design trends and techniques.",
+    //             organizer: {
+    //                 name: "Vo Minh Khoi",
+    //                 email: "minhkhoitdn@gmail.com",
+    //                 avatar: "/images/avatar.png"
+    //             },
+    //             expectations: [
+    //                 "Design thinking methodology sessions",
+    //                 "Portfolio reviews and feedback",
+    //                 "Networking with design professionals",
+    //                 "Tool demonstrations and tutorials",
+    //                 "Lunch and coffee provided"
+    //             ],
+    //             image: "/images/design.png"
+    //         }
+    //     },
+    //     {
+    //         id: 3,
+    //         type: 'invitation',
+    //         message: 'You have been invited to an event',
+    //         read: false,
+    //         event: {
+    //             id: 103,
+    //             title: "Networking Mixer",
+    //             date: "May 20, 2025",
+    //             time: "6:00 PM - 9:00 PM",
+    //             location: "Skyline Lounge, Chicago",
+    //             attendees: 55,
+    //             maxAttendees: 100,
+    //             description: "Connect with professionals from various tech industries in a relaxed social setting.",
+    //             organizer: {
+    //                 name: "Vo Minh Khoi",
+    //                 email: "minhkhoitdn@gmail.com",
+    //                 avatar: "/images/avatar.png"
+    //             },
+    //             expectations: [
+    //                 "Speed networking sessions",
+    //                 "Industry discussion groups",
+    //                 "Career opportunity conversations",
+    //                 "Appetizers and drinks provided",
+    //                 "Business card exchange"
+    //             ],
+    //             image: "/images/networking.png"
+    //         }
+    //     },
+    //     {
+    //         id: 4,
+    //         type: 'invitation',
+    //         message: 'You have been invited to an event',
+    //         read: false,
+    //         event: {
+    //             id: 104,
+    //             title: "AI Conference 2025",
+    //             date: "Jun 10, 2025",
+    //             time: "8:30 AM - 4:30 PM",
+    //             location: "Tech Center, Boston",
+    //             attendees: 75,
+    //             maxAttendees: 150,
+    //             description: "Explore the latest advancements in artificial intelligence and machine learning.",
+    //             organizer: {
+    //                 name: "Vo Minh Khoi",
+    //                 email: "minhkhoitdn@gmail.com",
+    //                 avatar: "/images/avatar.png"
+    //             },
+    //             expectations: [
+    //                 "Research presentations from AI experts",
+    //                 "Demo sessions of cutting-edge AI applications",
+    //                 "Panel discussions on AI ethics and future",
+    //                 "Networking with AI researchers and developers",
+    //                 "Full catering including breakfast and lunch"
+    //             ],
+    //             image: "/images/ai.png"
+    //         }
+    //     },
+    //     {
+    //         id: 5,
+    //         type: 'invitation',
+    //         message: 'You have been invited to an event',
+    //         read: false,
+    //         event: {
+    //             id: 105,
+    //             title: "Startup Pitch Day",
+    //             date: "Jul 25, 2025",
+    //             time: "1:00 PM - 5:00 PM",
+    //             location: "Innovation Hub, Austin",
+    //             attendees: 40,
+    //             maxAttendees: 80,
+    //             description: "Watch innovative startups pitch their ideas to investors and industry leaders.",
+    //             organizer: {
+    //                 name: "Vo Minh Khoi",
+    //                 email: "minhkhoitdn@gmail.com",
+    //                 avatar: "/images/avatar.png"
+    //             },
+    //             expectations: [
+    //                 "Live pitch presentations from selected startups",
+    //                 "Q&A sessions with founders",
+    //                 "Networking with entrepreneurs and investors",
+    //                 "Feedback sessions with industry mentors",
+    //                 "Refreshments and snacks provided"
+    //             ],
+    //             image: "/images/startup.png"
+    //         }
+    //     }
+    // ]);
+
 
     // Handle notification click
     const handleNotificationClick = (notification) => {
-        // Mark notification as read
-        const updatedNotifications = notifications.map(item =>
-            item.id === notification.id ? { ...item, read: true } : item
-        );
-        setNotifications(updatedNotifications);
+        // // Mark notification as read
+        // const updatedNotifications = notifications.map(item =>
+        //     item.id === notification.id ? { ...item, read: true } : item
+        // );
+        // setNotifications(updatedNotifications);
 
-        // Set selected event
-        setSelectedEvent(notification.event);
+        // // Set selected event
+        // setSelectedEvent(notification.event);
+
+        markAsRead(notification.id);
+
+        if (notification.relatedId !== null) {
+            const eventInfo = getEventInfoFromNotification(notification._id);
+            setSelectedEvent(eventInfo);
+        }
+        
     };
 
     // Handle accept invitation

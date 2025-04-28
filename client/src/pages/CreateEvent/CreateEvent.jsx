@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
@@ -7,6 +7,8 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
 const CreateEvent = () => {
+    const navigate = useNavigate();
+
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const widgetRef = useRef(null); 
@@ -106,7 +108,7 @@ const CreateEvent = () => {
     if (validateForm()) {
       try {
         const response = await fetch('http://localhost:8800/api/events', { 
-          method: 'post',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             
@@ -114,7 +116,7 @@ const CreateEvent = () => {
           credentials: 'include',
           body: JSON.stringify({
             ...formData,
-            organizer: currentUser
+            organizer: currentUser._id
           }),
         });
 
@@ -128,7 +130,9 @@ const CreateEvent = () => {
   
         const data = await response.json();
         console.log('Event created:', data);
-        // Optional: redirect or show success message here
+        alert('Event created successfully!');
+        navigate(`/event/${data._id}`); // Redirect to the event page
+        
   
       } catch (error) {
         console.error('Error creating event:', error.message);
@@ -214,7 +218,13 @@ const CreateEvent = () => {
   };
 
   const handlePrivacyToggle = () => {
-    setPrivacy((prev) => !prev);
+    setPrivacy((prev) => {
+        const newPrivacy = !prev;
+        setFormData((formData) => ({
+            ...formData,
+            publicity: !newPrivacy // Update publicity based on the new privacy value
+        }));
+    });
   };
 
   const handleDescriptionChange = (content) => {
@@ -412,7 +422,9 @@ const CreateEvent = () => {
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
+
                   onChange={handleDescriptionChange}
+
                   placeholder="Enter event description"
                   modules={{
                     toolbar: [
