@@ -1,5 +1,5 @@
 import express from "express";
-import {getNotifications, markAsRead, createNotification, deleteNotification} from "../controllers/notificationController.js";
+import {getNotifications, markAsRead, createNotification, deleteNotification, getEventInfoFromNotification} from "../controllers/notificationController.js";
 import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
@@ -8,6 +8,8 @@ const router = express.Router();
 // @desc    Get all notifications for a user
 // @access  Private
 router.get("/:userId", getNotifications);
+
+router.get("/:notificationId", getEventInfoFromNotification);
 
 // @route   PATCH /api/notifications/:id/read
 // @desc    Mark a notification as read
@@ -23,5 +25,7 @@ router.post("/", createNotification);
 // @desc    Delete a notification
 // @access  Private
 router.delete("/:id", deleteNotification);
+
+
 
 export default router;
