@@ -11,7 +11,6 @@ const CreateEvent = () => {
   const fileInputRef = useRef(null);
   const widgetRef = useRef(null); 
   const { currentUser } = useContext(AuthContext);
-
   const [errors, setErrors] = useState({});
   const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
   const [formData, setFormData] = useState({
@@ -68,38 +67,45 @@ const CreateEvent = () => {
   }, []);
 
   const validateForm = () => {
-
-    const {
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-    } = formData;
-
-    const newErrors = {};
-    
     try {
-      if (startDate && endDate && startTime && endTime) {
-        const start = new Date(`${startDate}T${startTime}`);
-        const end = new Date(`${endDate}T${endTime}`);
-      
-        if (!isNaN(start) && !isNaN(end)) {
-          if (start >= end) {
-            newErrors.startDate = "Start datetime must be before end datetime.";
-            newErrors.startTime = "Start datetime must be before end datetime.";
-          }
-        }
+      const { startDate, endDate, startTime, endTime } = formData;
+
+      // Ensure all required fields are present
+      if (!startDate || !endDate || !startTime || !endTime) {
+        alert("Please fill in all date and time fields.");
+        return false;
       }
-      
 
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0; // valid if no errors
-      
+      const today = new Date();
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const endDateTime = new Date(`${endDate}T${endTime}`);
+
+      // 1. Start date can't be today
+      if (new Date(startDate).toDateString() === today.toDateString()) {
+        alert("The start date cannot be today.");
+        return false;
+      }
+
+      // 2. Start date can't be after the end date
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("The start date cannot be after the end date.");
+        return false;
+      }
+
+      // 3. Start time can't be after end time (on the same day)
+      if (startDate === endDate && startDateTime >= endDateTime) {
+        alert("The start time cannot be after or equal to the end time.");
+        return false;
+      }
+
+      // If all validations pass
+      return true;
     } catch (error) {
-      console.error("Error validating input: ",error.message);
+      console.error("Error validating form:", error);
+      alert("An error occurred while validating the form.");
+      return false;
     }
-
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -130,7 +136,7 @@ const CreateEvent = () => {
         const data = await response.json();
         console.log('Event created:', data);
         alert('Event created successfully!');
-        navigate(`/event/${data._id}`); // Redirect to the event page
+        // navigate(`/event/${data._id}`); // Redirect to the event page
         
   
       } catch (error) {
@@ -217,12 +223,16 @@ const CreateEvent = () => {
   };
 
   const handlePrivacyToggle = () => {
-    setPrivacy((prev) => {
+      setPrivacy((prev) => {
         const newPrivacy = !prev;
+
+        // Update the publicity field in formData based on the new privacy value
         setFormData((formData) => ({
             ...formData,
-            publicity: !newPrivacy // Update publicity based on the new privacy value
+            publicity: !newPrivacy, // Publicity is the opposite of privacy
         }));
+
+        return newPrivacy; // Return the new privacy value
     });
   };
 
@@ -538,9 +548,9 @@ const CreateEvent = () => {
                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
                     />
                   </svg>
-                  <p className="text-center font-medium mb-2">Private Event</p>
+                  <p className="text-center font-medium mb-2">Public Event</p>
                   <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for private events. Switch to public mode to enable invitations.
+                    Invitations are disabled for Public events. Switch to private mode to enable invitations.
                   </p>
                 </div>
               </div>
