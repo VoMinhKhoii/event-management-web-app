@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 const CreateEvent = () => {
     const navigate = useNavigate();
@@ -49,8 +47,9 @@ const CreateEvent = () => {
     function initWidget() {
       widgetRef.current = window.cloudinary.createUploadWidget(
         {
-          cloudName: 'hzxyensd5',
-          uploadPreset: 'aoh4fpwm',
+          cloudName: 'dtc1fgnvp',
+          uploadPreset: 'ml_default',    
+          folder: 'permanent_assets', 
         },
         (error, result) => {
           if (!error && result && result.event === 'success') {
@@ -418,60 +417,13 @@ const CreateEvent = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
-              <div className="quill-wrapper">
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-
-                  onChange={handleDescriptionChange}
-
-                  placeholder="Enter event description"
-                  modules={{
-                    toolbar: [
-                      ['bold', 'italic', 'underline'],
-                      [{'list': 'ordered'}, {'list': 'bullet'}],
-                      ['link'],
-                      ['clean']
-                    ],
-                  }}
-                />
-                <style jsx="true">{`
-                  .quill-wrapper {
-                    height: 180px;
-                  }
-                  .quill-wrapper .ql-container {
-                    height: calc(100% - 42px);
-                    font-size: 14px;
-                    font-family: inherit;
-                    border-color: #d1d5db;
-                    border-bottom-left-radius: 0.5rem;
-                    border-bottom-right-radius: 0.5rem;
-                    background-color: white;
-                  }
-                  .quill-wrapper .ql-toolbar {
-                    border-color: #d1d5db;
-                    border-top-left-radius: 0.5rem;
-                    border-top-right-radius: 0.5rem;
-                  }
-                  .quill-wrapper .ql-editor {
-                    padding: 0.5rem 0.75rem;
-                    min-height: 138px;
-                  }
-                  .quill-wrapper .ql-editor.ql-blank::before {
-                    font-style: normal;
-                    color: #9ca3af;
-                    font-size: 14px;
-                  }
-                  @media (min-width: 768px) {
-                    .quill-wrapper {
-                      height: 240px;
-                    }
-                    .quill-wrapper .ql-editor {
-                      min-height: 198px;
-                    }
-                  }
-                `}</style>
-              </div>
+              <textarea
+              value={formData.description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              placeholder="Enter event description"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              rows="10"
+            ></textarea>
             </div>
 
             {/* Upload Image Section */}
