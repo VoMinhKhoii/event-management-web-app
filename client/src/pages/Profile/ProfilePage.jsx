@@ -568,9 +568,16 @@ const ProfilePage = () => {
                       time: `${event.startTime} - ${event.endTime}`,
                       location: event.location,
                       image: event.image,
-                      status: new Date(event.endDate) < new Date() ? "ended" : 
-                             new Date(event.startDate) > new Date() ? "upcoming" : "active"
-                    }} 
+                      status: (() => {
+                        const now = new Date(); 
+                        const startDateTime = new Date(`${event.startDate}T${event.startTime}`);
+                        const endDateTime = new Date(`${event.endDate}T${event.endTime}`);
+                        // Determine the status based on the current time and event times
+                        if (now > endDateTime) return "ended";
+                        if (now < startDateTime) return "upcoming";
+                        return "active";
+                      })()
+                    }}
                     onClick={() => navigate(`/event/${event._id}`)}
                   />
                 ))}
