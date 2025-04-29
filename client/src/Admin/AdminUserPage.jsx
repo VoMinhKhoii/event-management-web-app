@@ -268,34 +268,30 @@ const AdminUserPage = () => {
         setIsFiltered(false);
     };
 
-    // Clear individual filter
+    // Clear individual filter 
     const clearFilter = (filterType) => {
+        // Create a copy of current filters and remove the specific filter
         const updatedFilters = { ...appliedFilters };
+        delete updatedFilters[filterType]; // Remove filter completely instead of setting default value
         
-        // Đặt lại giá trị mặc định thay vì xóa
+        // Update form inputs based on filter type
         switch(filterType) {
             case 'searchTerm':
-                updatedFilters.searchTerm = DEFAULT_FILTERS.searchTerm;
                 setSearchTerm('');
                 setSelectedUser(null);
                 break;
             case 'dateRange':
-                updatedFilters.dateRange = DEFAULT_FILTERS.dateRange;
                 setDateRange(DEFAULT_FILTERS.dateRange);
                 break;
             case 'status':
-                updatedFilters.status = DEFAULT_FILTERS.status;
                 setStatusFilter(DEFAULT_FILTERS.status);
                 break;
         }
         
         setAppliedFilters(updatedFilters);
         
-        // Kiểm tra xem còn bộ lọc nào đang hoạt động
-        const hasActiveFilters = Object.keys(updatedFilters).some(key => 
-            updatedFilters[key] !== DEFAULT_FILTERS[key]
-        );
-        
+        // Check if any filters are still active - base it on whether any filters exist
+        const hasActiveFilters = Object.keys(updatedFilters).length > 0;
         setIsFiltered(hasActiveFilters);
     };
 
