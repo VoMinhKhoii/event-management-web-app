@@ -77,6 +77,7 @@ const CreateEvent = () => {
       }
 
       const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(`${endDate}T${endTime}`);
 
@@ -86,13 +87,19 @@ const CreateEvent = () => {
         return false;
       }
 
-      // 2. Start date can't be after the end date
+      // 2. Start date can't be in the past
+      if (new Date(startDate) < today) {
+        alert("The start date cannot be in the past.");
+        return false;
+      }
+
+      // 3. Start date can't be after the end date
       if (new Date(startDate) > new Date(endDate)) {
         alert("The start date cannot be after the end date.");
         return false;
       }
 
-      // 3. Start time can't be after end time (on the same day)
+      // 4. Start time can't be after end time (on the same day)
       if (startDate === endDate && startDateTime >= endDateTime) {
         alert("The start time cannot be after or equal to the end time.");
         return false;
