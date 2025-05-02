@@ -1,6 +1,5 @@
 import Event from '../models/Event.js';
-import Request from '../models/Request.js';
-import Invitation from '../models/Invitation.js';
+import Participation from '../models/Participation.js';
 import { logActivity } from '../middleware/logActivity.js';
 
 // GET /api/events
@@ -16,6 +15,51 @@ export const getAllEvent = async (req, res) => {
     res.status(200).json(events);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch events', message: err.message });
+  }
+};
+
+
+
+export const getAllPublicEvent = async (req, res) => {
+  try {
+    const events = await Event.find({ publicity: true }).populate('organizer');
+    if (!events) {
+      return res.status(404).json({ error: 'No public events found' });
+    }
+    res.status(200).json(events);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch public events', message: err.message });
+  }
+};
+
+
+
+export const getAllUserEvent = async (req, res) => {
+  try {
+    // 1. Events where user is the organizer
+    const ownedEvents = await Event.find({ organizer: req.userId });
+
+    // 2. Find approved participations
+    const participations = await Participation.find({
+      user: req.userId,
+      kind: 'Request',
+      status: 'approved'
+    }).select('event'); // Only get event field
+
+    const participantEventIds = participations.map(p => p.event);
+
+    // 3. Fetch those events
+    const joinedEvents = await Event.find({ _id: { $in: participantEventIds } });
+
+    // 4. Combine and return
+    const allEvents = [...ownedEvents, ...joinedEvents];
+
+    res.status(200).json(allEvents);
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to fetch user events',
+      message: err.message
+    });
   }
 };
 
