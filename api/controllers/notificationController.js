@@ -6,8 +6,9 @@ import Participation from "../models/Participation.js";
 // @access  Private
 export const getNotifications = async (req, res) => {
     try {
-        console.log("Fetching notifications for user ID:", req.params.userId);
-        const { userId } = req.params;
+        console.log("Fetching notifications for user ID:", req.userId);
+        const userId = req.userId;
+        console.log("User ID: ", userId);
         const notifications = await Notification.find({
             userId,
             relatedId: { $ne: null } // only where relatedId is not null
@@ -22,7 +23,8 @@ export const getNotifications = async (req, res) => {
             }
           })
           .lean(); // optional: return plain JS objects
-          
+
+        console.log("Fetched notifications: ", notifications);
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });
