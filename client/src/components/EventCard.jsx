@@ -1,6 +1,7 @@
 import React from 'react';
 
-const EventCard = ({ title, image, startDate, startTime, endTime, location, description, curAttendees, category , onClick}) => {
+const EventCard = ({ title, image, startDate, startTime, endTime, location, description, curAttendees, category, eventType, onClick }) => {
+  const displayCategory = category || eventType;
   return (  
     
     <div className="event-card bg-white rounded-lg shadow-md overflow-hidden font-['Poppins'] flex flex-col h-full" onClick={onClick}>
@@ -11,9 +12,11 @@ const EventCard = ({ title, image, startDate, startTime, endTime, location, desc
           className="card-image w-full h-full object-cover"
         />
         
-        <span className="category-badge absolute top-4 right-4 bg-blue-500 px-3 py-1 rounded-full text-white text-sm">
-          {category}
-        </span>
+        {displayCategory && (
+          <span className="category-badge absolute top-4 right-4 bg-blue-500 px-3 py-1 rounded-full text-white text-sm">
+            {displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1)}
+          </span>
+        )}
       </div>
       <div className="p-6 flex flex-col flex-grow" >
         <h2 className="text-[24px] font-semibold mb-4 text-gray-900">{title}</h2>
@@ -40,7 +43,9 @@ const EventCard = ({ title, image, startDate, startTime, endTime, location, desc
         
         {/* Description with fixed height and overflow handling */}
         <div className=" mt-4 h-[82px] overflow-hidden">
-          <p className="text-[#4B5563] text-[18px] line-clamp-3">{description}</p>
+        <p className="text-[#4B5563] text-[18px] line-clamp-3">
+        {description}
+        </p>
         </div>
         
         

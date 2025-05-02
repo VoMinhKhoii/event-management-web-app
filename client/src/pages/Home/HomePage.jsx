@@ -38,7 +38,7 @@ const HomePage = () => {
       ) {
         const events = JSON.parse(cachedData);
         setEvents(events);
-        setFilteredEvents(applyAllFilters(events)); // Apply any current filters
+        setFilteredEvents(isFiltered ? applyAllFilters(events) : events); // Apply any current filters
         setLastUpdated(new Date(parseInt(cacheTimestamp)));
         setLoading(false);
         return; // Exit early - no need to fetch
@@ -60,7 +60,7 @@ const HomePage = () => {
         // Update all events
         setEvents(eventData);
         // Apply any filters to the new data
-        setFilteredEvents(applyAllFilters(eventData)); // Apply filters to the new data
+        setFilteredEvents(isFiltered ? applyAllFilters(eventData) : eventData); // Apply filters to the new data
         
         // Cache the data
         localStorage.setItem('homePageEvents', JSON.stringify(eventData));
@@ -82,25 +82,42 @@ const HomePage = () => {
       }
     };
 
-  // You're missing this critical effect to trigger data loading on component mount
+  
+    useEffect(() => {
+      const isReload = window.performance
+        .getEntriesByType('navigation')
+        .some((nav) => nav.type === 'reload');
+    
+      fetchEvents(isReload); // Force refresh if the page was reloaded
+    }, []);
+
+ 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    if (events.length > 0) {
+      const filtered = applyAllFilters(events);
+      setFilteredEvents(filtered);
+    }
+  }, [events, filters, isFiltered]);
 
-  // Apply all filters to the events list
-  const applyAllFilters = (result) => {
-    if (!isFiltered) return result;
+ 
+  const applyAllFilters = (eventsToFilter = events) => {
+    if (!isFiltered) return eventsToFilter;
 
-    // Filter by search term
+    let result = [...eventsToFilter];
+
+   
     if (filters.searchTerm) {
       result = result.filter(event =>
         event.title.toLowerCase().includes(filters.searchTerm.toLowerCase())
       );
     }
 
-    // Filter by category - use eventType
+    // Filter by category 
     if (filters.category) {
-      result = result.filter(event => event.eventType === filters.category);
+      result = result.filter(event => {
+        const eventCat = event.eventType || event.category;
+        return eventCat && eventCat.toLowerCase() === filters.category.toLowerCase();
+      });
     }
 
     // Filter by date - use startDate
@@ -124,9 +141,9 @@ const HomePage = () => {
           break;
         case 'week': {
           const nextWeek = new Date(today);
-          nextWeek.setDate(today.getDay() + 7);
+          nextWeek.setDate(today.getDate() + 7);
           result = result.filter(event => {
-            const eventDate = new Date(event.startDate);
+            const eventDate = new Date(event.startDate || event.date);
             return eventDate >= today && eventDate <= nextWeek;
           });
           break;
@@ -144,14 +161,18 @@ const HomePage = () => {
     return result;
   };
 
-  // Handle search and filter updates from SearchBar
+  
   const handleSearchAndFilter = (term, category, date) => {
-    setFilters({
+    const newFilters = {
       searchTerm: term || '',
       category: category || '',
       date: date || ''
-    });
-    setIsFiltered(true); // Mark that filters are now active
+    };
+    
+    setFilters(newFilters);
+    setIsFiltered(true);
+    
+    setFilteredEvents(applyAllFilters(events));
   };
 
   // Handle clearing all filters
@@ -226,7 +247,7 @@ const HomePage = () => {
                   onClick={() => clearFilter('searchTerm')}
                   className="ml-2 text-blue-500 hover:text-blue-700"
                 >
-                  
+                  ×
                 </button>
               </div>
             )}

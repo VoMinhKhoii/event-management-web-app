@@ -1,17 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 const CreateEvent = () => {
+    const navigate = useNavigate();
+
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const widgetRef = useRef(null); 
   const { currentUser } = useContext(AuthContext);
-
   const [errors, setErrors] = useState({});
   const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
   const [formData, setFormData] = useState({
@@ -47,8 +46,9 @@ const CreateEvent = () => {
     function initWidget() {
       widgetRef.current = window.cloudinary.createUploadWidget(
         {
-          cloudName: 'hzxyensd5',
-          uploadPreset: 'aoh4fpwm',
+          cloudName: 'dtc1fgnvp',
+          uploadPreset: 'ml_default',    
+          folder: 'permanent_assets', 
         },
         (error, result) => {
           if (!error && result && result.event === 'success') {
@@ -67,38 +67,52 @@ const CreateEvent = () => {
   }, []);
 
   const validateForm = () => {
-
-    const {
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-    } = formData;
-
-    const newErrors = {};
-    
     try {
-      if (startDate && endDate && startTime && endTime) {
-        const start = new Date(`${startDate}T${startTime}`);
-        const end = new Date(`${endDate}T${endTime}`);
-      
-        if (!isNaN(start) && !isNaN(end)) {
-          if (start >= end) {
-            newErrors.startDate = "Start datetime must be before end datetime.";
-            newErrors.startTime = "Start datetime must be before end datetime.";
-          }
-        }
+      const { startDate, endDate, startTime, endTime } = formData;
+
+      // Ensure all required fields are present
+      if (!startDate || !endDate || !startTime || !endTime) {
+        alert("Please fill in all date and time fields.");
+        return false;
       }
-      
 
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0; // valid if no errors
-      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const endDateTime = new Date(`${endDate}T${endTime}`);
+
+      // 1. Start date can't be today
+      if (new Date(startDate).toDateString() === today.toDateString()) {
+        alert("The start date cannot be today.");
+        return false;
+      }
+
+      // 2. Start date can't be in the past
+      if (new Date(startDate) < today) {
+        alert("The start date cannot be in the past.");
+        return false;
+      }
+
+      // 3. Start date can't be after the end date
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("The start date cannot be after the end date.");
+        return false;
+      }
+
+      // 4. Start time can't be after end time (on the same day)
+      if (startDate === endDate && startDateTime >= endDateTime) {
+        alert("The start time cannot be after or equal to the end time.");
+        return false;
+      }
+
+      // If all validations pass
+      return true;
     } catch (error) {
-      console.error("Error validating input: ",error.message);
+      console.error("Error validating form:", error);
+      alert("An error occurred while validating the form.");
+      return false;
     }
-
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,7 +120,7 @@ const CreateEvent = () => {
     if (validateForm()) {
       try {
         const response = await fetch('http://localhost:8800/api/events', { 
-          method: 'post',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             
@@ -114,7 +128,7 @@ const CreateEvent = () => {
           credentials: 'include',
           body: JSON.stringify({
             ...formData,
-            organizer: currentUser
+            organizer: currentUser._id
           }),
         });
 
@@ -128,7 +142,9 @@ const CreateEvent = () => {
   
         const data = await response.json();
         console.log('Event created:', data);
-        // Optional: redirect or show success message here
+        alert('Event created successfully!');
+        // navigate(`/event/${data._id}`); // Redirect to the event page
+        
   
       } catch (error) {
         console.error('Error creating event:', error.message);
@@ -214,7 +230,24 @@ const CreateEvent = () => {
   };
 
   const handlePrivacyToggle = () => {
-    setPrivacy((prev) => !prev);
+      setPrivacy((prev) => {
+        const newPrivacy = !prev;
+
+        // Update the publicity field in formData based on the new privacy value
+        setFormData((formData) => ({
+            ...formData,
+            publicity: !newPrivacy, // Publicity is the opposite of privacy
+        }));
+
+        return newPrivacy; // Return the new privacy value
+    });
+  };
+
+  const handleDescriptionChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      description: content
+    }));
   };
 
   return (
@@ -362,11 +395,11 @@ const CreateEvent = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 >
                   <option value="">Select event type</option>
-                  <option value="conference">Conference</option>
-                  <option value="workshop">Workshop</option>
-                  <option value="seminar">Seminar</option>
-                  <option value="networking">Networking</option>
-                  <option value="other">Other</option>
+                  <option value="tech">Tech</option>
+                  <option value="business">Business</option>
+                  <option value="game">Game</option>
+                  <option value="music">Music</option>
+                  <option value="sports">Sports</option>
                 </select>
               </div>
               <div>
@@ -401,58 +434,13 @@ const CreateEvent = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
-              <div className="quill-wrapper">
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Enter event description"
-                  modules={{
-                    toolbar: [
-                      ['bold', 'italic', 'underline'],
-                      [{'list': 'ordered'}, {'list': 'bullet'}],
-                      ['link'],
-                      ['clean']
-                    ],
-                  }}
-                />
-                <style jsx="true">{`
-                  .quill-wrapper {
-                    height: 180px;
-                  }
-                  .quill-wrapper .ql-container {
-                    height: calc(100% - 42px);
-                    font-size: 14px;
-                    font-family: inherit;
-                    border-color: #d1d5db;
-                    border-bottom-left-radius: 0.5rem;
-                    border-bottom-right-radius: 0.5rem;
-                    background-color: white;
-                  }
-                  .quill-wrapper .ql-toolbar {
-                    border-color: #d1d5db;
-                    border-top-left-radius: 0.5rem;
-                    border-top-right-radius: 0.5rem;
-                  }
-                  .quill-wrapper .ql-editor {
-                    padding: 0.5rem 0.75rem;
-                    min-height: 138px;
-                  }
-                  .quill-wrapper .ql-editor.ql-blank::before {
-                    font-style: normal;
-                    color: #9ca3af;
-                    font-size: 14px;
-                  }
-                  @media (min-width: 768px) {
-                    .quill-wrapper {
-                      height: 240px;
-                    }
-                    .quill-wrapper .ql-editor {
-                      min-height: 198px;
-                    }
-                  }
-                `}</style>
-              </div>
+              <textarea
+              value={formData.description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              placeholder="Enter event description"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              rows="10"
+            ></textarea>
             </div>
 
             {/* Upload Image Section */}
@@ -567,9 +555,9 @@ const CreateEvent = () => {
                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
                     />
                   </svg>
-                  <p className="text-center font-medium mb-2">Private Event</p>
+                  <p className="text-center font-medium mb-2">Public Event</p>
                   <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for private events. Switch to public mode to enable invitations.
+                    Invitations are disabled for Public events. Switch to private mode to enable invitations.
                   </p>
                 </div>
               </div>
