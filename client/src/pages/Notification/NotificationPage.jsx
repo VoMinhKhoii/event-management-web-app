@@ -81,7 +81,7 @@ const NotificationPage = () => {
                                                 />
                                                 <div>
                                                     <div className="flex items-center">
-                                                        <span className="text-gray-800">{notification ? notification.relatedId.event.title : "System"}</span>
+                                                        <span className="text-gray-800">{notification.relatedId  ? notification.relatedId.event.title : "System"}</span>
                                                     </div>
                                                     <p className="text-gray-600">{notification.message}</p>
                                                 </div>

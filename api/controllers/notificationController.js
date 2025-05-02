@@ -1,3 +1,4 @@
+import { model } from "mongoose";
 import Notification from "../models/Notification.js";
 import Participation from "../models/Participation.js";
 
@@ -9,20 +10,18 @@ export const getNotifications = async (req, res) => {
         console.log("Fetching notifications for user ID:", req.userId);
         const userId = req.userId;
         console.log("User ID: ", userId);
-        const notifications = await Notification.find({
-            userId,
-            relatedId: { $ne: null } // only where relatedId is not null
-          })
-          .sort({ createdAt: -1 })
-          .populate({
-            path: 'relatedId',
-            model: 'Participation',
-            populate: {
-              path: 'event',
-              model: 'Event'
-            }
-          })
-          .lean(); // optional: return plain JS objects
+        const notifications = await Notification.find({ userId })
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'relatedId',
+          model: 'Participation',
+          populate: {
+            path: 'event',
+            model: 'Event'
+          }
+        })
+        .lean();
+      
 
         console.log("Fetched notifications: ", notifications);
         res.status(200).json(notifications);
