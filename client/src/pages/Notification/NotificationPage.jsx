@@ -16,7 +16,7 @@ const NotificationPage = () => {
         if (notification.isRead === false) {
             markAsRead(notification._id);
         }
-        if (notification.relatedId !== null) {   
+        if (notification.relatedId !== null){
             const eventInfo = notification.relatedId.event;
             setSelectedEvent(eventInfo); // Set the event info
 

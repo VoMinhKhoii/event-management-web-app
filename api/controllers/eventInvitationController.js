@@ -28,7 +28,7 @@ export const inviteToEvent = async (req, res) => {
         const existingInvitation = await Invitation.findOne({
             event: eventId,
             user: inviteeId,
-            status: { $in: ['invited', 'approved'] }
+            status: { $in: ['invited', 'approved', 'rejected'] }
         });
         if (existingInvitation) {
             return res.status(400).json({
