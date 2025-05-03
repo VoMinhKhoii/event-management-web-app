@@ -7,7 +7,6 @@ import Participation from "../models/Participation.js";
 // @access  Private
 export const getNotifications = async (req, res) => {
     try {
-        console.log("Fetching notifications for user ID:", req.userId);
         const userId = req.userId;
         console.log("User ID: ", userId);
         const notifications = await Notification.find({ userId })
@@ -22,8 +21,7 @@ export const getNotifications = async (req, res) => {
         })
         .lean();
       
-
-        console.log("Fetched notifications: ", notifications);
+        console.log("Notifications: ", notifications);
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });

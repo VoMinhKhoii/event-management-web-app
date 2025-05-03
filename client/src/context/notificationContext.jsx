@@ -11,6 +11,7 @@ export const NotificationContextProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
 
     const fetchNotifications = async () => {
+        clearNotifications(); // Clear notifications before fetching new ones to prevent memory leaks
         try {
             const response = await fetch(`http://localhost:8800/api/notifications`, {
                 method: 'GET',
