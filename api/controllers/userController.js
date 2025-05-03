@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import User from '../models/User.js';
+import path from 'path';
+import fs from 'fs';
 import { logActivity } from '../middleware/logActivity.js';
 
 export const getUsers = async (req, res) => {
@@ -118,27 +120,72 @@ export const deleteUser = async (req, res) => {
 // Update user avatar
 export const updateAvatar = async (req, res) => {
     try {
-        const { avatarUrl } = req.body;
-
-        if (!avatarUrl) {
-            return res.status(400).json({ message: 'Avatar URL is required' });
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded ' });
         }
 
-        const user = await User.findById(req.userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        const uploadDir = path.join(__dirname, '../../tmp/uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
         }
 
-        user.avatar = avatarUrl;
-        await user.save();
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/upload`;
+        const formData = new FormData();
+
+        // convert buffer to blob
+        const fileStream = fs.createReadStream(req.file.path);
+        formData.append('file', fileStream);
+        formData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', 'permanent_assets');
+
+        const cloudinaryResponse = await fetch(cloudinaryUrl, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!cloudinaryResponse.ok) {
+            const errorData = await cloudinaryResponse.json();
+            throw new Error(cloudinaryData.error?.message || 'Cloudinary upload failed');
+        }
+
+        const cloudinaryData = await cloudinaryResponse.json();
+
+        // remove temp file
+        try {
+            if (fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+            }
+        } catch (unlinkError) {
+            console.error('Error deleting temporary file:', unlinkError);
+        }
+
+        const avatarUrl = `/uploads/${req.file.filename}`;
+        const updatedUser = await User.findByIdAndUpdate(
+            req.userId,
+            { avatar: avatarUrl },
+            { new: true }
+        ).select('-password');
 
         res.status(200).json({
             message: 'Avatar updated successfully',
-            avatar: avatarUrl
+            avatar: avatarUrl,
+            user: updatedUser
         });
     } catch (error) {
+        // clean-up temp file if exists
+        if (req.file?.path && fs.existsSync(req.file.path)) {
+            try {
+                fs.unlinkSync(req.file.path);
+            } catch (cleanupError) {
+                console.error('Error during file cleanup:', cleanupError);
+            }
+        }
+
         console.error('Error updating avatar:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({
+            message: error.message || 'Failed to update avatar',
+            error: error.toString()
+        });
     }
 };
 
