@@ -160,7 +160,7 @@ const ProfilePage = () => {
           lastName: profileInfo.lastName,
           username: profileInfo.username,
           email: profileInfo.email,
-          password: profileInfo.password || undefined // Only send if not empty
+          password: profileInfo.password || undefined 
         })
       });
       
@@ -554,7 +554,35 @@ const ProfilePage = () => {
         {activeTab === 'bookings' && (
           <div className="bg-white rounded-lg shadow-md p-8">
             <h2 className="text-xl font-semibold mb-6">My Bookings</h2>
-            <p className="text-gray-600">You haven't booked any events yet.</p>
+            {userBookings.length > 0 ? (
+              <div className="space-y-4">
+                {userBookings.map((event) => (
+                  <EventMiniCard 
+                    key={event._id} 
+                    event={{
+                      id: event._id,
+                      title: event.title,
+                      date: event.startDate,
+                      time: `${event.startTime} - ${event.endTime}`,
+                      location: event.location,
+                      image: event.image,
+                      status: (() => {
+                        const now = new Date(); 
+                        const startDateTime = new Date(`${event.startDate}T${event.startTime}`);
+                        const endDateTime = new Date(`${event.endDate}T${event.endTime}`);
+                        // Determine the status based on the current time and event times
+                        if (now > endDateTime) return "ended";
+                        if (now < startDateTime) return "upcoming";
+                        return "active";
+                      })()
+                    }}
+                    onClick={() => navigate(`/event/${event._id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">You haven't booked any events yet.</p>
+            )}
           </div>
         )}
 
