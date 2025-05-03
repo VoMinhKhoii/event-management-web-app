@@ -11,18 +11,18 @@ export const getNotifications = async (req, res) => {
         const notifications = await Notification.find({
             userId,
             relatedId: { $ne: null } // only where relatedId is not null
-          })
-          .sort({ createdAt: -1 })
-          .populate({
-            path: 'relatedId',
-            model: 'Participation',
-            populate: {
-              path: 'event',
-              model: 'Event'
-            }
-          })
-          .lean(); // optional: return plain JS objects
-          
+        })
+            .sort({ createdAt: -1 })
+            .populate({
+                path: 'relatedId',
+                model: 'Participation',
+                populate: {
+                    path: 'event',
+                    model: 'Event'
+                }
+            })
+            .lean(); // optional: return plain JS objects
+
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });

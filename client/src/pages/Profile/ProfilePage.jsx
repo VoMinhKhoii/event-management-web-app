@@ -571,7 +571,7 @@ const ProfilePage = () => {
                       location: event.location,
                       image: event.image,
                       status: new Date(event.endDate) < new Date() ? "ended" : 
-                             new Date(event.startDate) > new Date() ? "upcoming" : "active"
+                              new Date(event.startDate) > new Date() ? "upcoming" : "active"
                     }} 
                     onClick={() => navigate(`/event/${event._id}`)}
                   />

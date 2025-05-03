@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
 
 const CreateEvent = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
