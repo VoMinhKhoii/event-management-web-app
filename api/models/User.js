@@ -33,6 +33,11 @@ const userSchema = mongoose.Schema({
     avatar: {
         type: String
     },
+    status: {
+        type: String,
+        enum: ['online', 'offline', 'away'],
+        default: 'offline'
+    },
 },
 {
     timestamps: true,

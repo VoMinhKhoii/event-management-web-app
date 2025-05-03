@@ -1,12 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
 
 const CreateEvent = () => {
+    const navigate = useNavigate();
+
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const widgetRef = useRef(null); 
-
+  const { currentUser } = useContext(AuthContext);
+  const [errors, setErrors] = useState({});
+  const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -18,10 +24,10 @@ const CreateEvent = () => {
     location: null,
     eventType: '',
     image: null,
-    maxAttendees: ''
+    maxAttendees: '',
+    publicity: !privacy
   });
-  const [errors, setErrors] = useState({});
-  const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
+
 
   useEffect(() => {
     // Load the Cloudinary upload widget script
@@ -40,15 +46,16 @@ const CreateEvent = () => {
     function initWidget() {
       widgetRef.current = window.cloudinary.createUploadWidget(
         {
-          cloudName: 'hzxyensd5',
-          uploadPreset: 'aoh4fpwm',
+          cloudName: 'dtc1fgnvp',
+          uploadPreset: 'ml_default',    
+          folder: 'permanent_assets', 
         },
         (error, result) => {
           if (!error && result && result.event === 'success') {
             console.log('Upload successful:', result.info);
             setFormData((prev) => ({
               ...prev,
-              image: result.info.public_id,
+              image: result.info.secure_url,
             }));
             setImagePreview(result.info.secure_url);
           } else if (error) {
@@ -59,12 +66,89 @@ const CreateEvent = () => {
     }
   }, []);
 
-  const validateForm = () => {}
+  const validateForm = () => {
+    try {
+      const { startDate, endDate, startTime, endTime } = formData;
 
-  const handleSubmit = (e) => {
+      // Ensure all required fields are present
+      if (!startDate || !endDate || !startTime || !endTime) {
+        alert("Please fill in all date and time fields.");
+        return false;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
+      const startDateTime = new Date(`${startDate}T${startTime}`);
+      const endDateTime = new Date(`${endDate}T${endTime}`);
+
+      // 1. Start date can't be today
+      if (new Date(startDate).toDateString() === today.toDateString()) {
+        alert("The start date cannot be today.");
+        return false;
+      }
+
+      // 2. Start date can't be in the past
+      if (new Date(startDate) < today) {
+        alert("The start date cannot be in the past.");
+        return false;
+      }
+
+      // 3. Start date can't be after the end date
+      if (new Date(startDate) > new Date(endDate)) {
+        alert("The start date cannot be after the end date.");
+        return false;
+      }
+
+      // 4. Start time can't be after end time (on the same day)
+      if (startDate === endDate && startDateTime >= endDateTime) {
+        alert("The start time cannot be after or equal to the end time.");
+        return false;
+      }
+
+      // If all validations pass
+      return true;
+    } catch (error) {
+      console.error("Error validating form:", error);
+      alert("An error occurred while validating the form.");
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      console.log('Form submitted:', formData);
+      try {
+        const response = await fetch('http://localhost:8800/api/events', { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            ...formData,
+            organizer: currentUser._id
+          }),
+        });
+
+        console.log(formData);
+  
+        if (!response.ok) {
+          // If response is not in the 200-299 range
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create event');
+        }
+  
+        const data = await response.json();
+        console.log('Event created:', data);
+        alert('Event created successfully!');
+        // navigate(`/event/${data._id}`); // Redirect to the event page
+        
+  
+      } catch (error) {
+        console.error('Error creating event:', error.message);
+      }
     }
   };
 
@@ -146,14 +230,32 @@ const CreateEvent = () => {
   };
 
   const handlePrivacyToggle = () => {
-    setPrivacy((prev) => !prev);
+      setPrivacy((prev) => {
+        const newPrivacy = !prev;
+
+        // Update the publicity field in formData based on the new privacy value
+        setFormData((formData) => ({
+            ...formData,
+            publicity: !newPrivacy, // Publicity is the opposite of privacy
+        }));
+
+        return newPrivacy; // Return the new privacy value
+    });
+  };
+
+  const handleDescriptionChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      description: content
+    }));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
       <NavPane/>
-
+      
+      {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
         {/* Header with responsive layout */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -212,6 +314,7 @@ const CreateEvent = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start time
                 </label>
+
                 <input
                   type="time"
                   name="startTime"
@@ -220,11 +323,13 @@ const CreateEvent = () => {
                   step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
+
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   End time
                 </label>
+
                 <input
                   type="time"
                   name="endTime"
@@ -233,6 +338,7 @@ const CreateEvent = () => {
                   step="60"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 />
+
               </div>
             </div>
 
@@ -289,11 +395,11 @@ const CreateEvent = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
                 >
                   <option value="">Select event type</option>
-                  <option value="conference">Conference</option>
-                  <option value="workshop">Workshop</option>
-                  <option value="seminar">Seminar</option>
-                  <option value="networking">Networking</option>
-                  <option value="other">Other</option>
+                  <option value="tech">Tech</option>
+                  <option value="business">Business</option>
+                  <option value="game">Game</option>
+                  <option value="music">Music</option>
+                  <option value="sports">Sports</option>
                 </select>
               </div>
               <div>
@@ -329,13 +435,12 @@ const CreateEvent = () => {
                 Description
               </label>
               <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="8"
-                className="w-full h-[180px] md:h-[240px] px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
-                placeholder="Enter event description"
-              />
+              value={formData.description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+              placeholder="Enter event description"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              rows="10"
+            ></textarea>
             </div>
 
             {/* Upload Image Section */}
@@ -450,9 +555,9 @@ const CreateEvent = () => {
                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
                     />
                   </svg>
-                  <p className="text-center font-medium mb-2">Private Event</p>
+                  <p className="text-center font-medium mb-2">Public Event</p>
                   <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for private events. Switch to public mode to enable invitations.
+                    Invitations are disabled for Public events. Switch to private mode to enable invitations.
                   </p>
                 </div>
               </div>
@@ -465,6 +570,7 @@ const CreateEvent = () => {
         <button
           type="submit"
           className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
+          onClick={handleSubmit}
         >
           Create
         </button>

@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
 import { AuthContext } from '../../context/authContext.jsx';
+import { NotificationContext } from '../../context/notificationContext.jsx';
 import { useContext } from 'react';
 import EventMiniCard from '../../components/EventMiniCard';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser, updateUser, updateAvatar } = useContext(AuthContext);
+  const {clearNotifications} = useContext(NotificationContext);
   const [activeTab, setActiveTab] = useState('settings');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -17,37 +19,10 @@ const ProfilePage = () => {
     darkMode: false
   });
   
-
-  // Sample user events data
-  const [userEvents, setUserEvents] = useState([
-    {
-      id: 1,
-      title: "Tech Summit 2025",
-      date: "Mar 15, 2025",
-      time: "9:00 AM - 1:00 PM",
-      location: "Convention Center, New York",
-      image: "/images/tech.png",
-      status: "upcoming"
-    },
-    {
-      id: 2,
-      title: "Business Workshop",
-      date: "Apr 22, 2025",
-      time: "2:00 PM - 5:00 PM",
-      location: "Downtown Conference Hall",
-      image: "/images/business.png",
-      status: "active"
-    },
-    {
-      id: 3,
-      title: "Gaming Tournament",
-      date: "May 10, 2025",
-      time: "10:00 AM - 6:00 PM",
-      location: "Esports Arena, Las Vegas",
-      image: "/images/game.png",
-      status: "upcoming"
-    }
-  ]);
+  
+  const [userEvents, setUserEvents] = useState([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [eventsError, setEventsError] = useState(null);
 
   // Add password visibility state
   const [pwdInputType, setPwdInputType] = useState({
@@ -70,6 +45,40 @@ const ProfilePage = () => {
     email: currentUser?.email || "",
     password: currentUser?.password || ""
   });
+
+  // Function to fetch user events from the API
+  const fetchUserEvents = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingEvents(true);
+    setEventsError(null);
+    
+    try {
+      const response = await fetch(`http://localhost:8800/api/events?organizerId=${currentUser._id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Unable to retrieve your events');
+      }
+      
+      const data = await response.json();
+      setUserEvents(data);
+    } catch (error) {
+      console.error('Error while fetching events:', error);
+      setEventsError(error.message || 'Failed to load your events');
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (activeTab === 'events' && currentUser) {
+      fetchUserEvents();
+    }
+  }, [activeTab, currentUser]);
 
   // Update profileImage when currentUser changes
   useEffect(() => {
@@ -110,7 +119,7 @@ const ProfilePage = () => {
       
 
       // Send request to API to update the user's profile
-      const res = await fetch('http://localhost:8800/api/users/${currentUser._id}', {
+      const res = await fetch(`http://localhost:8800/api/users/${currentUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -154,7 +163,7 @@ const ProfilePage = () => {
     try {
       setIsLoggingOut(true);
       
-      const res = await fetch('http://localhost:8800/api/auth/logout', {
+      const res = await fetch(`http://localhost:8800/api/auth/logout`, {
         method: 'POST',
         credentials: 'include' // Important for cookie handling
       });
@@ -195,8 +204,9 @@ const ProfilePage = () => {
     function initWidget() {
       widgetRef.current = window.cloudinary.createUploadWidget(
         {
-          cloudName: 'hzxyensd5',
-          uploadPreset: 'aoh4fpwm',
+          cloudName: 'dtc1fgnvp',
+          uploadPreset: 'ml_default',    
+          folder: 'permanent_assets', 
         },
         async (error, result) => {
           if (!error && result && result.event === 'success') {
@@ -209,7 +219,7 @@ const ProfilePage = () => {
             
             // Update avatar in the database
             try {
-              const res = await fetch('http://localhost:8800/api/users/updateAvatar', {
+              const res = await fetch(`http://localhost:8800/api/users/${currentUser._id}/avatar`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -391,14 +401,14 @@ const ProfilePage = () => {
                 </div>
               ) : (
                 <button 
-                  onClick={handleEditToggle}
-                  className="mt-2 px-4 py-2 bg-[#569DBA] text-white rounded hover:bg-opacity-90 transition-colors flex items-center gap-1"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                  </svg>
-                  Update Profile
-                </button>
+                onClick={handleEditToggle}
+                className="w-full md:w-auto mt-4 px-6 py-3 md:py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center md:justify-start gap-2 text-base md:text-sm"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                </svg>
+                Update Profile
+              </button>
               )}
             </div>
           </div>
@@ -531,14 +541,46 @@ const ProfilePage = () => {
               </button>
             </div>
             
-            {userEvents.length > 0 ? (
+            {isLoadingEvents ? (
+              <div className="flex justify-center items-center py-10">
+                <svg className="animate-spin h-10 w-10 text-[#569DBA]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            ) : eventsError ? (
+              <div className="text-center py-8">
+                <p className="text-red-500 mb-3">{eventsError}</p>
+                <button 
+                  onClick={fetchUserEvents}
+                  className="px-4 py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : userEvents.length > 0 ? (
               <div className="space-y-4">
                 {userEvents.map((event) => (
-                  <EventMiniCard key={event.id} event={event} />
+                  <EventMiniCard 
+                    key={event._id} 
+                    event={{
+                      id: event._id,
+                      title: event.title,
+                      date: event.startDate,
+                      time: `${event.startTime} - ${event.endTime}`,
+                      location: event.location,
+                      image: event.image,
+                      status: new Date(event.endDate) < new Date() ? "ended" : 
+                             new Date(event.startDate) > new Date() ? "upcoming" : "active"
+                    }} 
+                    onClick={() => navigate(`/event/${event._id}`)}
+                  />
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600">You haven't created any events yet.</p>
+              <div className="text-center py-10">
+                <p className="text-gray-500">You haven't created any events yet.</p>
+              </div>
             )}
           </div>
         )}

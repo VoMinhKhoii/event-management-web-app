@@ -1,25 +1,39 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { logActivity } from '../middleware/logActivity.js';
 
-//Register a new user
 const signup = async (req, res) => {
     try {
         
-        const { firstName, lastName, username, email, password, contact } = req.body;
-       
+        const { firstName, lastName, username, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
+        const defaultAvatar = "https://img.freepik.com/premium-vector/cute-boy-smiling-cartoon-kawaii-boy-illustration-boy-avatar-happy-kid_1001605-3447.jpg";
         const newUser = await User.create({
             firstName,
             lastName,
             username,
             email,
             password: hashedPassword,
+            avatar: defaultAvatar
         });
         const userObject = newUser.toObject();
         delete userObject.password;
-        res.status(201).json({ message: 'User registered successfully' });
-        user: userObject
+
+
+        await logActivity(
+                    newUser._id,
+                    'created',
+                    'user',
+                    newUser._id,
+                    { username: newUser.username }
+                );
+
+        res.status(201).json({ 
+            message: 'User registered successfully', 
+            user: userObject
+        });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -41,6 +55,10 @@ const login = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
+        // Update user status to online
+        user.status = 'online';
+        await user.save();
 
         //30 days
         const age = 1000 * 60 * 60 * 24 * 30;
@@ -73,12 +91,29 @@ const login = async (req, res) => {
     }
 };
 
-const logout = (req, res) => {
-    res.clearCookie("token").status(200).json({
-        message: "User logged out successfully",
-    });
-    //db operations
-    console.log("logout");
-} 
+const logout = async (req, res) => {
+    try {
+        // Extract user ID from token
+        const token = req.cookies.token;
+        if (token) {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const userId = decoded.id;
+            
+            // Update user status to offline
+            await User.findByIdAndUpdate(userId, { status: 'offline' });
+        }
+        
+        // Clear the cookie and respond
+        res.clearCookie("token").status(200).json({
+            message: "User logged out successfully",
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+        // Still clear the cookie even if there's an error
+        res.clearCookie("token").status(200).json({
+            message: "User logged out successfully",
+        });
+    }
+}
 
 export { signup, login, logout };

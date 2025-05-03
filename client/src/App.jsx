@@ -11,11 +11,11 @@ import SignUpPage from './pages/SignUp/SignUpPage.jsx';
 import NotificationPage from './pages/Notification/NotificationPage.jsx';
 import AdminUserPage from './Admin/AdminUserPage.jsx';
 import AdminEventsPage from './Admin/AdminEventsPage.jsx';
-import EventDetailsForOrganizer from './components/EventDetailsForOrganizer.jsx';
 import AdminDashboard from './Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
+import { eventCommentsLoader } from "./lib/loaders";
 
-function App () {
+function App() {
   const router = createBrowserRouter([
     {
       path: "/",
@@ -50,8 +50,9 @@ function App () {
       element: <Calendar />
     },
     {
-      path: "/event/:id",
-      element: <EventDetails />
+      path: "/event/:eventId",
+      element: <EventDetails />,
+      loader: singleEventLoader
     },
     {
       path: "/profile",
@@ -64,22 +65,7 @@ function App () {
     {
       path: "/notifications",
       element: <NotificationPage />
-    },
-    {
-      path: "/event/organizer/:id",
-      element: <EventDetailsForOrganizer />,
-      loader: singleEventLoader
-    },
-    {
-      path: "/even/:id",
-      element: <EventDetails />,
-      loader: singleEventLoader
-    },
-    {
-      path: "/organizerevents",
-      element: <EventDetailsForOrganizer />
     }
-  
   ]);
   return <RouterProvider router={router} />;
 }

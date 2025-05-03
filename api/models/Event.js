@@ -65,10 +65,10 @@ const eventSchema = mongoose.Schema({
     },
 
     organizer: {
-        type: Object,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
         required: true
     },
-
 
     curAttendees: {
         type: Number,
@@ -80,4 +80,5 @@ const eventSchema = mongoose.Schema({
     });
 
 const Event = mongoose.model("Event", eventSchema);
+
 export default Event;
