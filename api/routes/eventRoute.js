@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent, getAllPublicEvent, getAllUserEvent} from '../controllers/eventController.js';
+import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent} from '../controllers/eventController.js';
 import { requestToJoinEvent, handleJoinRequest } from '../controllers/eventRequestController.js';
 import { inviteToEvent, handleInvitation } from '../controllers/eventInvitationController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
@@ -7,8 +7,6 @@ import { verifyToken } from '../middleware/verifyToken.js';
 const router = express.Router();
 
 router.get('/', verifyToken, getAllEvent);
-router.get('/public-events', verifyToken, getAllPublicEvent); // Get all public events
-router.get('/user-events', verifyToken, getAllUserEvent); // Get all events associated with the user
 router.get('/:eventId', verifyToken, getEvent);
 router.post('/', verifyToken, createEvent);
 router.put('/:eventId', verifyToken, updateEvent);

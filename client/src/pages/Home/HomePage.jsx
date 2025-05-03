@@ -45,7 +45,7 @@ const HomePage = () => {
       }
       try {
         // Fetch fresh data
-        const response = await fetch('http://localhost:8800/api/events/public-events', {
+        const response = await fetch('http://localhost:8800/api/events?public=true', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'

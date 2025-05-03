@@ -5,63 +5,37 @@ import { logActivity } from '../middleware/logActivity.js';
 // GET /api/events
 export const getAllEvent = async (req, res) => {
   try {
-    const { public: isPublic, organizerId } = req.query;
+    const { public: isPublic, organizerId, bookingId } = req.query;
     const filter = {};
 
     if (isPublic) filter.publicity = true;
     if (organizerId) filter.organizer = organizerId;
-
     const events = await Event.find(filter).populate('organizer');
-    res.status(200).json(events);
+
+    if (bookingId) {
+      const participations = await Participation.find({
+        user: bookingId,
+        kind: 'Request',
+        status: 'approved'
+      }).select('event'); // Only get event field
+  
+      const participantEventIds = participations.map(p => p.event);
+  
+      const joinedEvents = await Event.find({ _id: { $in: participantEventIds } }).populate('organizer');
+      
+      if (organizerId) {
+        const allEvents = [...events, ...joinedEvents];
+        return res.status(200).json(allEvents);
+      } else return res.status(200).json(joinedEvents);
+    }
+
+    return res.status(200).json(events);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch events', message: err.message });
   }
 };
 
 
-
-export const getAllPublicEvent = async (req, res) => {
-  try {
-    const events = await Event.find({ publicity: true }).populate('organizer');
-    if (!events) {
-      return res.status(404).json({ error: 'No public events found' });
-    }
-    res.status(200).json(events);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch public events', message: err.message });
-  }
-};
-
-
-
-export const getAllUserEvent = async (req, res) => {
-  try {
-    // 1. Events where user is the organizer
-    const ownedEvents = await Event.find({ organizer: req.userId });
-
-    // 2. Find approved participations
-    const participations = await Participation.find({
-      user: req.userId,
-      kind: 'Request',
-      status: 'approved'
-    }).select('event'); // Only get event field
-
-    const participantEventIds = participations.map(p => p.event);
-
-    // 3. Fetch those events
-    const joinedEvents = await Event.find({ _id: { $in: participantEventIds } });
-
-    // 4. Combine and return
-    const allEvents = [...ownedEvents, ...joinedEvents];
-
-    res.status(200).json(allEvents);
-  } catch (err) {
-    res.status(500).json({
-      error: 'Failed to fetch user events',
-      message: err.message
-    });
-  }
-};
 
 // GET /api/events/:eventId
 export const getEvent = async (req, res) => {
@@ -76,7 +50,7 @@ export const getEvent = async (req, res) => {
   }
 };
 
-// POST /api/events
+// POST /api/events 
 export const createEvent = async (req, res) => {
   try {
     const newEvent = new Event({

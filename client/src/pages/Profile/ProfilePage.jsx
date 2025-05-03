@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
 import { AuthContext } from '../../context/authContext.jsx';
-import { NotificationContext } from '../../context/notificationContext.jsx';
 import { useContext } from 'react';
 import EventMiniCard from '../../components/EventMiniCard';
+// import { set } from 'mongoose';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser, updateUser, updateAvatar } = useContext(AuthContext);
-  const {clearNotifications} = useContext(NotificationContext);
   const [activeTab, setActiveTab] = useState('settings');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -19,7 +18,7 @@ const ProfilePage = () => {
     darkMode: false
   });
   
-  
+  const [userBookings, setUserBookings] = useState([]);
   const [userEvents, setUserEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState(null);
@@ -73,10 +72,43 @@ const ProfilePage = () => {
       setIsLoadingEvents(false);
     }
   };
+
+
+  const fetchUserBookings = async () => {
+    if (!currentUser) return;
+
+    setIsLoadingEvents(true);
+    setEventsError(null);
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/?bookingId=${currentUser._id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to retrieve your bookings');
+      }
+
+      const data = await response.json();
+      console.log('User Bookings:', data);
+      setUserBookings(data);
+
+    }
+    catch (error) {
+      console.error('Error while fetching bookings:', error);
+      setEventsError(error.message || 'Failed to load your bookings');
+    }
+  };
+
+
   
   useEffect(() => {
     if (activeTab === 'events' && currentUser) {
       fetchUserEvents();
+    }
+    if (activeTab === 'bookings') {
+      fetchUserBookings();
     }
   }, [activeTab, currentUser]);
 
