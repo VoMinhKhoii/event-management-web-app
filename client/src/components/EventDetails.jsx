@@ -11,7 +11,7 @@ const EventDetails = () => {
   const eventData = useLoaderData(); // Get event data from loader
 
   const { currentUser } = useContext(AuthContext);
-  
+
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -30,7 +30,7 @@ const EventDetails = () => {
     // Check if user is the organizer of this event
     if (currentUser && eventData && eventData.organizer) {
       setIsOrganizer(
-        currentUser._id === eventData.organizer._id || 
+        currentUser._id === eventData.organizer._id ||
         currentUser.email === eventData.organizer.email
       );
     }
@@ -146,7 +146,7 @@ const EventDetails = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ text: replyText}),
+        body: JSON.stringify({ text: replyText }),
       });
 
       if (!response.ok) {
@@ -155,10 +155,10 @@ const EventDetails = () => {
 
       // This is the updated comment with the new reply already included
       const updatedComment = await response.json();
-      
+
       // Replace the entire comment object in the comments array
-      setComments(prevComments => 
-        prevComments.map(comment => 
+      setComments(prevComments =>
+        prevComments.map(comment =>
           comment._id === commentId ? updatedComment : comment
         )
       );
@@ -172,12 +172,12 @@ const EventDetails = () => {
 
   const handleDeleteClick = async (commentId) => {
     if (!currentUser) return;
-    
+
     // Confirm before deleting
     if (!window.confirm('Are you sure you want to delete this comment?')) {
       return;
     }
-  
+
     try {
       const response = await fetch(`http://localhost:8800/api/comments/${commentId}`, {
         method: 'DELETE',
@@ -186,13 +186,13 @@ const EventDetails = () => {
         },
         credentials: 'include',
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to delete comment');
       }
-  
+
       // Remove the comment from state
-      setComments(prevComments => 
+      setComments(prevComments =>
         prevComments.filter(comment => comment._id !== commentId)
       );
     } catch (err) {
@@ -301,14 +301,14 @@ const EventDetails = () => {
 
   // const formatTime = (startTime, endTime) => {
   //   if (!startTime) return '';
-    
+
   //   const formatTimeString = (timeString) => {
   //     if (!timeString) return '';
-      
+
   //     if (typeof timeString === 'string' && timeString.includes(':')) {
   //       return timeString;
   //     }
-      
+
   //     try {
   //       const date = new Date(timeString);
   //       return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -324,10 +324,10 @@ const EventDetails = () => {
   // };
 
   // Ensure we have an array of images, even if there's just one or none
-  const images = eventData.images && eventData.images.length 
-    ? eventData.images 
-    : eventData.image 
-      ? [eventData.image] 
+  const images = eventData.images && eventData.images.length
+    ? eventData.images
+    : eventData.image
+      ? [eventData.image]
       : ['/images/tech.png']; // Default image as fallback
 
   // Expectations might be part of the description or a separate field
@@ -340,9 +340,9 @@ const EventDetails = () => {
   const renderAttendeeRightSidebar = () => {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-[12px] sticky top-24">
-        <button 
+        <button
           className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8"
-          // onClick={handleJoinRequest}
+        // onClick={handleJoinRequest}
         >
           Request to join
         </button>
@@ -714,14 +714,14 @@ const EventDetails = () => {
                             </span>
                           </div>
                           <p className="text-gray-700">{comment.text}</p>
-                          <button 
+                          <button
                             className="mr-[16px] text-gray-500 text-sm mt-1 hover:text-gray-700"
                             onClick={() => handleReplyClick(comment._id || comment.id)}
                           >
                             Reply
                           </button>
                           {comment.user?._id === currentUser?._id && (
-                            <button 
+                            <button
                               className="mr-[16px] text-gray-500 text-sm mt-1 hover:text-gray-700"
                               onClick={() => handleDeleteClick(comment._id || comment.id)}
                             >
