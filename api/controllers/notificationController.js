@@ -1,12 +1,29 @@
+import { model } from "mongoose";
 import Notification from "../models/Notification.js";
+import Participation from "../models/Participation.js";
 
 // @desc    Get all notifications for a user
 // @route   GET /api/notifications/:userId
 // @access  Private
 export const getNotifications = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
+        console.log("Fetching notifications for user ID:", req.userId);
+        const userId = req.userId;
+        console.log("User ID: ", userId);
+        const notifications = await Notification.find({ userId })
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'relatedId',
+          model: 'Participation',
+          populate: {
+            path: 'event',
+            model: 'Event'
+          }
+        })
+        .lean();
+      
+
+        console.log("Fetched notifications: ", notifications);
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });
@@ -14,13 +31,13 @@ export const getNotifications = async (req, res) => {
 };
 
 // @desc    Mark a notification as read
-// @route   PATCH /api/notifications/:id/read
+// @route   PATCH /api/notifications/:notificationId/read
 // @access  Private
 export const markAsRead = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { notificationId } = req.params;
         const notification = await Notification.findByIdAndUpdate(
-            id,
+            notificationId,
             { isRead: true, readAt: new Date() },
             { new: true }
         );
@@ -48,12 +65,12 @@ export const createNotification = async (req, res) => {
 };
 
 // @desc    Delete a notification
-// @route   DELETE /api/notifications/:id
+// @route   DELETE /api/notifications/:notificationId
 // @access  Private
 export const deleteNotification = async (req, res) => {
     try {
-        const { id } = req.params;
-        const notification = await Notification.findByIdAndDelete(id);
+        const { notificationId } = req.params;
+        const notification = await Notification.findByIdAndDelete(notificationId);
         if (!notification) {
             return res.status(404).json({ error: "Notification not found" });
         }
@@ -63,28 +80,4 @@ export const deleteNotification = async (req, res) => {
     }
 };
 
-export const getEventInfoFromNotification = async (req, res) => {
 
-    try {
-        const {id} = req.params;
-        const notification = await Notification.findById(id).populate('relatedId').model('request');
-        if (!notification){
-            notification = await Notification.findById(id).populate('relatedId').model('invitation');
-            if (!notification){
-                return res.status(404).json({ error: "Notification not found" });
-            }
-        }
-
-        const eventInfo = await notification.relatedId.populate('eventId').model('event');
-        if (!eventInfo) {
-            return res.status(404).json({ error: "Event not found" });
-        }
-
-        res.status(200).json(eventInfo);
-        console.log("Successfully retrieve event info: ", eventInfo);
-    }
-    catch (error) {
-        res.status(500).json({ error: "Server error", error });
-    }
-
-};

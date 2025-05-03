@@ -11,9 +11,13 @@ const notificationSchema = mongoose.Schema({
         enum: ['invitation', 'joinRequest', 'eventUpdate', 'reminder', 'message'],
         required: true
     },
+    message: {
+        type: String,
+        required: true
+    },
     relatedId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
+        required: false,
     },
     data: {
         type: mongoose.Schema.Types.Mixed // For additional context data
@@ -22,13 +26,10 @@ const notificationSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
     readAt: {
-        type: Date
-    }
+        type: Date,
+        default: null
+    },
 }, {
     timestamps: true // Adds createdAt and updatedAt fields automatically
 });

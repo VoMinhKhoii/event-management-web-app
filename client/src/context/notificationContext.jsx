@@ -1,17 +1,18 @@
 import { createContext } from "react";
 import { useState, useEffect } from "react";
+import { useContext } from "react";
+import { AuthContext } from "./authContext.jsx";
 
-export const notificationContext = createContext();
+export const NotificationContext = createContext();
 
-export const notificationContextProvider = ({ children }) => {
+export const NotificationContextProvider = ({ children }) => {
 
     const { currentUser } = useContext(AuthContext);
     const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(true);
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch(`http://localhost:8800/api/notifications/${currentUser._id}`, {
+            const response = await fetch(`http://localhost:8800/api/notifications`, {
                 method: 'GET',
                 credentials: 'include', // Important for cookies
             });
@@ -85,31 +86,22 @@ export const notificationContextProvider = ({ children }) => {
     }
 
 
-    const getEventInfoFromNotification = async (notificationId) => {
-        try {
-            const response = await fetch(`http://localhost:8800/api/notifications/${notificationId}`, {
-                method: 'GET',
-                credentials: 'include', // Important for cookies
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch event info from notification');
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching event info from notification:', error);
-        }
+    const clearNotifications = () => {
+        setNotifications([]); // Clear all notifications from the state
+        console.log('All notifications cleared');
     };
 
-
-
     useEffect(() => {
-        fetchNotifications();
-    }, []);
+        if (currentUser && currentUser._id) {
+            fetchNotifications();
+        } else {
+            clearNotifications(); // Clear notifications if no user is logged in
+        }
+    }, [currentUser]);
 
     return (
-        <notificationContext.Provider value={{ notifications, sendNotification, markAsRead, deleteNotification, getEventInfoFromNotification }}>
+        <NotificationContext.Provider value={{ notifications, sendNotification, markAsRead, deleteNotification, clearNotifications }}>
             {children}
-        </notificationContext.Provider>
+        </NotificationContext.Provider>
     );
 }

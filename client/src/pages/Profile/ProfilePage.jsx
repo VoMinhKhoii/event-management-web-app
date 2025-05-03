@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
 import { AuthContext } from '../../context/authContext.jsx';
+import { NotificationContext } from '../../context/notificationContext.jsx';
 import { useContext } from 'react';
 import EventMiniCard from '../../components/EventMiniCard';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser, updateUser, updateAvatar } = useContext(AuthContext);
+  const {clearNotifications} = useContext(NotificationContext);
   const [activeTab, setActiveTab] = useState('settings');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
