@@ -7,7 +7,6 @@ import commentRoute from './routes/commentRoute.js';
 import userRoute from './routes/userRoute.js';
 import eventRoute from './routes/eventRoute.js';
 import adminRoute from './routes/adminRoute.js';
-import uploadsRoute from './routes/uploadsRoute.js';
 import cookieParser from 'cookie-parser';
 import notificationRoute from './routes/notificationRoute.js';
 
@@ -36,7 +35,6 @@ app.use('/api/users', userRoute);
 app.use('/api/events', eventRoute);
 app.use('/api/notifications', notificationRoute);
 app.use('/api/admin', adminRoute)
-app.use('/api/uploads', uploadsRoute);
 
 app.listen(8800, () => {
     console.log('Server is running on port 8800');

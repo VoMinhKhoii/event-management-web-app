@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import User from '../models/User.js';
-import path from 'path';
 import fs from 'fs';
 import { logActivity } from '../middleware/logActivity.js';
+import https from 'https';
 
 export const getUsers = async (req, res) => {
     try {
@@ -121,70 +121,89 @@ export const deleteUser = async (req, res) => {
 export const updateAvatar = async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded ' });
+            return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        const uploadDir = path.join(__dirname, '../../tmp/uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
+        // read file as base64
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const base64File = fileBuffer.toString('base64');
+        const dataURI = `data:${req.file.mimetype};base64,${base64File}`;
 
         const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/upload`;
-        const formData = new FormData();
 
-        // convert buffer to blob
-        const fileStream = fs.createReadStream(req.file.path);
-        formData.append('file', fileStream);
-        formData.append('upload_preset', process.env.CLOUDINARY_UPLOAD_PRESET);
-        formData.append('folder', 'permanent_assets');
+        // manually construct data payload
+        const boundary = '----WebKitFormBoundary' + Math.random().toString(16).substr(2);
+        const payload = [
+            `--${boundary}`,
+            'Content-Disposition: form-data; name="file"',
+            `Content-Type: ${req.file.mimetype}`,
+            '',
+            dataURI,
+            `--${boundary}`,
+            'Content-Disposition: form-data; name="upload_preset"',
+            '',
+            process.env.CLOUDINARY_UPLOAD_PRESET,
+            `--${boundary}--`,
+            ''
+        ].join('\r\n');
 
-        const cloudinaryResponse = await fetch(cloudinaryUrl, {
-            method: 'POST',
-            body: formData
-        });
+        // request to cloudinary
+        const response = await new Promise((resolve, reject) => {
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': `multipart/form-data; boundary=${boundary}`,
+                    'Content-Length': Buffer.byteLength(payload)
+                }
+            };
 
-        if (!cloudinaryResponse.ok) {
-            const errorData = await cloudinaryResponse.json();
-            throw new Error(cloudinaryData.error?.message || 'Cloudinary upload failed');
-        }
+            const req = https.request(cloudinaryUrl, options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+                res.on('end', () => {
+                    resolve(JSON.parse(data));
+                });
+            });
 
-        const cloudinaryData = await cloudinaryResponse.json();
+            req.on('error', (err) => {
+                reject(err);
+            });
 
-        // remove temp file
-        try {
-            if (fs.existsSync(req.file.path)) {
-                fs.unlinkSync(req.file.path);
-            }
-        } catch (unlinkError) {
-            console.error('Error deleting temporary file:', unlinkError);
-        }
+            req.write(payload);
+            req.end();
+        })
 
-        const avatarUrl = `/uploads/${req.file.filename}`;
+        fs.unlinkSync(req.file.path);
+
+        // update user w/ cloudinary URL
         const updatedUser = await User.findByIdAndUpdate(
             req.userId,
-            { avatar: avatarUrl },
+            { avatar: response.secure_url },
             { new: true }
         ).select('-password');
 
         res.status(200).json({
             message: 'Avatar updated successfully',
-            avatar: avatarUrl,
+            avatar: response.secure_url,
             user: updatedUser
         });
-    } catch (error) {
+    } catch (err) {
+        console.error('Avatar upload error:', err);
         // clean-up temp file if exists
         if (req.file?.path && fs.existsSync(req.file.path)) {
             try {
-                fs.unlinkSync(req.file.path);
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
             } catch (cleanupError) {
                 console.error('Error during file cleanup:', cleanupError);
             }
         }
 
-        console.error('Error updating avatar:', error);
         res.status(500).json({
-            message: error.message || 'Failed to update avatar',
-            error: error.toString()
+            message: err.message || 'Failed to update avatar',
         });
     }
 };

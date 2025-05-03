@@ -6,10 +6,22 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadDir = path.join(process.cwd(), 'tmp', 'uploads');
+const UPLOAD_DIR = path.join(process.cwd(), 'tmp', 'uploads');
 
-fs.mkdirSync(uploadDir, { recursive: true });
-console.log('File uploads will be stored in:', uploadDir);
+const ensureUploadDirExists = () => {
+    try {
+        if (!fs.existsSync(UPLOAD_DIR)) {
+            fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+            console.log(`Created upload directory at: ${UPLOAD_DIR}`);
+        }
+        return UPLOAD_DIR;
+    } catch (err) {
+        console.error(`Failed to create upload directory: ${err}`);
+        throw new Error(`Could not create upload directory: ${err.message}`); // Rethrow to prevent further execution
+    }
+};
+
+const uploadDir = ensureUploadDirExists();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -18,13 +30,16 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         const ext = path.extname(file.originalname);
-        cb(null, 'avatar' + uniqueSuffix + ext);
+        cb(null, file.fieldname + '-' + uniqueSuffix + ext);
     },
 });
 
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024, files: 1 }, // 5MB limit
+    limits: {
+        fileSize: 5 * 1024 * 1024,
+        files: 1
+    }, // 5MB limit, 1 file only
     fileFilter: (req, file, cb) => {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.mimetype)) {
@@ -33,4 +48,5 @@ const upload = multer({
         cb(null, true);
     }
 });
+
 export default upload;
