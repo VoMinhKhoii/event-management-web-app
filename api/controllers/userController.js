@@ -132,7 +132,7 @@ export const updateAvatar = async (req, res) => {
         const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/upload`;
 
         // manually construct data payload
-        const boundary = '----WebKitFormBoundary' + Math.random().toString(16).substr(2);
+        const boundary = '----WebKitFormBoundary' + Math.random().toString(16).slice(2);
         const payload = [
             `--${boundary}`,
             'Content-Disposition: form-data; name="file"',
@@ -175,6 +175,7 @@ export const updateAvatar = async (req, res) => {
             req.end();
         })
 
+        // clean-up temp file
         fs.unlinkSync(req.file.path);
 
         // update user w/ cloudinary URL
