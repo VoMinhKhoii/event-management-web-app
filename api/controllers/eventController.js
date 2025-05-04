@@ -1,6 +1,8 @@
 import Event from '../models/Event.js';
 import Participation from '../models/Participation.js';
 import { logActivity } from '../middleware/logActivity.js';
+import fs from 'fs';
+import https from 'https';
 
 // GET /api/events
 export const getAllEvent = async (req, res) => {
@@ -106,7 +108,9 @@ export const createEvent = async (req, res) => {
 
         req.write(payload);
         req.end();
-      })
+      });
+
+      imageUrl = response.secure_url;
 
       // clean-up temp file
       fs.unlinkSync(req.file.path);
@@ -114,7 +118,8 @@ export const createEvent = async (req, res) => {
 
     const newEvent = new Event({
       ...req.body,
-      organizer: req.userId // Set organizer as current user
+      organizer: req.userId, // Set organizer as current user
+      image: imageUrl
     });
 
     await newEvent.save();

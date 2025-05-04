@@ -1,15 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
 
 const CreateEvent = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const widgetRef = useRef(null); 
   const { currentUser } = useContext(AuthContext);
   const [errors, setErrors] = useState({});
   const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
@@ -27,44 +26,6 @@ const CreateEvent = () => {
     maxAttendees: '',
     publicity: !privacy
   });
-
-
-  useEffect(() => {
-    // Load the Cloudinary upload widget script
-    if (!window.cloudinary) {
-      const script = document.createElement('script');
-      script.src = 'https://upload-widget.cloudinary.com/global/all.js';
-      script.async = true;
-      script.onload = () => {
-        initWidget();
-      };
-      document.body.appendChild(script);
-    } else {
-      initWidget();
-    }
-
-    function initWidget() {
-      widgetRef.current = window.cloudinary.createUploadWidget(
-        {
-          cloudName: 'dtc1fgnvp',
-          uploadPreset: 'ml_default',    
-          folder: 'permanent_assets', 
-        },
-        (error, result) => {
-          if (!error && result && result.event === 'success') {
-            console.log('Upload successful:', result.info);
-            setFormData((prev) => ({
-              ...prev,
-              image: result.info.secure_url,
-            }));
-            setImagePreview(result.info.secure_url);
-          } else if (error) {
-            console.error('Upload Error:', error);
-          }
-        }
-      );
-    }
-  }, []);
 
   const validateForm = () => {
     try {
@@ -115,39 +76,48 @@ const CreateEvent = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     if (validateForm()) {
       try {
-        const response = await fetch('http://localhost:8800/api/events', { 
+        const fd = new FormData();
+
+        // append all non-file fields
+        Object.entries(formData).forEach(([key, value]) => {
+          if (key !== 'image') {
+            fd.append(key, value);
+          }
+        });
+
+        // append file separately if exists
+        if (formData.image && formData.image instanceof File) {
+          fd.append('image', formData.image);
+        }
+        fd.append('organizer', currentUser._id);
+
+        const response = await fetch('http://localhost:8800/api/events', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            
-          },
           credentials: 'include',
-          body: JSON.stringify({
-            ...formData,
-            organizer: currentUser._id
-          }),
+          body: fd,
         });
 
         console.log(formData);
-  
+
         if (!response.ok) {
           // If response is not in the 200-299 range
           const errorData = await response.json();
           throw new Error(errorData.message || 'Failed to create event');
         }
-  
+
         const data = await response.json();
         console.log('Event created:', data);
         alert('Event created successfully!');
         // navigate(`/event/${data._id}`); // Redirect to the event page
-        
-  
+
+
       } catch (error) {
         console.error('Error creating event:', error.message);
+        alert(error.message || 'Failed to create event');
       }
     }
   };
@@ -177,9 +147,7 @@ const CreateEvent = () => {
   }
 
   const handleImageClick = () => {
-    if (widgetRef.current) {
-      widgetRef.current.open(); // Open the Cloudinary widget
-    }
+    fileInputRef.current.click();
   };
 
   const handleImageChange = (e) => {
@@ -230,16 +198,16 @@ const CreateEvent = () => {
   };
 
   const handlePrivacyToggle = () => {
-      setPrivacy((prev) => {
-        const newPrivacy = !prev;
+    setPrivacy((prev) => {
+      const newPrivacy = !prev;
 
-        // Update the publicity field in formData based on the new privacy value
-        setFormData((formData) => ({
-            ...formData,
-            publicity: !newPrivacy, // Publicity is the opposite of privacy
-        }));
+      // Update the publicity field in formData based on the new privacy value
+      setFormData((formData) => ({
+        ...formData,
+        publicity: !newPrivacy, // Publicity is the opposite of privacy
+      }));
 
-        return newPrivacy; // Return the new privacy value
+      return newPrivacy; // Return the new privacy value
     });
   };
 
@@ -253,8 +221,8 @@ const CreateEvent = () => {
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       {/* Navigation Header */}
-      <NavPane/>
-      
+      <NavPane />
+
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
         {/* Header with responsive layout */}
@@ -276,11 +244,11 @@ const CreateEvent = () => {
             </label>
           </div>
         </div>
-        
+
         {/* Responsive grid layout that adapts to screen size */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
           {/* Left Column: Event Form - Full width on mobile, appropriate size on larger screens */}
-          <form onSubmit={handleSubmit} className="md:col-span-1 lg:col-span-5 space-y-4">
+          <form className="md:col-span-1 lg:col-span-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -413,11 +381,10 @@ const CreateEvent = () => {
                   onChange={handleChange}
                   min="1"
                   max="1000"
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 ${
-                    errors.maxAttendees 
-                      ? 'border-red-500 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 ${errors.maxAttendees
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                   placeholder="Enter maximum attendees"
                 />
                 {errors.maxAttendees && (
@@ -435,12 +402,12 @@ const CreateEvent = () => {
                 Description
               </label>
               <textarea
-              value={formData.description}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              placeholder="Enter event description"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-              rows="10"
-            ></textarea>
+                value={formData.description}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
+                placeholder="Enter event description"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                rows="10"
+              ></textarea>
             </div>
 
             {/* Upload Image Section */}
@@ -518,7 +485,7 @@ const CreateEvent = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Invite Participants
             </label>
-            
+
             {privacy ? (
               // Public event - Show invitation form
               <div className="bg-[#569DBA] text-white p-4 md:p-6 rounded-lg">
@@ -542,17 +509,17 @@ const CreateEvent = () => {
               // Private event - Show message
               <div className="bg-gray-100 text-gray-700 p-4 md:p-6 rounded-lg h-full min-h-[200px] flex items-center">
                 <div className="flex flex-col items-center justify-center w-full">
-                  <svg 
-                    className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mb-4" 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mb-4"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth="1.5" 
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                     />
                   </svg>
                   <p className="text-center font-medium mb-2">Public Event</p>
