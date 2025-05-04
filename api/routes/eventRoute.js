@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent } from '../controllers/eventController.js';
+import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent} from '../controllers/eventController.js';
 import { requestToJoinEvent, handleJoinRequest } from '../controllers/eventRequestController.js';
 import { inviteToEvent, handleInvitation } from '../controllers/eventInvitationController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
@@ -11,6 +11,7 @@ router.get('/:eventId', verifyToken, getEvent);
 router.post('/', verifyToken, createEvent);
 router.put('/:eventId', verifyToken, updateEvent);
 router.delete('/:eventId', verifyToken, deleteEvent);
+
 
 // TODO: Ability to cancel request/invitation, GET all requests/invitation associated with a user
 router.post('/:eventId/request-join', verifyToken, requestToJoinEvent);                 // Request to join public event

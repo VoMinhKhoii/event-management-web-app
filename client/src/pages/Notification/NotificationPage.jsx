@@ -1,8 +1,7 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
-import { useContext } from 'react';
 import { NotificationContext } from '../../context/notificationContext.jsx'; // adjust path if needed
 const NotificationPage = () => {
     // State to keep track of selected notification/event
@@ -151,7 +150,7 @@ const NotificationPage = () => {
                                                 />
                                                 <div>
                                                     <div className="flex items-center">
-                                                        <span className="text-gray-800">{notification ? notification.relatedId.event.title : "System"}</span>
+                                                        <span className="text-gray-800">{notification.relatedId  ? notification.relatedId.event.title : "System"}</span>
                                                     </div>
                                                     <p className="text-gray-600">{notification.message}</p>
                                                 </div>

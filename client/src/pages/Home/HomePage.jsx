@@ -19,8 +19,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-
-    // Fetch events with caching - similar to AdminDashboard
+    // Fetch events with caching 
   const fetchEvents = async (forceRefresh = false) => {
     setLoading(true);
   
@@ -45,7 +44,7 @@ const HomePage = () => {
       }
       try {
         // Fetch fresh data
-        const response = await fetch('http://localhost:8800/api/events', {
+        const response = await fetch('http://localhost:8800/api/events?public=true', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'

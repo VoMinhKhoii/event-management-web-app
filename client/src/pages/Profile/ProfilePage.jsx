@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
 import { AuthContext } from '../../context/authContext.jsx';
-import { NotificationContext } from '../../context/notificationContext.jsx';
 import { useContext } from 'react';
 import EventMiniCard from '../../components/EventMiniCard';
+// import { set } from 'mongoose';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser, updateUser, updateAvatar } = useContext(AuthContext);
-  const {clearNotifications} = useContext(NotificationContext);
   const [activeTab, setActiveTab] = useState('settings');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -19,7 +18,7 @@ const ProfilePage = () => {
     darkMode: false
   });
   
-  
+  const [userBookings, setUserBookings] = useState([]);
   const [userEvents, setUserEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState(null);
@@ -73,10 +72,43 @@ const ProfilePage = () => {
       setIsLoadingEvents(false);
     }
   };
+
+
+  const fetchUserBookings = async () => {
+    if (!currentUser) return;
+
+    setIsLoadingEvents(true);
+    setEventsError(null);
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/?bookingId=${currentUser._id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to retrieve your bookings');
+      }
+
+      const data = await response.json();
+      console.log('User Bookings:', data);
+      setUserBookings(data);
+
+    }
+    catch (error) {
+      console.error('Error while fetching bookings:', error);
+      setEventsError(error.message || 'Failed to load your bookings');
+    }
+  };
+
+
   
   useEffect(() => {
     if (activeTab === 'events' && currentUser) {
       fetchUserEvents();
+    }
+    if (activeTab === 'bookings') {
+      fetchUserBookings();
     }
   }, [activeTab, currentUser]);
 
@@ -128,7 +160,7 @@ const ProfilePage = () => {
           lastName: profileInfo.lastName,
           username: profileInfo.username,
           email: profileInfo.email,
-          password: profileInfo.password || undefined // Only send if not empty
+          password: profileInfo.password || undefined 
         })
       });
       
@@ -522,7 +554,35 @@ const ProfilePage = () => {
         {activeTab === 'bookings' && (
           <div className="bg-white rounded-lg shadow-md p-8">
             <h2 className="text-xl font-semibold mb-6">My Bookings</h2>
-            <p className="text-gray-600">You haven't booked any events yet.</p>
+            {userBookings.length > 0 ? (
+              <div className="space-y-4">
+                {userBookings.map((event) => (
+                  <EventMiniCard 
+                    key={event._id} 
+                    event={{
+                      id: event._id,
+                      title: event.title,
+                      date: event.startDate,
+                      time: `${event.startTime} - ${event.endTime}`,
+                      location: event.location,
+                      image: event.image,
+                      status: (() => {
+                        const now = new Date(); 
+                        const startDateTime = new Date(`${event.startDate}T${event.startTime}`);
+                        const endDateTime = new Date(`${event.endDate}T${event.endTime}`);
+                        // Determine the status based on the current time and event times
+                        if (now > endDateTime) return "ended";
+                        if (now < startDateTime) return "upcoming";
+                        return "active";
+                      })()
+                    }}
+                    onClick={() => navigate(`/event/${event._id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600">You haven't booked any events yet.</p>
+            )}
           </div>
         )}
 
@@ -570,9 +630,11 @@ const ProfilePage = () => {
                       time: `${event.startTime} - ${event.endTime}`,
                       location: event.location,
                       image: event.image,
+
                       status: new Date(event.endDate) < new Date() ? "ended" : 
                               new Date(event.startDate) > new Date() ? "upcoming" : "active"
                     }} 
+
                     onClick={() => navigate(`/event/${event._id}`)}
                   />
                 ))}

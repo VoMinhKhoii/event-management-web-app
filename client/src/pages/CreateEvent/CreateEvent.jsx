@@ -143,7 +143,7 @@ const CreateEvent = () => {
         const data = await response.json();
         console.log('Event created:', data);
         alert('Event created successfully!');
-        // navigate(`/event/${data._id}`); // Redirect to the event page
+        navigate(`/event/${data._id}`); // Redirect to the event page
         
   
       } catch (error) {

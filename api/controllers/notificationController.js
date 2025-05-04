@@ -1,3 +1,4 @@
+import { model } from "mongoose";
 import Notification from "../models/Notification.js";
 import Participation from "../models/Participation.js";
 
@@ -6,6 +7,7 @@ import Participation from "../models/Participation.js";
 // @access  Private
 export const getNotifications = async (req, res) => {
     try {
+
         console.log("Fetching notifications for user ID:", req.params.userId);
         const { userId } = req.params;
         const notifications = await Notification.find({

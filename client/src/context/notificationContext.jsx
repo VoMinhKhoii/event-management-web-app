@@ -11,9 +11,9 @@ export const NotificationContextProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
 
     const fetchNotifications = async () => {
-        console.log("Fetching notifications for user ID:", currentUser._id);
+        clearNotifications(); // Clear notifications before fetching new ones to prevent memory leaks
         try {
-            const response = await fetch(`http://localhost:8800/api/notifications/${currentUser._id}`, {
+            const response = await fetch(`http://localhost:8800/api/notifications`, {
                 method: 'GET',
                 credentials: 'include', // Important for cookies
             });
