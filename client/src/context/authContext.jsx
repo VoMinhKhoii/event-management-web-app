@@ -10,7 +10,6 @@ export const AuthContextProvider = ({ children }) => {
     });
 
     const updateUser = (data) => {
-        console.log("updateUser called with:", data); // Debug log
         setCurrentUser(data);
     }
     

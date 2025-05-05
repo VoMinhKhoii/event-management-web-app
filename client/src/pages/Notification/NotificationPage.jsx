@@ -9,7 +9,9 @@ const NotificationPage = () => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
 
-
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+ 
     // Handle notification click
     const handleNotificationClick = async (notification) => {
         if (notification.isRead === false) {
@@ -26,19 +28,89 @@ const NotificationPage = () => {
     };
 
     // Handle accept invitation
-    const handleAccept = (eventId) => {
-        console.log(`Accepted invitation to event ${eventId}`);
-        // Here you would typically call an API to update the user's response
-        // For now we'll just update the UI
-        alert(`You have accepted the invitation to ${selectedEvent.title}`);
+    const handleAccept = async (eventId, invitationId) => {
+        if (!selectedNotification || !selectedEvent) return;
+        
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const response = await fetch(`http://localhost:8800/api/events/${eventId}/invitations/${invitationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ action: 'accept' })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Handle specific error cases
+                if (response.status === 400 && data.conflicts) {
+                    setError(`Schedule conflict detected: You already have events during this time.`);
+                } else {
+                    setError(data.error || 'Failed to accept invitation');
+                }
+                return;
+            }
+            
+            // Refresh notifications to get updated data
+            await markAsRead(selectedNotification._id);
+            
+            // Show success message
+            alert('You have successfully accepted the invitation');
+        } catch (err) {
+            setError('Network error. Please try again.');
+            console.error('Error accepting invitation:', err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
+
     // Handle decline invitation
-    const handleDecline = (eventId) => {
-        console.log(`Declined invitation to event ${eventId}`);
-        // Here you would typically call an API to update the user's response
-        // For now we'll just update the UI
-        alert(`You have declined the invitation to ${selectedEvent.title}`);
+    const handleDecline = async (eventId, invitationId) => {
+        if (!selectedNotification || !selectedEvent) return;
+        
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const response = await fetch(`http://localhost:8800/api/events/${eventId}/invitations/${invitationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ action: 'decline' })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                setError(data.error || 'Failed to decline invitation');
+                return;
+            }
+            
+            // Update local state
+            setSelectedNotification(prev => ({
+                ...prev,
+                relatedId: { ...prev.relatedId, status: 'rejected' }
+            }));
+            
+            // Mark notification as read
+            await markAsRead(selectedNotification._id);
+            
+            // Show success message
+            alert('You have declined the invitation');
+        } catch (err) {
+            setError('Network error. Please try again.');
+            console.error('Error declining invitation:', err);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -123,7 +195,11 @@ const NotificationPage = () => {
                                             <div className="absolute bottom-0 left-0 right-0 flex justify-between p-4">
                                                 <button
                                                     className="bg-white text-blue-500 font-medium py-2 px-6 rounded-full shadow hover:bg-blue-50 flex items-center"
-                                                    onClick={() => handleAccept(selectedEvent._id)}
+                                                    onClick={() => handleAccept(
+                                                        selectedEvent._id, 
+                                                        selectedNotification.relatedId._id
+                                                    )}
+                                                    disabled={isLoading}
                                                 >
                                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -132,7 +208,11 @@ const NotificationPage = () => {
                                                 </button>
                                                 <button
                                                     className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center"
-                                                    onClick={() => handleDecline(selectedEvent._id)}
+                                                    onClick={() => handleDecline(
+                                                        selectedEvent._id, 
+                                                        selectedNotification.relatedId._id
+                                                    )}
+                                                    disabled={isLoading}
                                                 >
                                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

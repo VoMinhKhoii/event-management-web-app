@@ -241,45 +241,58 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Recent Activity Table */}
-                        <div className="bg-white shadow-sm rounded-md border border-gray-200 overflow-hidden">
+                        {/* Recent Activity Table with dynamic height */}
+                        <div className="bg-white shadow-sm rounded-md border border-gray-200 overflow-hidden flex flex-col">
                             <div className="p-6 pb-2">
-                                <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {activities.map((activity) => (
-                                                <tr key={activity.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        <span className="inline-flex items-center gap-2">
-                                                            <img src={recentActivityIcon} alt="activity" className="w-4 h-4 inline-block" />
-                                                            {activity.desc}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${actionColor[activity.action]}`}>{activity.action.charAt(0).toUpperCase() + activity.action.slice(1)}</span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {activity.timestamp && !isNaN(new Date(activity.timestamp).getTime()) ? (
-                                                            // Pass exact time to TimeAgo component
-                                                            <TimeAgo 
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-semibold">Recent Activity</h2>
+                                    <button 
+                                        onClick={fetchActivities} 
+                                        className="text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1 rounded-md flex items-center gap-1"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {/* Scrollable container with dynamic height */}
+                            <div className="flex-grow overflow-y-auto" style={{ maxHeight: 'calc(100vh - 520px)', minHeight: '200px' }}>
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50 sticky top-0">
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {activities.map((activity) => (
+                                            <tr key={activity.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <img src={recentActivityIcon} alt="activity" className="w-4 h-4 inline-block" />
+                                                        {activity.desc}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${actionColor[activity.action]}`}>{activity.action.charAt(0).toUpperCase() + activity.action.slice(1)}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {activity.timestamp && !isNaN(new Date(activity.timestamp).getTime()) ? (
+                                                        <TimeAgo 
                                                             date={new Date(activity.timestamp)} 
                                                             formatter={{
                                                                 allowFuture: false,
-                                                                minPeriod: 60 // Prevent timestamps from saying "just now" until 30 seconds
+                                                                minPeriod: 60
                                                             }}
-                                                            />
-                                                        ) : (
-                                                            "Unknown time"
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                        />
+                                                    ) : (
+                                                        "Unknown time"
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
