@@ -1,20 +1,20 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext.jsx';
+import { AuthContext } from '../../context/authContext.jsx';
 import NavPane from '../../components/NavPane.jsx';
 
 const Calendar = () => {
-  const {currentUser} = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const navigate = useNavigate();
-  
+
   // Add states for events
   const [isLoading, setIsLoading] = useState(true);
   const [allEvents, setAllEvents] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState({});
-  
+
   // NEW: Add a state for mobile view
   const [isListView, setIsListView] = useState(window.innerWidth < 768);
 
@@ -28,14 +28,14 @@ const Calendar = () => {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-  
+
         if (!response.ok) {
           throw new Error('Failed to fetch events');
         }
-  
+
         const eventData = await response.json();
         setAllEvents(eventData);
-        
+
         // Process events for calendar view
         processEventsForCalendar(eventData);
       } catch (error) {
@@ -47,21 +47,21 @@ const Calendar = () => {
 
     fetchEvents();
   }, [currentDate]); // Refetch when month changes
-  
+
   // Function to process events for calendar
   const processEventsForCalendar = (events) => {
     const eventsMap = {};
-    
+
     events.forEach(event => {
       // Parse the start date to get the day
       const eventDate = new Date(event.startDate);
-      
+
       // Only include events from current month
-      if (eventDate.getMonth() === currentDate.getMonth() && 
-          eventDate.getFullYear() === currentDate.getFullYear()) {
-        
+      if (eventDate.getMonth() === currentDate.getMonth() &&
+        eventDate.getFullYear() === currentDate.getFullYear()) {
+
         const day = eventDate.getDate();
-        
+
         // Format the event for calendar display
         const calendarEvent = {
           id: event._id,
@@ -73,7 +73,7 @@ const Calendar = () => {
           date: eventDate,
           accepted: true // Assuming all events are accepted by default
         };
-        
+
         // Add to events map
         if (!eventsMap[day]) {
           eventsMap[day] = [];
@@ -81,7 +81,7 @@ const Calendar = () => {
         eventsMap[day].push(calendarEvent);
       }
     });
-    
+
     setCalendarEvents(eventsMap);
   };
 
@@ -119,15 +119,15 @@ const Calendar = () => {
   const renderEventsList = () => {
     // Combine all events into a single array with dates
     const displayEvents = [];
-    
+
     // Use real events from API
     allEvents.forEach(event => {
       const eventDate = new Date(event.startDate);
-      
+
       // Only include events from current month
-      if (eventDate.getMonth() === currentDate.getMonth() && 
-          eventDate.getFullYear() === currentDate.getFullYear()) {
-        
+      if (eventDate.getMonth() === currentDate.getMonth() &&
+        eventDate.getFullYear() === currentDate.getFullYear()) {
+
         displayEvents.push({
           id: event._id,
           title: event.title,
@@ -142,10 +142,10 @@ const Calendar = () => {
         });
       }
     });
-    
+
     // Sort events by date
     displayEvents.sort((a, b) => a.date - b.date);
-    
+
     if (isLoading) {
       return (
         <div className="text-center py-8">
@@ -153,12 +153,12 @@ const Calendar = () => {
         </div>
       );
     }
-    
+
     if (displayEvents.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500">
           <p>No events found for this month</p>
-          <button 
+          <button
             onClick={() => navigate('/create-event')}
             className="mt-4 px-4 py-2 bg-[#569DBA] text-white rounded-full hover:bg-opacity-90"
           >
@@ -167,11 +167,11 @@ const Calendar = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="space-y-4 px-2 pb-4">
         {displayEvents.map((event) => (
-          <div 
+          <div
             key={event.id}
             className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"
             onClick={() => handleEventClick(event.id)}
@@ -179,8 +179,8 @@ const Calendar = () => {
             <div className="flex gap-3 items-start">
               {event.image && (
                 <div className="w-16 h-16 flex-shrink-0">
-                  <img 
-                    src={event.image} 
+                  <img
+                    src={event.image}
                     alt={event.title}
                     className="w-full h-full object-cover rounded"
                   />
@@ -292,7 +292,7 @@ const Calendar = () => {
               <td
                 key={`${dayData.isPrevMonth ? 'prev-' : dayData.isNextMonth ? 'next-' : ''}${dayData.day}`}
                 className={`min-w-[20px] border border-gray-200 p-1 md:p-2 align-top overflow-hidden relative ${!dayData.isCurrentMonth ? 'text-black opacity-30'
-                    : 'hover:bg-gray-100 cursor-pointer transition-colors duration-200'
+                  : 'hover:bg-gray-100 cursor-pointer transition-colors duration-200'
                   }`}
                 onClick={dayData.isCurrentMonth ? () => setSelectedDate(dayData.day) : undefined}
               >
@@ -398,13 +398,13 @@ const Calendar = () => {
               onClick={toggleView}
               className="hidden md:flex bg-gray-100 text-gray-700 px-2 py-2 md:px-3 text-sm rounded-full hover:bg-gray-200 transition-colors items-center justify-center mr-2"
             >
-              {isListView ? 
+              {isListView ?
                 <span className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
                   Grid View
-                </span> : 
+                </span> :
                 <span className="flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
