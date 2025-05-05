@@ -147,7 +147,6 @@ const ProfilePage = () => {
       };
       
       setProfileInfo(updatedProfileInfo);
-      console.log('Updated Profile Info:', updatedProfileInfo);
       
 
       // Send request to API to update the user's profile

@@ -1,3 +1,4 @@
+import { model } from "mongoose";
 import Notification from "../models/Notification.js";
 import Participation from "../models/Participation.js";
 
@@ -6,23 +7,21 @@ import Participation from "../models/Participation.js";
 // @access  Private
 export const getNotifications = async (req, res) => {
     try {
-        console.log("Fetching notifications for user ID:", req.params.userId);
-        const { userId } = req.params;
-        const notifications = await Notification.find({
-            userId,
-            relatedId: { $ne: null } // only where relatedId is not null
+        const userId = req.userId;
+        console.log("User ID: ", userId);
+        const notifications = await Notification.find({ userId })
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'relatedId',
+          model: 'Participation',
+          populate: {
+            path: 'event',
+            model: 'Event'
+          }
         })
-            .sort({ createdAt: -1 })
-            .populate({
-                path: 'relatedId',
-                model: 'Participation',
-                populate: {
-                    path: 'event',
-                    model: 'Event'
-                }
-            })
-            .lean(); // optional: return plain JS objects
-
+        .lean();
+      
+        console.log("Notifications: ", notifications);
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });
