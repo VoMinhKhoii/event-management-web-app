@@ -8,7 +8,6 @@ import Invitation from '../models/Invitation.js';
 
 // POST /api/events/:eventId/request-join
 export const requestToJoinEvent = async (req, res) => {
-    // Start a session for the transaction
     console.log('Memory before function:', process.memoryUsage().heapUsed / 1024 / 1024, 'MB');
     const session = await mongoose.startSession();
     
@@ -19,49 +18,38 @@ export const requestToJoinEvent = async (req, res) => {
         const { eventId } = req.params;
         const userId = req.userId;
         
-        // Check if event exists
-        const event = await Event.findById(eventId).session(session);
+        // Check if event exists with minimal data projection
+        const event = await Event.findById(eventId)
+            .select('title organizer status publicity curAttendees maxAttendees startDate startTime endDate endTime')
+            .session(session)
+            .lean();
+            
         if (!event) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({ error: 'Event not found' });
+            throw new Error('Event not found');
         }
 
-        // Check event status
+        // Basic validations
         if (event.status === 'ended') {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'Cannot request to join an event that has ended' });
+            throw new Error('Cannot request to join an event that has ended');
         }
         
         if (event.status === 'cancelled') {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'Cannot request to join a cancelled event' });
+            throw new Error('Cannot request to join a cancelled event');
         }
 
-        // Check if event is public
         if (event.publicity === false) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'Cannot request to join a private event' });
+            throw new Error('Cannot request to join a private event');
         }
         
-        // Check if event's capacity
         if (event.curAttendees >= event.maxAttendees) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'Event is at maximum capacity' });
+            throw new Error('Event is at maximum capacity');
         }
         
-        // Check if user is the organizer (can't request to join your own event)
         if (event.organizer.toString() === userId) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'You are the organizer of this event' });
+            throw new Error('You are the organizer of this event');
         }
 
-        // Check if user already has a participation record
+        // Check existing participation
         const existingParticipation = await Participation.findOne({
             event: eventId,
             user: userId
@@ -71,7 +59,7 @@ export const requestToJoinEvent = async (req, res) => {
             let errorMessage, statusDetails;
             
             switch(existingParticipation.status) {
-                case 'approved':
+                case 'approved': 
                     errorMessage = 'You are already attending this event';
                     statusDetails = 'already_attending';
                     break;
@@ -92,194 +80,29 @@ export const requestToJoinEvent = async (req, res) => {
                     statusDetails = 'existing_record';
             }
             
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({
-                error: errorMessage,
-                status: statusDetails,
+            throw new Error(JSON.stringify({
+                message: errorMessage,
+                code: statusDetails,
                 participationId: existingParticipation._id,
-                participationStatus: existingParticipation.status,
-                participationType: existingParticipation.kind,
-                sentAt: existingParticipation.createdAt
-            });
+                participationType: existingParticipation.kind
+            }));
         }
 
-        // Create join request
-        const request = await Request.create([{
-            event: eventId,
+        // NEW: Check for scheduling conflicts BEFORE creating the request
+        const targetStartDate = event.startDate;
+        const targetEndDate = event.endDate;
+        const targetStartTime = event.startTime;
+        const targetEndTime = event.endTime;
+        
+        // Find conflicting participations
+        const conflictingParticipations = await Participation.find({
             user: userId,
-            status: 'pending',
-            customMessage: req.body.message || '' // Include custom message if provided
-        }], { session }).then(requests => requests[0]);
-
-        console.log("Creating notification with data:", {
-            userId: event.organizer,
-            type: 'joinRequest',
-            message: `${req.username || 'A user'} has requested to join your event: ${event.title}`,
-            relatedId: request._id,
-        });
-
-        // Create notification for the event organizer
-        await Notification.create([{
-            userId: event.organizer,
-            type: 'joinRequest',
-            message: `${req.username || 'A user'} has requested to join your event: ${event.title}`,
-            relatedId: request._id,
-            isRead: false
-        }], { session });
-
-        // Return fully populated data
-        const populatedRequest = await Request.findById(request._id)
-            .session(session)
-            .populate('event', 'title startDate startTime endDate endTime location image')
-            .populate('user', 'username email');
-
-        // Commit the transaction
-        await session.commitTransaction();
-        session.endSession();
-        
-        res.status(201).json({
-            request: populatedRequest,
-            message: 'Join request sent successfully'
-        });
-    } catch (err) {
-        // Abort the transaction on error
-        if (session) {
-            await session.abortTransaction();
-            session.endSession();
-        }
-        console.error('Error creating join request:', err);
-        res.status(500).json({ error: 'Failed to send join request', message: err.message });
-    } finally {
-        // Ensure session is ended
-        if (session) {
-            session.endSession();
-        }
-    }
-    console.log('Memory after function:', process.memoryUsage().heapUsed / 1024 / 1024, 'MB');
-};
-
-// PUT /api/events/:eventId/requests/:requestId
-// PUT /api/events/:eventId/requests/:requestId
-export const handleJoinRequest = async (req, res) => {
-    // Start a session for the transaction
-    const session = await mongoose.startSession();
-    
-    try {
-        // Begin transaction
-        session.startTransaction();
-        
-        const { eventId, requestId } = req.params;
-        const { action } = req.body; // 'approve' / 'decline'
-        const organizerId = req.userId; // From auth middleware
-
-        // Find request - ensure it's a Request type
-        const joinRequest = await Request.findOne({
-            _id: requestId,
-            event: eventId,
-            kind: 'Request' // Ensure it's a Request, not an Invitation
-        }).session(session).populate({
+            status: 'approved',
+        }).session(session)
+        .populate({
             path: 'event',
-            select: 'title organizer curAttendees maxAttendees status startDate startTime endDate endTime'
-        }).populate('user', 'username email');
-
-        if (!joinRequest) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({ error: 'Join request not found' });
-        }
-
-        // Check if request is still pending
-        if (joinRequest.status !== 'pending') {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'This request has already been processed' });
-        }
-        
-        // Check if current user is the event organizer
-        if (joinRequest.event.organizer.toString() !== organizerId) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(403).json({ error: 'Only the event organizer can handle join requests' });
-        }
-        
-        // Check if event is still active
-        if (joinRequest.event.status === 'ended' || joinRequest.event.status === 'cancelled') {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ 
-                error: `Cannot process request for an event that is ${joinRequest.event.status}` 
-            });
-        }
-
-        if (action === 'approve') {
-            // Check capacity within transaction
-            if (joinRequest.event.curAttendees >= joinRequest.event.maxAttendees) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(400).json({ error: 'Event is at maximum capacity' });
-            }
-            
-            // Get current event dates and times
-            const targetStartDate = joinRequest.event.startDate;
-            const targetEndDate = joinRequest.event.endDate;
-            const targetStartTime = joinRequest.event.startTime;
-            const targetEndTime = joinRequest.event.endTime;
-            
-            // Get requestor's ID for conflict checking
-            const requestorId = joinRequest.user._id;
-            
-            // Find conflicting participations of ANY type
-            const conflictingParticipations = await Participation.find({
-                user: requestorId,
-                status: 'approved',
-                _id: { $ne: requestId }
-            }).session(session)
-            .populate({
-                path: 'event',
-                match: {
-                    // Only return events that overlap with the target timeframe
-                    $and: [
-                        // Event hasn't ended before our event starts
-                        {
-                            $or: [
-                                { endDate: { $gt: targetStartDate } },
-                                { 
-                                    $and: [
-                                        { endDate: targetStartDate },
-                                        { endTime: { $gte: targetStartTime } }
-                                    ]
-                                }
-                            ]
-                        },
-                        // Event doesn't start after our event ends
-                        {
-                            $or: [
-                                { startDate: { $lt: targetEndDate } },
-                                {
-                                    $and: [
-                                        { startDate: targetEndDate },
-                                        { startTime: { $lte: targetEndTime } }
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    // Skip events that are cancelled
-                    status: { $ne: 'cancelled' }
-                },
-                select: 'title startDate startTime endDate endTime'
-            });
-            
-            // Find events the user is organizing that overlap with this timeframe
-            const conflictingOrganizedEvents = await Event.find({
-                organizer: requestorId,
-                _id: { $ne: eventId },
-                status: { $nin: ['cancelled', 'ended'] },
-                
-                // Check for overlapping timeframe
+            match: {
                 $and: [
-                    // Event hasn't ended before our event starts
                     {
                         $or: [
                             { endDate: { $gt: targetStartDate } },
@@ -291,7 +114,6 @@ export const handleJoinRequest = async (req, res) => {
                             }
                         ]
                     },
-                    // Event doesn't start after our event ends
                     {
                         $or: [
                             { startDate: { $lt: targetEndDate } },
@@ -303,43 +125,192 @@ export const handleJoinRequest = async (req, res) => {
                             }
                         ]
                     }
-                ]
-            }).session(session)
-            .select('title startDate startTime endDate endTime');
-            
-            // Process conflicts
-            const conflicts = [];
-            
-            // Process participation conflicts
-            conflictingParticipations.forEach(participation => {
-                if (participation.event) {
-                    conflicts.push({
-                        eventTitle: participation.event.title,
-                        eventTime: `${participation.event.startDate} ${participation.event.startTime} - ${participation.event.endDate} ${participation.event.endTime}`,
-                        role: 'Participant',
-                        participationType: participation.kind
-                    });
+                ],
+                status: { $ne: 'cancelled' }
+            },
+            select: 'title startDate startTime endDate endTime'
+        });
+        
+        // Find events the user is organizing that overlap
+        const conflictingOrganizedEvents = await Event.find({
+            organizer: userId,
+            _id: { $ne: eventId },
+            status: { $nin: ['cancelled', 'ended'] },
+            $and: [
+                {
+                    $or: [
+                        { endDate: { $gt: targetStartDate } },
+                        { 
+                            $and: [
+                                { endDate: targetStartDate },
+                                { endTime: { $gte: targetStartTime } }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    $or: [
+                        { startDate: { $lt: targetEndDate } },
+                        {
+                            $and: [
+                                { startDate: targetEndDate },
+                                { startTime: { $lte: targetEndTime } }
+                            ]
+                        }
+                    ]
                 }
-            });
-            
-            // Process organizing conflicts
-            conflictingOrganizedEvents.forEach(event => {
+            ]
+        }).session(session)
+        .select('title startDate startTime endDate endTime');
+        
+        // Process conflicts
+        const conflicts = [];
+        
+        conflictingParticipations.forEach(participation => {
+            if (participation.event) {
                 conflicts.push({
-                    eventTitle: event.title,
-                    eventTime: `${event.startDate} ${event.startTime} - ${event.endDate} ${event.endTime}`,
-                    role: 'Organizer'
-                });
-            });
-            
-            if (conflicts.length > 0) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(400).json({ 
-                    error: 'Scheduling conflict detected',
-                    conflicts: conflicts
+                    eventTitle: participation.event.title,
+                    eventTime: `${participation.event.startDate} ${participation.event.startTime} - ${participation.event.endDate} ${participation.event.endTime}`,
+                    role: 'Participant',
+                    participationType: participation.kind
                 });
             }
+        });
+        
+        conflictingOrganizedEvents.forEach(evt => {
+            conflicts.push({
+                eventTitle: evt.title,
+                eventTime: `${evt.startDate} ${evt.startTime} - ${evt.endDate} ${evt.endTime}`,
+                role: 'Organizer'
+            });
+        });
+        
+        if (conflicts.length > 0) {
+            throw new Error(JSON.stringify({
+                message: 'Scheduling conflict detected',
+                conflicts: conflicts
+            }));
+        }
 
+        // Create join request after all validations pass
+        const request = await Request.create([{
+            event: eventId,
+            user: userId,
+            status: 'pending',
+            customMessage: req.body.message || ''
+        }], { session }).then(requests => requests[0]);
+
+        // Create notification for organizer
+        await Notification.create([{
+            userId: event.organizer,
+            type: 'joinRequest',
+            message: `${req.username || 'A user'} has requested to join your event: ${event.title}`,
+            relatedId: request._id,
+            isRead: false
+        }], { session });
+
+        // Return minimal data
+        const result = {
+            _id: request._id,
+            status: 'pending',
+            event: {
+                _id: event._id,
+                title: event.title
+            },
+            message: 'Join request sent successfully'
+        };
+        
+        // Commit transaction
+        await session.commitTransaction();
+        
+        res.status(201).json(result);
+    } catch (err) {
+        // Better error handling
+        if (session) {
+            try {
+                await session.abortTransaction();
+            } catch (abortError) {
+                console.error('Error aborting transaction:', abortError);
+            }
+        }
+        
+        console.error('Error in requestToJoinEvent:', err);
+        
+        // Parse error message if it's our custom JSON error
+        try {
+            const parsedError = JSON.parse(err.message);
+            if (parsedError.conflicts) {
+                return res.status(400).json({
+                    error: 'Scheduling conflict detected',
+                    conflicts: parsedError.conflicts
+                });
+            } else {
+                return res.status(400).json({
+                    error: parsedError.message,
+                    status: parsedError.code,
+                    participationId: parsedError.participationId
+                });
+            }
+        } catch (parseErr) {
+            // Regular error handling
+            return res.status(err.message.includes('not found') ? 404 : 400).json({ 
+                error: err.message || 'Failed to send join request'
+            });
+        }
+    } finally {
+        // Always end the session
+        if (session) {
+            session.endSession();
+        }
+        
+        console.log('Memory after function:', process.memoryUsage().heapUsed / 1024 / 1024, 'MB');
+    }
+};
+
+// PUT /api/events/:eventId/requests/:requestId
+export const handleJoinRequest = async (req, res) => {
+    const session = await mongoose.startSession();
+    
+    try {
+        session.startTransaction();
+        
+        const { eventId, requestId } = req.params;
+        const { action } = req.body; // 'approve' / 'decline'
+        const organizerId = req.userId;
+
+        // Find request with minimal population
+        const joinRequest = await Request.findOne({
+            _id: requestId,
+            event: eventId,
+            kind: 'Request'
+        }).session(session)
+        .populate('event', 'title organizer curAttendees maxAttendees status')
+        .populate('user', 'username email');
+
+        if (!joinRequest) {
+            throw new Error('Join request not found');
+        }
+
+        if (joinRequest.status !== 'pending') {
+            throw new Error('This request has already been processed');
+        }
+        
+        if (joinRequest.event.organizer.toString() !== organizerId) {
+            throw new Error('Only the event organizer can handle join requests');
+        }
+        
+        if (joinRequest.event.status === 'ended' || joinRequest.event.status === 'cancelled') {
+            throw new Error(`Cannot process request for an event that is ${joinRequest.event.status}`);
+        }
+
+        if (action === 'approve') {
+            // Check capacity
+            if (joinRequest.event.curAttendees >= joinRequest.event.maxAttendees) {
+                throw new Error('Event is at maximum capacity');
+            }
+            
+            // No need to check conflicts here - already checked during request creation
+            
             // Update request status
             await Participation.findByIdAndUpdate(
                 requestId,
@@ -357,7 +328,7 @@ export const handleJoinRequest = async (req, res) => {
                 { session }
             );
             
-            // Create notification for the requestor
+            // Create notification for requestor
             await Notification.create([{
                 userId: joinRequest.user._id,
                 type: 'requestApproved',
@@ -377,7 +348,7 @@ export const handleJoinRequest = async (req, res) => {
                 { session }
             );
             
-            // Create notification for the requestor
+            // Create notification for requestor
             await Notification.create([{
                 userId: joinRequest.user._id,
                 type: 'requestDeclined',
@@ -386,32 +357,36 @@ export const handleJoinRequest = async (req, res) => {
                 isRead: false
             }], { session });
         } else {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ error: 'Invalid action' });
+            throw new Error('Invalid action');
         }
 
-        // Get the updated request to return in response
-        const updatedRequest = await Request.findById(requestId)
-            .session(session)
-            .populate('event', 'title startDate startTime location')
-            .populate('user', 'username email');
-        
-        // Commit the transaction
-        await session.commitTransaction();
-        session.endSession();
-        
-        res.status(200).json({
-            request: updatedRequest,
+        // Return minimal data
+        const result = {
+            requestId: requestId,
+            status: action === 'approve' ? 'approved' : 'rejected',
             message: `Join request ${action === 'approve' ? 'approved' : 'declined'} successfully`
-        });
+        };
+        
+        await session.commitTransaction();
+        
+        res.status(200).json(result);
     } catch (err) {
-        // Abort the transaction on error
         if (session) {
-            await session.abortTransaction();
+            try {
+                await session.abortTransaction();
+            } catch (abortError) {
+                console.error('Error aborting transaction:', abortError);
+            }
+        }
+        
+        console.error('Error handling join request:', err);
+        
+        res.status(400).json({ 
+            error: err.message || 'Failed to process join request'
+        });
+    } finally {
+        if (session) {
             session.endSession();
         }
-        console.error('Error handling join request:', err);
-        res.status(500).json({ error: 'Failed to process join request', message: err.message });
     }
 };
