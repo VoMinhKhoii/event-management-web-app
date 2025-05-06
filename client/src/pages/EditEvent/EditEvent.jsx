@@ -1,15 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
 
 const EditEvent = () => {
+    const { id: eventId } = useParams();
     const navigate = useNavigate();
+    const { currentUser } = useContext(AuthContext);
 
     const [imagePreview, setImagePreview] = useState(null);
     const fileInputRef = useRef(null);
-    const { currentUser } = useContext(AuthContext);
     const [errors, setErrors] = useState({});
     const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
     const [formData, setFormData] = useState({
@@ -216,6 +217,10 @@ const EditEvent = () => {
         }));
     };
 
+    const handleCancel = () => {
+        navigate(`/event/${eventId}`);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 font-['Poppins']">
             {/* Navigation Header */}
@@ -225,26 +230,18 @@ const EditEvent = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
                 {/* Header with responsive layout */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                    <h1 className="text-[24px] sm:text-[28px] font-semibold">New Event</h1>
-                    {/* Privacy Toggle */}
-                    <div className="flex items-center space-x-2 self-end sm:self-auto">
-                        <span className="text-sm font-medium text-gray-700">
-                            {privacy ? 'Private' : 'Public'}
-                        </span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                className="sr-only peer"
-                                checked={privacy}
-                                onChange={handlePrivacyToggle}
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#569DBA]"></div>
-                        </label>
-                    </div>
+                    <h1 className="text-[24px] sm:text-[28px] font-semibold">Edit Event</h1>
+                    <button
+                        type='button'
+                        onClick={handleCancel}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                    >
+                        Cancel
+                    </button>
                 </div>
 
                 {/* Responsive grid layout that adapts to screen size */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Left Column: Event Form - Full width on mobile, appropriate size on larger screens */}
                     <form className="md:col-span-1 lg:col-span-5 space-y-4">
                         <div>
@@ -476,57 +473,6 @@ const EditEvent = () => {
                                 />
                             </div>
                         </div>
-                    </div>
-
-                    {/* Right Column: Invite Participants */}
-                    <div className="md:col-span-2 lg:col-span-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Invite Participants
-                        </label>
-
-                        {privacy ? (
-                            // Public event - Show invitation form
-                            <div className="bg-[#569DBA] text-white p-4 md:p-6 rounded-lg">
-                                {/* Invite Form */}
-                                <form onSubmit={(e) => e.preventDefault()} className="mb-6">
-                                    <label className="block text-sm font-medium mb-2">Email</label>
-                                    <input
-                                        type="email"
-                                        placeholder="Enter email"
-                                        className="w-full px-3 py-2 mb-4 border border-gray-300 rounded-lg focus:outline-none text-black"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="w-full bg-white text-[#569DBA] py-2 rounded-lg hover:bg-opacity-90 transition-colors"
-                                    >
-                                        Send Invite
-                                    </button>
-                                </form>
-                            </div>
-                        ) : (
-                            // Private event - Show message
-                            <div className="bg-gray-100 text-gray-700 p-4 md:p-6 rounded-lg h-full min-h-[200px] flex items-center">
-                                <div className="flex flex-col items-center justify-center w-full">
-                                    <svg
-                                        className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mb-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="1.5"
-                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                                        />
-                                    </svg>
-                                    <p className="text-center font-medium mb-2">Public Event</p>
-                                    <p className="text-center text-sm text-gray-500">
-                                        Invitations are disabled for Public events. Switch to private mode to enable invitations.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
