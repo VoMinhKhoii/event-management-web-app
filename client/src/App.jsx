@@ -50,7 +50,7 @@ function App() {
       element: <Calendar />
     },
     {
-      path: "/event/:eventId",
+      path: "/event/:id",
       element: <EventDetails />,
       loader: singleEventLoader
     },
