@@ -74,17 +74,36 @@ export const createReply = async (req, res) => {
         const { commentId } = req.params;
         const { text } = req.body;
 
+        // Add validation
+        if (!text || !text.trim()) {
+            return res.status(400).json({ message: "Reply text cannot be empty" });
+        }
+
+        // Check authentication
+        if (!req.userId) {
+            return res.status(401).json({ message: "Authentication required" });
+        }
+
         const comment = await Comment.findById(commentId);
         if (!comment) {
             return res.status(404).json({ message: "Comment not found" });
         }
 
+        // Add reply to comment
         comment.replies.push({ user: req.userId, text });
         await comment.save();
 
-        const populatedComment = await comment.populate("replies.user", "username avatar");
+        // Get fully populated comment with both comment user and reply users
+        const populatedComment = await Comment.findById(commentId)
+            .populate("user", "username avatar email")
+            .populate("replies.user", "username avatar email");
+            
+        // Log success for debugging
+        console.log(`Reply added to comment ${commentId} by user ${req.userId}`);
+            
         res.status(201).json(populatedComment);
     } catch (err) {
+        console.error("Error creating reply:", err);
         res.status(500).json({ message: err.message });
     }
 };
@@ -136,10 +155,12 @@ export const deleteReply = async (req, res) => {
             return res.status(403).json({ message: "You are not authorized to delete this reply" });
         }
 
-        reply.remove();
+        comment.replies.pull({ _id: replyId });
         await comment.save();
 
-        const populatedComment = await comment.populate("replies.user", "username avatar");
+        const populatedComment = await Comment.findById(commentId)
+            .populate("user", "username avatar email")
+            .populate("replies.user", "username avatar email");
         res.status(200).json(populatedComment);
     } catch (err) {
         res.status(500).json({ message: err.message });
