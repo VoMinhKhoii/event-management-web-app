@@ -19,8 +19,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-
-    // Fetch events with caching - similar to AdminDashboard
+    // Fetch events with caching 
   const fetchEvents = async (forceRefresh = false) => {
     setLoading(true);
   

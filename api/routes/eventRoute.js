@@ -1,14 +1,15 @@
 import express from 'express';
-import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent} from '../controllers/eventController.js';
+import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent } from '../controllers/eventController.js';
 import { requestToJoinEvent, handleJoinRequest } from '../controllers/eventRequestController.js';
 import { inviteToEvent, handleInvitation } from '../controllers/eventInvitationController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
+import { upload } from '../middleware/fileUpload.js';
 
 const router = express.Router();
 
 router.get('/', verifyToken, getAllEvent);
 router.get('/:eventId', verifyToken, getEvent);
-router.post('/', verifyToken, createEvent);
+router.post('/', verifyToken, upload.single('image'), createEvent);
 router.put('/:eventId', verifyToken, updateEvent);
 router.delete('/:eventId', verifyToken, deleteEvent);
 
