@@ -649,28 +649,40 @@ const EventDetails = () => {
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
           <div className="lg:col-span-2">
-            <h1 className="text-[32px] md:text-[42px] lg:text-[52px] font-bold mb-4">{eventData.title}</h1>
+            <h1 className='text-[32px] md:text-[42px] lg:text-[52px] font-bold break-words mr-2'>{eventData.title}</h1>
 
-            <div className="flex flex-wrap items-center gap-4 md:gap-6 text-gray-600 mb-8">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{eventData.startDate}</span>
+            <div className="flex justify-between items-center mb-8">
+              <div className='flex flex-wrap items-center gap-4 md:gap-6 text-gray-600'>
+
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{eventData.startDate}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{eventData.startTime} - {eventData.endTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{eventData.location}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{eventData.startTime} - {eventData.endTime}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{eventData.location}</span>
-              </div>
+
+              {isOrganizer && (
+                <Link
+                  to={`/event/${id}/edit`}
+                  className='flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap'
+                >
+                  Edit
+                </Link>
+              )}
             </div>
 
             <section className="mb-8">
