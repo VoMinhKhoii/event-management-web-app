@@ -6,8 +6,10 @@ import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/authContext.jsx';
 
+
 const EventDetails = () => {
   const { id } = useParams();
+  console.log("Event ID from URL parameters:", id); // Add this debugging line
   const eventData = useLoaderData(); // Get event data from loader
 
   const { currentUser } = useContext(AuthContext);
@@ -47,7 +49,12 @@ const EventDetails = () => {
           throw new Error('Failed to fetch comments');
         }
         const data = await response.json();
-        setComments(data);
+        // Add this when fetching comments
+        const normalizedComments = data.map(comment => ({
+          ...comment,
+          replies: comment.replies || []  // Ensure replies is always an array and prevent data inconsistency
+        }));
+        setComments(normalizedComments);
       } catch (err) {
         console.error('Error fetching comments:', err);
         setError('Failed to load comments. Please try again later.');
@@ -131,6 +138,11 @@ const EventDetails = () => {
     setReplyingTo(commentId);
   };
 
+  const hasNoReplies = (comment) => {
+    // This will be computed fresh on every render
+    return !comment.replies || comment.replies.length === 0;
+  };
+
   const handleCancelReply = () => {
     setReplyingTo(null);
     setReplyText('');
@@ -198,6 +210,42 @@ const EventDetails = () => {
     } catch (err) {
       console.error('Error deleting comment:', err);
       setError('Failed to delete comment. Please try again.');
+    }
+  };
+
+  const handleDeleteReply = async (commentId, replyId) => {
+    if (!currentUser) return;
+
+    // Confirm before deleting
+    if (!window.confirm('Are you sure you want to delete this reply?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8800/api/comments/${commentId}/replies/${replyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete reply');
+      }
+
+      // This is the updated comment with the new reply already included
+      const updatedComment = await response.json();
+
+      // Update the comments state with the updated comment
+      setComments(prevComments =>
+        prevComments.map(comment =>
+          comment._id === commentId ? updatedComment : comment
+        )
+      );
+    } catch (err) {
+      console.error('Error deleting reply:', err);
+      setError('Failed to delete reply. Please try again.');
     }
   };
 
@@ -720,14 +768,15 @@ const EventDetails = () => {
                           >
                             Reply
                           </button>
-                          {comment.user?._id === currentUser?._id && (
-                            <button
-                              className="mr-[16px] text-gray-500 text-sm mt-1 hover:text-gray-700"
-                              onClick={() => handleDeleteClick(comment._id || comment.id)}
-                            >
-                              Delete
-                            </button>
-                          )}
+                          {String(comment.user?._id) === String(currentUser?._id) &&
+                            (!comment.replies || comment.replies.length === 0) && (
+                              <button
+                                className="mr-[16px] text-gray-500 text-sm mt-1 hover:text-gray-700"
+                                onClick={() => handleDeleteClick(comment._id || comment.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
                         </div>
                       </div>
 
@@ -785,6 +834,15 @@ const EventDetails = () => {
                                   </span>
                                 </div>
                                 <p className="text-gray-700 text-sm">{reply.text}</p>
+                                {console.log(`Comment ${comment._id}: replies=${JSON.stringify(comment.replies)}`)}
+                                {String(reply.user?._id) === String(currentUser?._id) && (
+                                  <button
+                                    className="text-gray-500 text-sm mt-1 hover:text-gray-700"
+                                    onClick={() => handleDeleteReply(comment._id, reply._id)}
+                                  >
+                                    Delete
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ))}
