@@ -47,14 +47,14 @@ const LoginPage = () => {
                 console.error("No user data in response");
                 throw new Error(data.message || 'Login failed');
             }
-
+            alert('Login successful! Redirecting to home page.');
             updateUser(data.user);
             console.log('Login successful:', data);
             navigate('/home'); // Redirect to home page after successful login
 
         } catch (err) {
             console.error('Login error:', err);
-            setError(err.message || 'Something went wrong. Please try again.');
+            alert(err.message || 'Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -90,7 +90,6 @@ const LoginPage = () => {
                     <div className="mb-4">
                         <div className="flex justify-between items-center mb-1">
                             <label htmlFor="password" className="block font-medium text-[#374151]">Password</label>
-                            <a href="#" className="text-[14px] text-[#569DBA] hover:underline">Forgot password?</a>
                         </div>
                         <input
                             type="password"

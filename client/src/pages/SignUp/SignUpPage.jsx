@@ -109,7 +109,7 @@ const SignUpPage = () => {
                 return;
             }
 
-            setSuccessMessage('Registration successful! Redirecting to login...');
+            alert('Registration successful! Redirecting to login...');
             setTimeout(() => {
                 navigate("/login");
             }, 1500);
@@ -134,14 +134,6 @@ const SignUpPage = () => {
                         {error}
                     </div>
                 )}
-
-                {/* Show success message */}
-                {successMessage && (
-                    <div className="mb-4 p-3 bg-green-50 border border-green-300 text-green-700 rounded-md">
-                        {successMessage}
-                    </div>
-                )}
-
                 <form onSubmit={handleSubmit}>
                     <div className="flex gap-5 mb-4">
                         <div className="flex-1">
