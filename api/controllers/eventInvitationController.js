@@ -5,6 +5,30 @@ import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
 import mongoose from "mongoose";
 
+
+
+// GET /api/events/:eventId/invitations/:userId
+export const getInvitations = async (req, res) => {
+    try {  
+        const { eventId } = req.params;
+        const invitations = await Participation.find({ event: eventId }).populate({
+            path: 'user',
+            select: 'username avatar email'
+        });
+        if (!invitations) {
+            return res.status(404).json({ error: 'No invitations found' });
+        }
+        res.status(200).json({ invitations });
+    } catch (err) {
+        console.error('Error fetching invitations:', err);
+        res.status(500).json({ error: 'Failed to fetch invitations', message: err.message });
+    }
+};
+
+
+
+
+
 // POST /api/events/:eventId/invite
 export const inviteToEvent = async (req, res) => {
     // Start a session for the transaction
