@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
@@ -13,6 +13,7 @@ const EditEvent = () => {
     const fileInputRef = useRef(null);
     const [errors, setErrors] = useState({});
     const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
+    const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -21,12 +22,58 @@ const EditEvent = () => {
         endTime: '',
         startDate: '',
         endDate: '',
-        location: null,
+        location: '',
         eventType: '',
         image: null,
         maxAttendees: '',
         publicity: !privacy
     });
+
+    // fetch event data when mounting component
+    useEffect(() => {
+        const fetchEventData = async () => {
+            try {
+                const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch event data');
+                }
+                const data = await response.json();
+
+                const startDate = new Date(data.startDate).toISOString().split('T')[0];
+                const endDate = new Date(data.endDate).toISOString().split('T')[0];
+
+                setFormData({
+                    title: data.title || '',
+                    description: data.description || '',
+                    summary: data.summary || '',
+                    startTime: data.startTime || '',
+                    endTime: data.endTime || '',
+                    startDate: startDate || '',
+                    endDate: endDate || '',
+                    location: data.location || '',
+                    eventType: data.eventType || '',
+                    image: null, // handle image separately
+                    maxAttendees: data.maxAttendees || '',
+                    publicity: data.publicity !== undefined ? data.publicity : !privacy
+                });
+
+                setPrivacy(!data.publicity);
+
+                if (data.image) {
+                    setImagePreview(data.image);
+                }
+                setIsLoading(false);
+            } catch (err) {
+                console.error('Error fetching event data:', err);
+                alert('Failed to fetch event data');
+                navigate(`/event/${eventId}`);
+            }
+        };
+        fetchEventData();
+    }, [eventId, navigate])
 
     const validateForm = () => {
         try {
@@ -79,6 +126,10 @@ const EditEvent = () => {
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
 
+        if (!window.confirm('Are you sure you want to update the event information?')) {
+            return;
+        }
+
         if (validateForm()) {
             try {
                 const fd = new FormData();
@@ -96,13 +147,11 @@ const EditEvent = () => {
                 }
                 fd.append('organizer', currentUser._id);
 
-                const response = await fetch('http://localhost:8800/api/events', {
-                    method: 'POST',
+                const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+                    method: 'PUT',
                     credentials: 'include',
                     body: fd,
                 });
-
-                console.log(formData);
 
                 if (!response.ok) {
                     // If response is not in the 200-299 range
@@ -112,10 +161,10 @@ const EditEvent = () => {
 
                 const data = await response.json();
                 console.log('Event edited:', data);
-                alert('Event edited successfully!');
+                alert('Event updated successfully!');
                 navigate(`/event/${data._id}`); // Redirect to the event page
             } catch (error) {
-                console.error('Error editing event:', error.message);
+                console.error('Error updating event:', error.message);
                 alert(error.message || 'Failed to edit event');
             }
         }
@@ -221,6 +270,19 @@ const EditEvent = () => {
         navigate(`/event/${eventId}`);
     };
 
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 font-['Poppins']">
+                <NavPane />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 font-['Poppins']">
             {/* Navigation Header */}
@@ -231,13 +293,29 @@ const EditEvent = () => {
                 {/* Header with responsive layout */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                     <h1 className="text-[24px] sm:text-[28px] font-semibold">Edit Event</h1>
-                    <button
-                        type='button'
-                        onClick={handleCancel}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-                    >
-                        Cancel
-                    </button>
+                    <div className='flex items-center gap-4'>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-gray-700">
+                                {privacy ? 'Private' : 'Public'}
+                            </span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="sr-only peer"
+                                    checked={privacy}
+                                    onChange={handlePrivacyToggle}
+                                />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#569DBA]"></div>
+                            </label>
+                        </div>
+                        <button
+                            type='button'
+                            onClick={handleCancel}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
 
                 {/* Responsive grid layout that adapts to screen size */}
@@ -483,7 +561,7 @@ const EditEvent = () => {
                     className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
                     onClick={handleSubmit}
                 >
-                    Edit
+                    Update
                 </button>
             </div>
         </div>

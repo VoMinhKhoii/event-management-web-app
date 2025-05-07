@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/', verifyToken, getAllEvent);
 router.get('/:eventId', verifyToken, getEvent);
 router.post('/', verifyToken, upload.single('image'), createEvent);
-router.put('/:eventId', verifyToken, updateEvent);
+router.put('/:eventId', verifyToken, upload.single('image'), updateEvent);
 router.delete('/:eventId', verifyToken, deleteEvent);
 
 
