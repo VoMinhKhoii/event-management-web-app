@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import Notification from '../models/Notification.js';
 import Participation from '../models/Participation.js';
 import Invitation from '../models/Invitation.js';
+import User from '../models/User.js';
 
 // POST /api/events/:eventId/request-join
 export const requestToJoinEvent = async (req, res) => {
@@ -200,11 +201,14 @@ export const requestToJoinEvent = async (req, res) => {
             customMessage: req.body.message || ''
         }], { session }).then(requests => requests[0]);
 
+        const requestingUser = await User.findById(userId).select('username').lean();
+        console.log('Requesting user:', requestingUser);
+
         // Create notification for organizer
         await Notification.create([{
             userId: event.organizer,
             type: 'joinRequest',
-            message: `${req.username || 'A user'} has requested to join your event: ${event.title}`,
+            message: `${requestingUser.username || 'A user'} has requested to join your event`,
             relatedId: request._id,
             isRead: false
         }], { session });
