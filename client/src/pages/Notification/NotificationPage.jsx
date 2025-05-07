@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext} from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
-import { NotificationContext } from '../../context/notificationContext.jsx'; // adjust path if needed
+import { NotificationContext } from '../../context/NotificationContext.jsx'; // adjust path if needed
 const NotificationPage = () => {
     // State to keep track of selected notification/event
     const {notifications, markAsRead, deleteNotification} = useContext(NotificationContext);
@@ -140,7 +140,7 @@ const NotificationPage = () => {
                                     {notifications.map((notification) => (
                                         <div
                                             key={notification._id}
-                                            className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification.relatedId.event._id ? 'bg-blue-50' : ''
+                                            className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification?.relatedId?.event?._id ? 'bg-blue-50' : ''
                                                 } ${notification.isRead ? 'opacity-70' : 'font-medium'}`}
                                             onClick={() => handleNotificationClick(notification)}
                                         >
@@ -248,7 +248,6 @@ const NotificationPage = () => {
                                                 <span>{selectedEvent.location}</span>
                                             </div>
                                         </div>
-
                                         <section className="mb-8">
                                             <h2 className="text-2xl font-semibold mb-4">About this event</h2>
                                             <p className="text-gray-600 mb-8">{selectedEvent.description}</p>

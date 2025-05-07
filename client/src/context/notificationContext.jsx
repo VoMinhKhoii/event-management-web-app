@@ -20,8 +20,8 @@ export const NotificationContextProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('Failed to fetch notifications');
             }
+            
             const data = await response.json();
-            console.log('Fetched notifications:', data);
             setNotifications(data);
         } catch (error) {
             console.error('Error fetching notifications:', error);
