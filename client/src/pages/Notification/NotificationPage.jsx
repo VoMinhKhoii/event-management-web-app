@@ -17,7 +17,7 @@ const NotificationPage = () => {
         if (notification.isRead === false) {
             markAsRead(notification._id);
         }
-        if (notification.relatedId !== null) {   
+        if (notification.relatedId !== null && notification.relatedId.event) {   
             const eventInfo = notification.relatedId.event;
             setSelectedEvent(eventInfo); // Set the event info
 
@@ -140,8 +140,10 @@ const NotificationPage = () => {
                                     {notifications.map((notification) => (
                                         <div
                                             key={notification._id}
+
                                             className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification?.relatedId?.event?._id ? 'bg-blue-50' : ''
                                                 } ${notification.isRead ? 'opacity-70' : 'font-medium'}`}
+
                                             onClick={() => handleNotificationClick(notification)}
                                         >
                                             <div className="flex items-center">
@@ -152,7 +154,7 @@ const NotificationPage = () => {
                                                 />
                                                 <div>
                                                     <div className="flex items-center">
-                                                        <span className="text-gray-800">{notification.relatedId  ? notification.relatedId.event.title : "System"}</span>
+                                                        <span className="text-gray-800">{notification.relatedId && notification.relatedId.event ? notification.relatedId.event.title : "System"}</span>
                                                     </div>
                                                     <p className="text-gray-600">{notification.message}</p>
                                                 </div>
@@ -238,7 +240,7 @@ const NotificationPage = () => {
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span>{selectedEvent.startTime}</span>
+                                                <span>{selectedEvent.startTime}-{selectedEvent.endTime}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
