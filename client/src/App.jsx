@@ -11,6 +11,7 @@ import SignUpPage from './pages/SignUp/SignUpPage.jsx';
 import NotificationPage from './pages/Notification/NotificationPage.jsx';
 import AdminUserPage from './Admin/AdminUserPage.jsx';
 import AdminEventsPage from './Admin/AdminEventsPage.jsx';
+import AdminSettingPage from './Admin/AdminSettingPage.jsx';
 import AdminDashboard from './Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
 import { eventCommentsLoader } from "./lib/loaders";
@@ -36,6 +37,10 @@ function App() {
     {
       path: "/adminevents",
       element: <AdminEventsPage />
+    },
+    {
+      path: "/adminsetting",
+      element: <AdminSettingPage />
     },
     {
       path: "/signup",
