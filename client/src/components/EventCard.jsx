@@ -1,9 +1,54 @@
 import React from 'react';
 
-const EventCard = ({ title, image, startDate, startTime, endTime, location, description, curAttendees, category, eventType, onClick }) => {
+const EventCard = ({ title, image, startDate, startTime, endTime, location, description, curAttendees, category, eventType, onClick, _id }) => {
   const displayCategory = category || eventType;
-  return (  
+  
+  // Handle request to join
+  const handleRequestJoin = async (e) => {
+    e.stopPropagation(); // Prevent card click event
     
+    // Confirmation dialog
+    if (!window.confirm(`Are you sure you want to request to join "${title}"?`)) {
+      return; // Exit if user cancels
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${_id}/request-join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ message: '' }) // Optional custom message
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 400 && data.conflicts) {
+          const conflictMessages = data.conflicts.map(conflict => 
+            `• ${conflict.eventTitle} (${conflict.eventTime})`
+          ).join('\n');
+          
+          alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
+        } else {
+          // General error message
+          alert(data.message || 'Failed to send join request');
+        }
+        return;
+      }
+      
+      // Success message
+      alert('Your request to join has been sent successfully!');
+      
+    } catch (err) {
+      console.error('Error requesting to join event:', err);
+      alert('Network error. Please try again later.');
+    }
+  };
+  
+  return (  
     <div className="event-card bg-white rounded-lg shadow-md overflow-hidden font-['Poppins'] flex flex-col h-full" onClick={onClick}>
       <div className="card-image-container relative h-48">
         <img
@@ -57,7 +102,10 @@ const EventCard = ({ title, image, startDate, startTime, endTime, location, desc
             </svg>
             <span>{curAttendees} attending</span>
           </div>
-          <button className="px-4 py-2 rounded-[50px] text-white font-medium bg-[#569DBA]">
+          <button 
+            className="px-4 py-2 rounded-[50px] text-white font-medium bg-[#569DBA] hover:bg-[#4a89a3]"
+            onClick={handleRequestJoin}
+          >
             Request to join
           </button>
         </div>
