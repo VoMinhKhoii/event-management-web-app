@@ -5,7 +5,7 @@ import NavPane from './NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/authContext.jsx';
-import { NotificationContext} from '../context/NotificationContext.jsx';
+import { NotificationContext} from '../context/notificationContext.jsx';
 
 
 const EventDetails = () => {
