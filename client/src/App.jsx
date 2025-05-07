@@ -27,19 +27,19 @@ function App() {
       element: <LoginPage />
     },
     {
-      path: "/admindashboard",
+      path: "/admin/dashboard",
       element: <AdminDashboard />
     },
     {
-      path: "/adminuserpage",
+      path: "/admin/userpage",
       element: <AdminUserPage />
     },
     {
-      path: "/adminevents",
+      path: "/admin/events",
       element: <AdminEventsPage />
     },
     {
-      path: "/adminsetting",
+      path: "/admin/setting",
       element: <AdminSettingPage />
     },
     {

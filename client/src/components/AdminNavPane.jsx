@@ -46,28 +46,28 @@ const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
     const navItems = [
         {
             name: 'Dashboard',
-            path: '/admindashboard',
+            path: '/admin/dashboard',
             menu: 'dashboard',
             activeIcon: chartActive,
             inactiveIcon: chartInactive,
         },
         {
             name: 'Users',
-            path: '/adminuserpage',
+            path: '/admin/userpage',
             menu: 'users',
             activeIcon: userActive,
             inactiveIcon: userInactive,
         },
         {
             name: 'Events',
-            path: '/adminevents',
+            path: '/admin/events',
             menu: 'events',
             activeIcon: calendarActive,
             inactiveIcon: calendarInactive,
         },
         {
             name: 'Settings',
-            path: '/adminsetting',
+            path: '/admin/setting',
             menu: 'settings',
             activeIcon: settingActive,
             inactiveIcon: settingInactive,
