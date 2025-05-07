@@ -6,9 +6,7 @@ import { AuthContext } from '../../context/authContext.jsx';
 import { useContext } from 'react';
 
 const LoginPage = () => {
-
     const navigate = useNavigate();
-
     const { updateUser } = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -25,12 +23,11 @@ const LoginPage = () => {
         }));
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const res = await fetch('http://localhost:8800/api/auth/login', {
                 method: 'POST',
@@ -46,17 +43,15 @@ const LoginPage = () => {
 
             const data = await res.json();
 
-            
             if (!res.ok) {
                 console.error("No user data in response");
                 throw new Error(data.message || 'Login failed');
             }
 
-            updateUser(data.user); 
-            
+            updateUser(data.user);
             console.log('Login successful:', data);
             navigate('/home'); // Redirect to home page after successful login
-            
+
         } catch (err) {
             console.error('Login error:', err);
             setError(err.message || 'Something went wrong. Please try again.');
@@ -70,6 +65,13 @@ const LoginPage = () => {
             <div className="bg-white rounded-[12px] shadow-md max-w-md w-full p-6 transition-all duration-300 hover:shadow-xl hover:translate-y-[-1px]">
                 <h1 className="text-[32px] font-bold text-center mb-[12px]">Log in</h1>
                 <p className="text-center text-[#4B5563] mb-[24px]">Welcome back!</p>
+
+                {/* Display error message */}
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md">
+                        {error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
@@ -104,8 +106,9 @@ const LoginPage = () => {
                     <button
                         type="submit"
                         className="text-[16px] w-full bg-[#569DBA] text-white py-[12px] rounded-full hover:bg-opacity-90 transition-colors mt-4"
+                        disabled={isLoading}
                     >
-                        Log in
+                        {isLoading ? 'Logging in...' : 'Log in'}
                     </button>
                 </form>
 
@@ -118,6 +121,5 @@ const LoginPage = () => {
             </div>
         </div>
     );
-};
-
+}
 export default LoginPage;

@@ -5,11 +5,65 @@ import { useNavigate } from 'react-router-dom';
 
 const SignUpPage = () => {
 
-
+    const [error, setError] = useState(null);
+    const [passwordStrength, setPasswordStrength] = useState({
+        score: 0,
+        message: "",
+        color: ""
+    });
+    
+    const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(null);
     const navigate = useNavigate();
+
+    const checkPasswordStrength = (password) => {
+        let score = 0;
+        let message = "";
+        let color = "";
+
+        if (!password || password.length === 0) {
+            setPasswordStrength({ score: 0, message: "", color: "" });
+            return;
+        }
+
+        if (password.length >= 8) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+
+        switch (score) {
+            case 0:
+            case 1:
+                message = "Weak";
+                color = "#f44336";
+                break;
+            case 2:
+                message = "Fair";
+                color = "#ff9800";
+                break;
+            case 3:
+                message = "Good";
+                color = "#2196f3";
+                break;
+            case 4:
+                message = "Strong";
+                color = "#4caf50";
+                break;
+            default:
+                break;
+        }
+
+        setPasswordStrength({ score, message, color });
+    };
+
+    const handlePasswordChange = (e) => {
+        checkPasswordStrength(e.target.value);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError(null); // Reset error state
+        setIsLoading(true); // Start loading
 
         const formData = new FormData(e.target);
 
@@ -17,35 +71,55 @@ const SignUpPage = () => {
         const lastName = formData.get('lastName');
         const username = formData.get('username');
         const email = formData.get('email');
-        const contact = formData.get('contact');
         const password = formData.get('password');
 
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters long");
+            setIsLoading(false); // Stop loading
+            return;
+        }
+
+        if (passwordStrength.score < 2) {
+            setError("Please choose a stronger password");
+            setIsLoading(false); // Stop loading
+            return;
+        }
 
         console.log("Register:", { firstName, lastName, username, email, password });
 
-        const res = await fetch('http://localhost:8800/api/auth/signup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                firstName,
-                lastName,
-                username,
-                email,
-                password,
+        try {
+            const res = await fetch('http://localhost:8800/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    firstName,
+                    lastName,
+                    username,
+                    email,
+                    password,
+                })
+            });
 
-            })
-        });
+            const data = await res.json();
 
-        const data = await res.json();
+            if (!res.ok) {
+                setError(data.message || 'Registration failed');
+                return;
+            }
 
-        if (!res.ok) {
-            throw new Error(data.message || 'Registration failed');
+            setSuccessMessage('Registration successful! Redirecting to login...');
+            setTimeout(() => {
+                navigate("/login");
+            }, 1500);
+            console.log(data);
+        } catch (err) {
+            console.error('Registration error:', err);
+            setError(err.message || 'Something went wrong. Please try again.');
+        } finally {
+            setIsLoading(false); // Stop loading
         }
-
-        navigate("/login");
-        console.log(data);
     };
 
     return (
@@ -53,6 +127,20 @@ const SignUpPage = () => {
             <div className="bg-white rounded-[12px] shadow-md max-w-md w-full p-6 transition-all duration-300 hover:shadow-xl hover:translate-y-[-1px]">
                 <h1 className="text-[32px] font-bold text-center mb-[12px]">Sign up</h1>
                 <p className="text-center text-[#4B5563] mb-[24px]">Join us today and start your journey</p>
+
+                {/* Show error message */}
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md">
+                        {error}
+                    </div>
+                )}
+
+                {/* Show success message */}
+                {successMessage && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-300 text-green-700 rounded-md">
+                        {successMessage}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
                     <div className="flex gap-5 mb-4">
@@ -101,8 +189,6 @@ const SignUpPage = () => {
                         />
                     </div>
 
-
-
                     <div className="mb-6">
                         <label htmlFor="password" className="block font-medium text-[#374151] mb-1">Password</label>
                         <input
@@ -111,15 +197,34 @@ const SignUpPage = () => {
                             name="password"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                             required
+                            onChange={handlePasswordChange}
                         />
-                    </div>
 
+                        {/* Password strength indicator */}
+                        {passwordStrength.message &&  (
+                            <div className="mt-2">
+                                <div className="h-1 w-full bg-gray-200 rounded">
+                                    <div 
+                                        className="h-full rounded transition-all duration-300" 
+                                        style={{ 
+                                            width: `${(passwordStrength.score / 4) * 100}%`,
+                                            backgroundColor: passwordStrength.color
+                                        }}
+                                    ></div>
+                                </div>
+                                <p className="text-xs mt-1" style={{ color: passwordStrength.color }}>
+                                    {passwordStrength.message}
+                                </p>
+                            </div>
+                        )}
+                    </div>
 
                     <button
                         type="submit"
+                        disabled={isLoading}
                         className="text-[16px] w-full bg-[#569DBA] text-white py-[12px] rounded-full hover:bg-opacity-90 transition-colors"
                     >
-                        Sign up
+                        {isLoading ? 'Signing up...' : 'Sign up'}
                     </button>
                 </form>
 
@@ -137,6 +242,5 @@ const SignUpPage = () => {
             </div>
         </div>
     );
-};
-
+}
 export default SignUpPage;
