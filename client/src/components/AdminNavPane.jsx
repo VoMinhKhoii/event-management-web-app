@@ -67,7 +67,7 @@ const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
         },
         {
             name: 'Settings',
-            path: '/admindashboard/settings',
+            path: '/adminsetting',
             menu: 'settings',
             activeIcon: settingActive,
             inactiveIcon: settingInactive,
