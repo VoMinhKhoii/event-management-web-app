@@ -1,23 +1,26 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { NotificationContext } from '../../context/notificationContext.jsx'; // adjust path if needed
 const NotificationPage = () => {
     // State to keep track of selected notification/event
-    const {notifications, markAsRead, deleteNotification} = useContext(NotificationContext);
+    const { notifications, markAsRead, deleteNotification } = useContext(NotificationContext);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
- 
+
     // Handle notification click
     const handleNotificationClick = async (notification) => {
         if (notification.isRead === false) {
             markAsRead(notification._id);
         }
-        if (notification.relatedId !== null && notification.relatedId.event) {   
+
+        if (notification.relatedId !== null) {
+
+
             const eventInfo = notification.relatedId.event;
             setSelectedEvent(eventInfo); // Set the event info
 
@@ -28,12 +31,16 @@ const NotificationPage = () => {
     };
 
     // Handle accept invitation
-    const handleAccept = async (eventId, invitationId) => {
+    const handleAcceptInvitation = async (eventId, invitationId) => {
         if (!selectedNotification || !selectedEvent) return;
-        
+
+        if (!window.confirm(`Are you sure you want to join "${selectedEvent.title}"?`)) {
+            return; // Exit if user cancels
+        }
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const response = await fetch(`http://localhost:8800/api/events/${eventId}/invitations/${invitationId}`, {
                 method: 'PUT',
@@ -43,9 +50,9 @@ const NotificationPage = () => {
                 credentials: 'include',
                 body: JSON.stringify({ action: 'accept' })
             });
-            
+
             const data = await response.json();
-            
+
             if (!response.ok) {
                 // Handle specific error cases
                 if (response.status === 400 && data.conflicts) {
@@ -55,10 +62,10 @@ const NotificationPage = () => {
                 }
                 return;
             }
-            
+
             // Refresh notifications to get updated data
             await markAsRead(selectedNotification._id);
-            
+
             // Show success message
             alert('You have successfully accepted the invitation');
         } catch (err) {
@@ -71,12 +78,16 @@ const NotificationPage = () => {
 
 
     // Handle decline invitation
-    const handleDecline = async (eventId, invitationId) => {
+    const handleDeclineInvitation = async (eventId, invitationId) => {
         if (!selectedNotification || !selectedEvent) return;
-        
+
+        if (!window.confirm(`Are you sure you want to decline the invitation to "${selectedEvent.title}"?`)) {
+            return; // Exit if user cancels
+        }
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const response = await fetch(`http://localhost:8800/api/events/${eventId}/invitations/${invitationId}`, {
                 method: 'PUT',
@@ -86,28 +97,128 @@ const NotificationPage = () => {
                 credentials: 'include',
                 body: JSON.stringify({ action: 'decline' })
             });
-            
+
             const data = await response.json();
-            
+
             if (!response.ok) {
                 setError(data.error || 'Failed to decline invitation');
                 return;
             }
-            
+
             // Update local state
             setSelectedNotification(prev => ({
                 ...prev,
                 relatedId: { ...prev.relatedId, status: 'rejected' }
             }));
-            
+
             // Mark notification as read
             await markAsRead(selectedNotification._id);
-            
+
             // Show success message
             alert('You have declined the invitation');
         } catch (err) {
             setError('Network error. Please try again.');
             console.error('Error declining invitation:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle join request approval (for event organizers)
+    const handleApproveRequest = async (eventId, requestId) => {
+        if (!selectedNotification || !selectedEvent) return;
+
+        const username = selectedNotification.relatedId?.user?.username || 'this user';
+
+        // Add confirmation dialog with username
+        if (!window.confirm(`Are you sure you want to approve ${username}'s request to join your event?`)) {
+            return; // Exit if user cancels
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`http://localhost:8800/api/events/${eventId}/requests/${requestId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ action: 'approve' })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.error || 'Failed to approve request');
+                return;
+            }
+
+            // Update local state
+            setSelectedNotification(prev => ({
+                ...prev,
+                relatedId: { ...prev.relatedId, status: 'approved' }
+            }));
+
+            // Mark notification as read
+            await markAsRead(selectedNotification._id);
+
+            // Show success message
+            alert('You have approved the join request');
+        } catch (err) {
+            setError('Network error. Please try again.');
+            console.error('Error approving request:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle join request decline (for event organizers)
+    const handleDeclineRequest = async (eventId, requestId) => {
+        if (!selectedNotification || !selectedEvent) return;
+
+        const username = selectedNotification.relatedId?.user?.username || 'this user';
+
+        // Add confirmation dialog with username
+        if (!window.confirm(`Are you sure you want to decline ${username}'s request to join your event?`)) {
+            return; // Exit if user cancels
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`http://localhost:8800/api/events/${eventId}/requests/${requestId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ action: 'decline' })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.error || 'Failed to decline request');
+                return;
+            }
+
+            // Update local state
+            setSelectedNotification(prev => ({
+                ...prev,
+                relatedId: { ...prev.relatedId, status: 'rejected' }
+            }));
+
+            // Mark notification as read
+            await markAsRead(selectedNotification._id);
+
+            // Show success message
+            alert('You have declined the join request');
+        } catch (err) {
+            setError('Network error. Please try again.');
+            console.error('Error declining request:', err);
         } finally {
             setIsLoading(false);
         }
@@ -141,20 +252,22 @@ const NotificationPage = () => {
                                         <div
                                             key={notification._id}
 
-                                            className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification?.relatedId?.event?._id ? 'bg-blue-50' : ''
-                                                } ${notification.isRead ? 'opacity-70' : 'font-medium'}`}
+                                            className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification.relatedId.event._id ? '' : ''
+
 
                                             onClick={() => handleNotificationClick(notification)}
                                         >
                                             <div className="flex items-center">
                                                 <img
-                                                    src="/images/avatar.png"
+                                                    src={notification.relatedId.user.avatar}
                                                     alt="User avatar"
                                                     className="w-10 h-10 rounded-full mr-3"
                                                 />
                                                 <div>
                                                     <div className="flex items-center">
-                                                        <span className="text-gray-800">{notification.relatedId && notification.relatedId.event ? notification.relatedId.event.title : "System"}</span>
+
+                                                        <span className="text-gray-800">{notification.relatedId ? notification.relatedId.user.username : "A user"}</span>
+
                                                     </div>
                                                     <p className="text-gray-600">{notification.message}</p>
                                                 </div>
@@ -164,7 +277,7 @@ const NotificationPage = () => {
                                 </div>
                             </div>
                         </div>
-                                        
+
                         {/* Right Column - Offset to account for fixed left column */}
                         {/* Tao thêm 1 cái giờ nó thu nhỏ bị ngu rồi, có j sửa lại mấy cái này giúp tao */}
                         <div className="md:col-span-3 md:ml-[calc(33.333%-20px)]">
@@ -193,12 +306,13 @@ const NotificationPage = () => {
                                             alt={selectedEvent.title}
                                             className="w-full h-full object-cover rounded-t-lg"
                                         />
-                                        {selectedNotification.relatedId.status === "invited"  ? (
+                                        {/* For invitation notifications */}
+                                        {selectedNotification.type === 'invitation' && selectedNotification.relatedId.status === "invited" && (
                                             <div className="absolute bottom-0 left-0 right-0 flex justify-between p-4">
                                                 <button
                                                     className="bg-white text-blue-500 font-medium py-2 px-6 rounded-full shadow hover:bg-blue-50 flex items-center"
-                                                    onClick={() => handleAccept(
-                                                        selectedEvent._id, 
+                                                    onClick={() => handleAcceptInvitation(
+                                                        selectedEvent._id,
                                                         selectedNotification.relatedId._id
                                                     )}
                                                     disabled={isLoading}
@@ -210,8 +324,8 @@ const NotificationPage = () => {
                                                 </button>
                                                 <button
                                                     className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center"
-                                                    onClick={() => handleDecline(
-                                                        selectedEvent._id, 
+                                                    onClick={() => handleDeclineInvitation(
+                                                        selectedEvent._id,
                                                         selectedNotification.relatedId._id
                                                     )}
                                                     disabled={isLoading}
@@ -222,9 +336,41 @@ const NotificationPage = () => {
                                                     Decline
                                                 </button>
                                             </div>
-                                        ) : null}  {/* Currently doesn't show button if already accepted or declined */}
+                                        )}
+
+                                        {/* For join request notifications (NEW) */}
+                                        {selectedNotification.type === 'joinRequest' && selectedNotification.relatedId.status === "pending" && (
+                                            <div className="absolute bottom-0 left-0 right-0 flex justify-between p-4">
+                                                <button
+                                                    className="bg-white text-green-500 font-medium py-2 px-6 rounded-full shadow hover:bg-green-50 flex items-center"
+                                                    onClick={() => handleApproveRequest(
+                                                        selectedEvent._id,
+                                                        selectedNotification.relatedId._id
+                                                    )}
+                                                    disabled={isLoading}
+                                                >
+                                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center"
+                                                    onClick={() => handleDeclineRequest(
+                                                        selectedEvent._id,
+                                                        selectedNotification.relatedId._id
+                                                    )}
+                                                    disabled={isLoading}
+                                                >
+                                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                    Decline
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    
+
                                     {/* Event Details */}
                                     <div className="p-6">
                                         <h1 className="text-4xl font-bold mb-4">{selectedEvent.title}</h1>
