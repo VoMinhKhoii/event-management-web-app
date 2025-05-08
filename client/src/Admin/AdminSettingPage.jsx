@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { FiSave, FiRefreshCw, FiInfo } from 'react-icons/fi';
+import { FiSave, FiRefreshCw, FiInfo, FiSettings } from 'react-icons/fi';
+
 import AdminNavPane from '../components/AdminNavPane';
 
 const AdminSettingPage = () => {
@@ -14,7 +15,6 @@ const AdminSettingPage = () => {
         maxEventsPerUser: 10,
         maxInvitationsPerEvent: 100,
         maxAttendeesPerEvent: 500,
-        defaultEventDuration: 3 // hours
     });
     
     const [notificationSettings, setNotificationSettings] = useState({
@@ -78,35 +78,13 @@ const AdminSettingPage = () => {
         const { name, value } = e.target;
         
         // Convert string values to numbers where appropriate
-        const numericValue = ['maxEventsPerUser', 'maxInvitationsPerEvent', 'maxAttendeesPerEvent', 'defaultEventDuration'].includes(name)
+        const numericValue = ['maxEventsPerUser', 'maxInvitationsPerEvent', 'maxAttendeesPerEvent'].includes(name)
             ? parseInt(value, 10)
             : value;
             
         setEventSettings({
             ...eventSettings,
             [name]: numericValue
-        });
-        
-        // Clear error for this field if it exists
-        if (formErrors[name]) {
-            setFormErrors({
-                ...formErrors,
-                [name]: null
-            });
-        }
-    };
-
-    // Handle form input changes for notification settings
-    const handleNotificationSettingChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        
-        // Handle checkboxes separately
-        const newValue = type === 'checkbox' ? checked : 
-                         ['reminderTimeBefore'].includes(name) ? parseInt(value, 10) : value;
-            
-        setNotificationSettings({
-            ...notificationSettings,
-            [name]: newValue
         });
         
         // Clear error for this field if it exists
@@ -177,10 +155,6 @@ const AdminSettingPage = () => {
         if (eventSettings.maxAttendeesPerEvent < 1) {
             errors.maxAttendeesPerEvent = 'Must be at least 1';
         }
-        if (eventSettings.defaultEventDuration < 0.5) {
-            errors.defaultEventDuration = 'Must be at least 0.5 hours';
-        }
-        
         // Validate notification settings
         if (notificationSettings.reminderTimeBefore < 0) {
             errors.reminderTimeBefore = 'Must be a positive number';
@@ -266,7 +240,6 @@ const AdminSettingPage = () => {
             maxEventsPerUser: 10,
             maxInvitationsPerEvent: 100,
             maxAttendeesPerEvent: 500,
-            defaultEventDuration: 3
         });
         
         setNotificationSettings({
@@ -371,6 +344,7 @@ const AdminSettingPage = () => {
                         <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
                             <div className="flex items-center space-x-4 mb-6">
                                 <div className="p-3 rounded-full bg-[#EFF6FF]">
+                                    <FiSettings className="h-6 w-6 text-blue-600" />
                                 </div>
                                 <h2 className="text-xl font-semibold text-gray-800">Event Settings</h2>
                             </div>
@@ -438,113 +412,11 @@ const AdminSettingPage = () => {
                                         Maximum number of attendees allowed per event
                                     </p>
                                 </div>
-                                
-                                {/* Default Event Duration */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Default Event Duration (hours)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="defaultEventDuration"
-                                        value={eventSettings.defaultEventDuration}
-                                        onChange={handleEventSettingChange}
-                                        className={`w-full py-2 px-3 border ${formErrors.defaultEventDuration ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                        min="0.5"
-                                        step="0.5"
-                                    />
-                                    {formErrors.defaultEventDuration && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.defaultEventDuration}</p>
-                                    )}
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        Default duration for newly created events
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Notification Settings Card */}
-                        <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
-                            <div className="flex items-center space-x-4 mb-6">
-                                <div className="p-3 rounded-full bg-[#EFF6FF]">
-                                </div>
-                                <h2 className="text-xl font-semibold text-gray-800">Notification Settings</h2>
-                            </div>
-                            
-                            <div className="space-y-4">
-                                {/* Enable Email Notifications */}
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="enableEmailNotifications"
-                                        name="enableEmailNotifications"
-                                        checked={notificationSettings.enableEmailNotifications}
-                                        onChange={handleNotificationSettingChange}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="enableEmailNotifications" className="ml-2 block text-sm text-gray-700">
-                                        Enable Email Notifications
-                                    </label>
-                                </div>
-                                
-                                {/* Reminder Time */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Reminder Time Before Event (hours)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="reminderTimeBefore"
-                                        value={notificationSettings.reminderTimeBefore}
-                                        onChange={handleNotificationSettingChange}
-                                        className={`w-full py-2 px-3 border ${formErrors.reminderTimeBefore ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                        min="0"
-                                        disabled={!notificationSettings.enableEmailNotifications}
-                                    />
-                                    {formErrors.reminderTimeBefore && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.reminderTimeBefore}</p>
-                                    )}
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        How many hours before event to send reminder emails
-                                    </p>
-                                </div>
-                                
-                                {/* Send Update Notifications */}
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="sendUpdateNotifications"
-                                        name="sendUpdateNotifications"
-                                        checked={notificationSettings.sendUpdateNotifications}
-                                        onChange={handleNotificationSettingChange}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                        disabled={!notificationSettings.enableEmailNotifications}
-                                    />
-                                    <label htmlFor="sendUpdateNotifications" className="ml-2 block text-sm text-gray-700">
-                                        Send Notifications When Events Are Updated
-                                    </label>
-                                </div>
-                                
-                                {/* Send RSVP Reminders */}
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        id="sendRSVPReminders"
-                                        name="sendRSVPReminders"
-                                        checked={notificationSettings.sendRSVPReminders}
-                                        onChange={handleNotificationSettingChange}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                        disabled={!notificationSettings.enableEmailNotifications}
-                                    />
-                                    <label htmlFor="sendRSVPReminders" className="ml-2 block text-sm text-gray-700">
-                                        Send Reminders For Pending RSVPs
-                                    </label>
-                                </div>
                             </div>
                         </div>
 
                         {/* System Settings Card */}
-                        <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 lg:col-span-2">
+                        <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 grid-cols-2 lg:grid-col-2">
                             <div className="flex items-center space-x-4 mb-6">
                                 <div className="p-3 rounded-full bg-[#EFF6FF]">
                                     <FiInfo className="h-6 w-6 text-blue-600" />
@@ -552,7 +424,7 @@ const AdminSettingPage = () => {
                                 <h2 className="text-xl font-semibold text-gray-800">System Settings</h2>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6">
                                 <div className="space-y-4">
                                     {/* Event Categories */}
                                     <div>
@@ -585,7 +457,7 @@ const AdminSettingPage = () => {
                                             onChange={handleSystemSettingChange}
                                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                         />
-                                        <label htmlFor="registrationRequiresApproval" className="ml-2 block text-sm text-gray-700">
+                                        <label htmlForm="registrationRequiresApproval" className="ml-2 block text-sm text-gray-700">
                                             New User Registration Requires Admin Approval
                                         </label>
                                     </div>
