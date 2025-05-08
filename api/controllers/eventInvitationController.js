@@ -379,7 +379,7 @@ export const handleInvitation = async (req, res) => {
             // Create a notification for the event organizer
             await Notification.create([{
                 userId: invitation.event.organizer,
-                type: 'invitation_accepted',
+                type: 'invitationAccepted',
                 message: `${req.username || 'A user'} has accepted your invitation to ${invitation.event.title || 'your event'}`,
                 relatedId: invitation._id,
                 isRead: false
