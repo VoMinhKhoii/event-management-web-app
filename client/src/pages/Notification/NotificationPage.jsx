@@ -251,10 +251,7 @@ const NotificationPage = () => {
                                     {notifications.map((notification) => (
                                         <div
                                             key={notification._id}
-
-                                            className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification.relatedId.event._id ? '' : ''
-
-
+                                            className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification.relatedId.event._id ? '' : ''}`}
                                             onClick={() => handleNotificationClick(notification)}
                                         >
                                             <div className="flex items-center">

@@ -435,7 +435,7 @@ const ProfilePage = () => {
                 }`}
               onClick={() => setActiveTab('bookings')}
             >
-              My Bookings
+              My Requests
             </button>
             <button
               className={`py-4 px-6 font-medium text-sm focus:outline-none ${activeTab === 'events'
@@ -529,29 +529,13 @@ const ProfilePage = () => {
 
         {activeTab === 'bookings' && (
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-xl font-semibold mb-6">My Bookings</h2>
+            
             {userBookings.length > 0 ? (
               <div className="space-y-4">
                 {userBookings.map((event) => (
                   <EventMiniCard
                     key={event._id}
-                    event={{
-                      id: event._id,
-                      title: event.title,
-                      date: event.startDate,
-                      time: `${event.startTime} - ${event.endTime}`,
-                      location: event.location,
-                      image: event.image,
-                      status: (() => {
-                        const now = new Date();
-                        const startDateTime = new Date(`${event.startDate}T${event.startTime}`);
-                        const endDateTime = new Date(`${event.endDate}T${event.endTime}`);
-                        // Determine the status based on the current time and event times
-                        if (now > endDateTime) return "ended";
-                        if (now < startDateTime) return "upcoming";
-                        return "active";
-                      })()
-                    }}
+                    {...event}
                     onClick={() => navigate(`/event/${event._id}`)}
                   />
                 ))}
@@ -564,8 +548,8 @@ const ProfilePage = () => {
 
         {activeTab === 'events' && (
           <div className="bg-white rounded-lg shadow-md p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">My Events</h2>
+            <div className="flex justify-end items-center mb-6">
+              
               <button
                 onClick={() => navigate('/create-event')}
                 className="bg-[#569DBA] text-white px-4 py-2 rounded-full text-sm hover:bg-opacity-90 transition-colors flex items-center gap-2"
@@ -599,23 +583,7 @@ const ProfilePage = () => {
                 {userEvents.map((event) => (
                   <EventMiniCard
                     key={event._id}
-                    event={{
-                      id: event._id,
-                      title: event.title,
-                      date: event.startDate,
-                      time: `${event.startTime} - ${event.endTime}`,
-                      location: event.location,
-                      image: event.image,
-                      status: (() => {
-                        const now = new Date();
-                        const startDateTime = new Date(`${event.startDate}T${event.startTime}`);
-                        const endDateTime = new Date(`${event.endDate}T${event.endTime}`);
-                        // Determine the status based on the current time and event times
-                        if (now > endDateTime) return "ended";
-                        if (now < startDateTime) return "upcoming";
-                        return "active";
-                      })()
-                    }}
+                    {...event}
                     onClick={() => navigate(`/event/${event._id}`)}
                   />
                 ))}
