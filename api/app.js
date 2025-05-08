@@ -7,6 +7,8 @@ import commentRoute from './routes/commentRoute.js';
 import userRoute from './routes/userRoute.js';
 import eventRoute from './routes/eventRoute.js';
 import adminRoute from './routes/adminRoute.js';
+import settingsRoute from './routes/settingsRoute.js';
+
 import cookieParser from 'cookie-parser';
 import notificationRoute from './routes/notificationRoute.js';
 
@@ -30,6 +32,7 @@ app.use(cookieParser());
 
 // API Routes
 app.use('/api/auth', authRoute);
+app.use('/api/settings', settingsRoute);
 app.use('/api/comments', commentRoute);
 app.use('/api/users', userRoute);
 app.use('/api/events', eventRoute);
