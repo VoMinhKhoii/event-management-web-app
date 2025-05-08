@@ -359,6 +359,49 @@ const EventDetails = () => {
     }
   };
 
+   
+  const handleJoinRequest = async () => {
+    if (!currentUser) {
+      alert("Please login to request joining this event.");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to request to join "${eventData.title}"?`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/request-join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ message: '' }) // Optional custom message
+      });
+      const data = await response.json();
+    
+      if (!response.ok) {
+        
+        if (response.status === 400 && data.conflicts) {
+          const conflictMessages = data.conflicts.map(conflict => 
+            `• ${conflict.eventTitle} (${conflict.eventTime})`
+          ).join('\n');
+          
+          alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
+        } else {
+          
+          alert(data.message || 'Failed to send join request');
+        }
+        return;
+      }
+      
+      
+      alert('Your request to join has been sent successfully!');
+      
+    } catch (err) {
+      alert('Error requesting to join event:');
+      
+    }
+  };
   // Add useEffect to fetch users
   useEffect(() => {
     const fetchUsers = async () => {
@@ -486,7 +529,7 @@ const EventDetails = () => {
       <div className="bg-white rounded-lg border border-gray-200 p-[12px] sticky top-24">
         <button
           className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8"
-        // onClick={handleJoinRequest}
+        onClick={handleJoinRequest}
         >
           Request to join
         </button>

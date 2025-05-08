@@ -114,7 +114,6 @@ const SignUpPage = () => {
                 return;
             }
 
-            alert('Registration successful! Redirecting to login...');
             setTimeout(() => {
                 navigate("/login");
             }, 1500);

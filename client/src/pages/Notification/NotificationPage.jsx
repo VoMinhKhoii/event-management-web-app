@@ -253,7 +253,12 @@ const NotificationPage = () => {
                                     {notifications.map((notification) => (
                                         <div
                                             key={notification._id}
-                                            className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent && selectedEvent._id === notification.relatedId.event._id ? '' : ''}`}
+                                            className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent &&
+                                                    notification.relatedId?.event?._id &&
+                                                    selectedEvent._id === notification.relatedId.event._id
+                                                    ? 'bg-gray-100'
+                                                    : ''
+                                                }`}
                                             onClick={() => handleNotificationClick(notification)}
                                         >
                                             <div className="flex items-center">
@@ -307,7 +312,7 @@ const NotificationPage = () => {
                                 // Show event details if the notification has an associated event
                                 <div className="max-h-[calc(100vh-160px)]">
                                     {/* Event Image */}
-                                    {selectedNotification.type === 'joinRequest' || selectedNotification.type === 'invitation' && (
+                                    {selectedNotification.type === 'joinRequest' || selectedNotification.type === 'invitation' ||  selectedNotification.type === 'invitationDeclined' && (
                                         <div className="relative h-[400px]">
 
                                             <img

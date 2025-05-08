@@ -52,7 +52,6 @@ const LoginPage = () => {
                 console.error("No user data in response");
                 throw new Error(data.message || 'Login failed');
             }
-            alert('Login successful! Redirecting to home page.');
             updateUser(data.user);
             console.log('Login successful:', data);
             navigate('/home'); // Redirect to home page after successful login
