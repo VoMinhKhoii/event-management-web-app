@@ -1,5 +1,6 @@
 import Event from '../models/Event.js';
 import Participation from '../models/Participation.js';
+import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
 import { detectEventChanges } from '../utils/eventHelpers.js';
 import fs from 'fs';
@@ -239,6 +240,7 @@ export const updateEvent = async (req, res) => {
     const updatedEvent = await Event.findByIdAndUpdate(req.params.eventId, updateData, {
       new: true,
       runValidators: true,
+      session,
     });
 
     await logActivity(
@@ -251,32 +253,35 @@ export const updateEvent = async (req, res) => {
 
     // only send notif if there were actual changes
     if (changes) {
-      // get all approved attendees
       const participations = await Participation.find({
         event: req.params.eventId,
         status: 'approved'
       }).session(session);
 
       if (participations.length > 0) {
-        const notifications = participations.map(participation => ({
-          userId: participation.user,
-          type: 'eventUpdate',
-          message: `Event "${updatedEvent.title}" has been updated.`,
-          relatedId: updatedEvent._id,
-          data: {
-            changes,
-            message: `The event "${updatedEvent.title}" has been updated with new information.`,
-            event: {
-              title: updatedEvent.title,
-              startDate: updatedEvent.startDate,
-              startTime: updatedEvent.startTime,
-              location: updatedEvent.location
-            }
-          },
-          isRead: false
-        }));
+        const notifications = participations.map(participation => {
+          return {
+            userId: participation.user,
+            type: 'eventUpdate',
+            message: `Event "${updatedEvent.title}" has been updated`,
+            relatedId: {
+              _id: updatedEvent._id,
+              event: {
+                _id: updatedEvent._id,
+                title: updatedEvent.title,
+                startDate: updatedEvent.startDate,
+                startTime: updatedEvent.startTime,
+                endTime: updatedEvent.endTime,
+                location: updatedEvent.location,
+                image: updatedEvent.image
+              }
+            },
+            data: `Event "${updatedEvent.title}" has been updated`,
+            isRead: false
+          };
+        });
 
-        await Notification.insertMany(notifications, { session });
+        await Notification.create(notifications, { session });
       }
     }
 
