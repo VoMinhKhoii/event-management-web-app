@@ -7,7 +7,7 @@ const EventMiniCard = ({ title, image, startDate, endDate, startTime, endTime, l
 
     const handleClick = () => {
         // Navigate to event details page
-        navigate(`/event/${event.id}`);
+        navigate(`/event/${_id}`);
     };
 
     return (

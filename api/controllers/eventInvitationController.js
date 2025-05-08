@@ -4,7 +4,7 @@ import Participation from '../models/Participation.js';
 import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
 import mongoose from "mongoose";
-
+import User from '../models/User.js';
 
 
 // GET /api/events/:eventId/invitations/:userId
@@ -39,15 +39,24 @@ export const inviteToEvent = async (req, res) => {
         session.startTransaction();
         
         const { eventId } = req.params;
-        const { userId: inviteeId } = req.body;
+        const { username } = req.body;
         const inviterId = req.userId;
 
-        // Validate input
-        if (!inviteeId) {
+        if (!username) {
             await session.abortTransaction();
             session.endSession();
-            return res.status(400).json({ error: 'User ID is required' });
+            return res.status(400).json({ error: 'Username is required' });
         }
+
+        // Validate input
+        const invitee = await User.findOne({ username }).session(session);
+        if (!invitee) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const inviteeId = invitee._id;
 
         // Check if event exists & get details - do this in a single query
         const event = await Event.findById(eventId).session(session);

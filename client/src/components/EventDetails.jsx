@@ -22,6 +22,7 @@ const EventDetails = () => {
   const [comments, setComments] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [error, setError] = useState(null);
+  const [inviteUsername, setInviteUsername] = useState('');
 
   const { sendNotification } = useContext(NotificationContext); // Use the notification context
 
@@ -282,22 +283,30 @@ const EventDetails = () => {
     }
   };
 
-  const handleSendInvite = async (userId) => {
+  const handleSendInvite = async (username) => {
     if (!isOrganizer) return;
-
+  
     try {
-      const response = await fetch(`/api/events/${id}/invite/`, {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/invite`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         credentials: 'include',
-        body: userId
+        body: JSON.stringify({ username: username })
       });
-
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        throw new Error('Failed to resend invitation');
+        alert(data.error || 'Failed to send invitation');
+        return;
       }
-
+  
       // Show notification or success message
-      alert('Invitation sent successfully');
+      alert(data.message || 'Invitation sent successfully');
+
+      setInviteUsername('');
     } catch (err) {
       console.error('Error sending invitation:', err);
       setError('Failed to send invitation. Please try again.');
@@ -495,7 +504,7 @@ const EventDetails = () => {
               <div className="text-xl font-semibold text-yellow-600">{invitationStats.pending.length}</div>
             </div>
             <div className="bg-red-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-600">Declined</div>
+              <div className="text-sm text-gray-600">Rejected</div>
               <div className="text-xl font-semibold text-red-600">{invitationStats.declined.length}</div>
             </div>
           </div>
@@ -504,19 +513,23 @@ const EventDetails = () => {
         {/* Invite More Section */}
         <div className="w-full py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-base font-medium p-4">
           {/* Invite Form */}
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSendInvite(inviteUsername);
+            }} className="space-y-4">
             <label className="block text-sm font-medium">Username</label>
             <input
               type="string"
               placeholder="Enter username"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-black"
+              value={inviteUsername}
+              onChange={(e) => setInviteUsername(e.target.value)}
             />
             <button
               type="submit"
               className="w-full py-2 bg-white text-[#569DBA] rounded-lg hover:bg-opacity-90 transition-colors"
-              // onClick={handleSendInvite}
             >
-              Send Invite
+              Invite
             </button>
           </form>
         </div>
