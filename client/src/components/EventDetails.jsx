@@ -1,10 +1,11 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import NavPane from './NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/authContext.jsx';
+import { NotificationContext } from '../context/notificationContext.jsx';
 
 
 const EventDetails = () => {
@@ -21,6 +22,15 @@ const EventDetails = () => {
   const [comments, setComments] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [error, setError] = useState(null);
+  const [inviteUsername, setInviteUsername] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const resultsRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const { sendNotification } = useContext(NotificationContext); // Use the notification context
 
   // Organizer statistics
   const [rsvpRate, setRsvpRate] = useState(0);
@@ -64,33 +74,42 @@ const EventDetails = () => {
     fetchComments();
   }, [id]);
 
-  // // If the user is an organizer, fetch invitations and calculate RSVP stats
-  // useEffect(() => {
-  //   if (!id || !isOrganizer) return;
+  // If the user is an organizer, fetch invitations and calculate RSVP stats
+  useEffect(() => {
+    if (!id || !isOrganizer) return;
 
-  //   const fetchInvitationsAndStats = async () => {
-  //     try {
-  //       const response = await fetch(`/api/events/${id}/invitations`);
-  //       if (!response.ok) {
-  //         throw new Error('Failed to fetch invitations');
-  //       }
-  //       const data = await response.json();
-  //       setInvitations(data);
+    const fetchInvitationsAndStats = async () => {
+      try {
+        const response = await fetch(`http://localhost:8800/api/events/${id}/invitations-get`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch invitations');
+        }
+        const data = await response.json();
 
-  //       // Calculate RSVP rate (percentage of accepted invitations)
-  //       if (data.length > 0) {
-  //         const acceptedCount = data.filter(inv => inv.status === 'accepted').length;
-  //         setRsvpRate(Math.round((acceptedCount / data.length) * 100));
-  //       }
-  //     } catch (err) {
-  //       console.error('Error fetching invitations:', err);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
+        const dataArray = data.invitations || [];
+        setInvitations(dataArray);
 
-  //   fetchInvitationsAndStats();
-  // }, [id, isOrganizer]);
+        // Calculate RSVP rate
+        const acceptedCount = dataArray.filter(inv => inv.status === 'approved').length;
+        const totalRespondedCount = dataArray.filter(inv => inv.status !== 'invited').length;
+
+        if (totalRespondedCount === 0) {
+          setRsvpRate(0);
+        } else {
+          const calculatedRate = Math.round((acceptedCount / totalRespondedCount) * 100);
+          setRsvpRate(calculatedRate);
+        }
+
+
+      } catch (err) {
+        console.error('Error fetching invitations:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvitationsAndStats();
+  }, [id, isOrganizer]);
 
   // Set loading to false once event data is loaded
   useEffect(() => {
@@ -101,10 +120,11 @@ const EventDetails = () => {
 
   // Calculate invitation statistics for organizer view
   const invitationStats = {
+
     total: invitations.length,
-    accepted: invitations.filter(inv => inv.status === 'accepted').length,
-    pending: invitations.filter(inv => inv.status === 'pending').length,
-    declined: invitations.filter(inv => inv.status === 'declined').length
+    accepted: invitations.filter(inv => inv.status === 'approved'),
+    pending: invitations.filter(inv => inv.status === 'pending'),
+    declined: invitations.filter(inv => inv.status === 'rejected')
   };
 
   const handleCommentSubmit = async (e) => {
@@ -249,69 +269,176 @@ const EventDetails = () => {
     }
   };
 
-  // const handleSendReminder = async (invitationId) => {
-  //   if (!isOrganizer) return;
+  const handleSendInviteeReminders = async () => {
+    if (!isOrganizer || !eventData._id) return;
 
-  //   try {
-  //     const response = await fetch(`/api/events/${id}/invitations/${invitationId}/reminder`, {
-  //       method: 'POST',
-  //     });
+    if (!window.confirm('Send reminders to all users with pending invitations?')) {
+      return;
+    }
 
-  //     if (!response.ok) {
-  //       throw new Error('Failed to send reminder');
-  //     }
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/reminders/pending-invites`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
 
-  //     // Show notification or success message
-  //     alert('Reminder sent successfully');
-  //   } catch (err) {
-  //     console.error('Error sending reminder:', err);
-  //     setError('Failed to send reminder. Please try again.');
-  //   }
-  // };
+      const data = await response.json();
 
-  // const handleResendInvite = async (invitationId) => {
-  //   if (!isOrganizer) return;
+      if (!response.ok) {
+        alert(data.error || 'Failed to send reminders');
+        return;
+      }
 
-  //   try {
-  //     const response = await fetch(`/api/events/${id}/invitations/${invitationId}/resend`, {
-  //       method: 'POST',
-  //     });
+      alert(`${data.count} reminders sent successfully`);
+    } catch (err) {
+      console.error('Error sending reminders:', err);
+      alert('Failed to send reminders');
+    }
+  };
 
-  //     if (!response.ok) {
-  //       throw new Error('Failed to resend invitation');
-  //     }
+  const handleSendAttendeeReminders = async () => {
+    if (!isOrganizer || !id) return;
 
-  //     // Show notification or success message
-  //     alert('Invitation resent successfully');
-  //   } catch (err) {
-  //     console.error('Error resending invitation:', err);
-  //     setError('Failed to resend invitation. Please try again.');
-  //   }
-  // };
+    if (!window.confirm('Send reminders to all attendees?')) {
+      return;
+    }
 
-  // const handleJoinRequest = async () => {
-  //   if (!currentUser) {
-  //     // Redirect to login if not logged in
-  //     window.location.href = '/login';
-  //     return;
-  //   }
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/reminders/attendees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
 
-  //   try {
-  //     const response = await fetch(`/api/events/${id}/join`, {
-  //       method: 'POST',
-  //     });
+      const data = await response.json();
 
-  //     if (!response.ok) {
-  //       throw new Error('Failed to request to join');
-  //     }
+      if (!response.ok) {
+        alert(data.error || 'Failed to send reminders');
+        return;
+      }
 
-  //     // Show success message
-  //     alert('Your request to join has been submitted');
-  //   } catch (err) {
-  //     console.error('Error requesting to join:', err);
-  //     setError('Failed to send join request. Please try again.');
-  //   }
-  // };
+      alert(`${data.count} reminders sent successfully`);
+    } catch (err) {
+      console.error('Error sending reminders:', err);
+      alert('Failed to send reminders');
+    }
+  };
+
+  const handleSendInvite = async (username) => {
+    if (!isOrganizer) return;
+
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ username: username })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to send invitation');
+        return;
+      }
+
+      // Show notification or success message
+      alert(data.message || 'Invitation sent successfully');
+
+      setInviteUsername('');
+    } catch (err) {
+      console.error('Error sending invitation:', err);
+      setError('Failed to send invitation. Please try again.');
+    }
+  };
+
+  // Add useEffect to fetch users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('http://localhost:8800/api/users', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const userData = await response.json();
+        setUsers(userData);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    
+    fetchUsers();
+  }, []);
+
+  // Update filtered results without applying filters to the main view
+  const updateFilteredResults = (term = inviteUsername) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    const searchLower = term.toLowerCase();
+    
+    // Search for exact username matches first
+    const exactUsernameMatches = users.filter(user => 
+      (user.username || '').toLowerCase() === searchLower
+    );
+    
+    // Then search for usernames containing the search string
+    const usernameMatches = users.filter(user => 
+      (user.username || '').toLowerCase().includes(searchLower) &&
+      (user.username || '').toLowerCase() !== searchLower
+    );
+    
+    // Combine all results
+    const results = [...exactUsernameMatches, ...usernameMatches];
+    setSearchResults(results);
+    setShowResults(results.length > 0);
+  };
+
+  // Handle search when user types each character
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setInviteUsername(term);
+    
+    if (selectedUser) {
+      setSelectedUser(null);
+    }
+    
+    updateFilteredResults(term);
+  };
+
+  // Handle when user selects a search result
+  const handleUserSelect = (user) => {
+    setSelectedUser(user);
+    setInviteUsername(user.username);
+    setShowResults(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (resultsRef.current && !resultsRef.current.contains(event.target) && 
+          inputRef.current && !inputRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (isLoading) {
     return (
@@ -339,37 +466,6 @@ const EventDetails = () => {
       </div>
     );
   }
-
-  // // Format date and time for display
-  // const formatDate = (dateString) => {
-  //   if (!dateString) return '';
-  //   const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  //   return new Date(dateString).toLocaleDateString(undefined, options);
-  // };
-
-  // const formatTime = (startTime, endTime) => {
-  //   if (!startTime) return '';
-
-  //   const formatTimeString = (timeString) => {
-  //     if (!timeString) return '';
-
-  //     if (typeof timeString === 'string' && timeString.includes(':')) {
-  //       return timeString;
-  //     }
-
-  //     try {
-  //       const date = new Date(timeString);
-  //       return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  //     } catch (e) {
-  //       return timeString;
-  //     }
-  //   };
-
-  //   const formattedStartTime = formatTimeString(startTime);
-  //   const formattedEndTime = endTime ? formatTimeString(endTime) : '';
-
-  //   return formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : formattedStartTime;
-  // };
 
   // Ensure we have an array of images, even if there's just one or none
   const images = eventData.images && eventData.images.length
@@ -424,7 +520,7 @@ const EventDetails = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               <span className="font-regular text-black text-[18px]">
-                {eventData.attendees || 0} attending ({eventData.maxAttendees || 'unlimited'})
+                {eventData.curAttendees || 0} attending ({eventData.maxAttendees || 'unlimited'})
               </span>
             </div>
           </div>
@@ -440,6 +536,7 @@ const EventDetails = () => {
         {/* RSVP Rate Card */}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
           <h3 className="font-semibold text-lg mb-2">RSVP Rate</h3>
+
           <div className="flex items-center mb-2">
             <div className="w-full bg-gray-200 rounded-full h-4 mr-2">
               <div
@@ -471,74 +568,123 @@ const EventDetails = () => {
             </div>
             <div className="bg-green-50 p-3 rounded-lg">
               <div className="text-sm text-gray-600">Accepted</div>
-              <div className="text-xl font-semibold text-green-600">{invitationStats.accepted}</div>
+              <div className="text-xl font-semibold text-green-600">{invitationStats.accepted.length}</div>
             </div>
             <div className="bg-yellow-50 p-3 rounded-lg">
               <div className="text-sm text-gray-600">Pending</div>
-              <div className="text-xl font-semibold text-yellow-600">{invitationStats.pending}</div>
+              <div className="text-xl font-semibold text-yellow-600">{invitationStats.pending.length}</div>
             </div>
             <div className="bg-red-50 p-3 rounded-lg">
-              <div className="text-sm text-gray-600">Declined</div>
-              <div className="text-xl font-semibold text-red-600">{invitationStats.declined}</div>
+              <div className="text-sm text-gray-600">Rejected</div>
+              <div className="text-xl font-semibold text-red-600">{invitationStats.declined.length}</div>
             </div>
           </div>
         </div>
 
-        {/* Invite More Button */}
-        <button className="w-full py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-base font-medium">
-          Invite More People
-        </button>
+        {/* Invite More Section */}
+        <div className="w-full py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-base font-medium p-4">
+          {/* Invite Form */}
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSendInvite(inviteUsername);
+          }} className="space-y-4">
+            <label className="block text-sm font-medium">Username</label>
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Enter username"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-black"
+                value={inviteUsername}
+                onChange={handleSearch}
+                onFocus={() => {
+                  if (inviteUsername) updateFilteredResults(inviteUsername);
+                }}
+                autoComplete="off"
+              />
+              
+              {/* Dropdown for search results */}
+              {showResults && (
+                <ul
+                  ref={resultsRef}
+                  className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden max-h-60 overflow-y-auto border border-gray-200"
+                >
+                  {searchResults.length > 0 ? (
+                    searchResults.map(user => (
+                      <li 
+                        key={user._id}
+                        className="border-b border-gray-100 last:border-b-0"
+                        onClick={() => handleUserSelect(user)}
+                      >
+                        <div className="p-3 hover:bg-gray-50 cursor-pointer">
+                          <div className="flex items-center">
+                            <img
+                              src={user.avatar || '/images/avatar.png'}
+                              alt={user.username}
+                              className="w-8 h-8 rounded-full mr-3"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900">{user.username}</div>
+                              <div className="text-sm text-gray-500 break-all whitespace-normal max-w-[220px]">{user.email}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-4 text-center text-gray-500">
+                      No users found matching "{inviteUsername}"
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full py-2 bg-white text-[#569DBA] rounded-lg hover:bg-opacity-90 transition-colors"
+            >
+              Invite
+            </button>
+          </form>
+        </div>
 
         {/* Invitations List */}
         {invitations.length > 0 && (
           <div>
-            <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+              <button
+                onClick={() => handleSendInviteeReminders()}
+                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
+                title="Send reminder"
+              >
+                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
               {invitations.map((invitation) => (
                 <div key={invitation._id || invitation.id} className="flex items-center justify-between pb-3 border-b border-gray-100">
                   <div className="flex items-center">
                     <img
                       src={invitation.user?.avatar || '/images/avatar.png'}
-                      alt={invitation.user?.name || 'User'}
+                      alt={invitation.user?.username || 'User'}
                       className="w-8 h-8 rounded-full mr-3"
                     />
                     <div>
-                      <div className="font-medium text-sm">{invitation.user?.name || invitation.email}</div>
-                      <div className="text-xs text-gray-500">{invitation.user?.email || ''}</div>
+                      <div className="font-medium text-sm">{invitation.user?.username || invitation.email}</div>
+                      <div className="text-xs text-gray-500 break-all whitespace-normal max-w-[180px]">{invitation.user?.email || ''}</div>
                     </div>
                   </div>
                   <div className="flex items-center">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium 
-                      ${invitation.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                        invitation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      ${invitation.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        invitation.status === 'invited' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'}`}
                     >
-                      {invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)}
+                      {invitation.status === 'invited' ? ' Pending' : invitation.status === 'approved' ? ' Accepted' : 'Rejected'}
                     </span>
-
-                    {invitation.status === 'pending' && (
-                      <button
-                        // onClick={() => handleSendReminder(invitation._id || invitation.id)}
-                        className="ml-2 p-1 text-gray-400 hover:text-gray-600"
-                        title="Send reminder"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                      </button>
-                    )}
-
-                    {invitation.status === 'declined' && (
-                      <button
-                        // onClick={() => handleResendInvite(invitation._id || invitation.id)}
-                        className="ml-2 p-1 text-gray-400 hover:text-gray-600"
-                        title="Resend invitation"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -581,6 +727,44 @@ const EventDetails = () => {
             </div>
           </div>
         </div>
+
+        <div className="mt-4">
+        <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg mb-3">Attendees</h3>
+              <button
+                onClick={() => handleSendAttendeeReminders()}
+                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
+                title="Send reminder"
+              >
+                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+            </div>
+
+          {/*Show attendees */}
+          {invitationStats.accepted.length > 0 ? (
+            <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+
+              {invitationStats.accepted.map((invitation) => (
+                <div key={invitation._id || invitation.id} className="flex items-center pb-2 border-b border-gray-100">
+                  <img
+                    src={invitation.user?.avatar || '/images/avatar.png'}
+                    alt={invitation.user?.username || 'User'}
+                    className="w-8 h-8 rounded-full mr-3"
+                  />
+                  <div>
+                    <div className="font-medium">{invitation.user?.username || invitation.email}</div>
+                    <div className="text-xs text-gray-500">{invitation.user?.email || ''}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">No attendees yet</p>
+          )}
+        </div>
+
       </div>
     );
   };

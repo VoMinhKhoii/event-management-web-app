@@ -4,6 +4,30 @@ import Participation from '../models/Participation.js';
 import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
 import mongoose from "mongoose";
+import User from '../models/User.js';
+
+
+// GET /api/events/:eventId/invitations/:userId
+export const getInvitations = async (req, res) => {
+    try {  
+        const { eventId } = req.params;
+        const invitations = await Participation.find({ event: eventId }).populate({
+            path: 'user',
+            select: 'username avatar email'
+        });
+        if (!invitations) {
+            return res.status(404).json({ error: 'No invitations found' });
+        }
+        res.status(200).json({ invitations });
+    } catch (err) {
+        console.error('Error fetching invitations:', err);
+        res.status(500).json({ error: 'Failed to fetch invitations', message: err.message });
+    }
+};
+
+
+
+
 
 // POST /api/events/:eventId/invite
 export const inviteToEvent = async (req, res) => {
@@ -15,15 +39,24 @@ export const inviteToEvent = async (req, res) => {
         session.startTransaction();
         
         const { eventId } = req.params;
-        const { userId: inviteeId } = req.body;
+        const { username } = req.body;
         const inviterId = req.userId;
 
-        // Validate input
-        if (!inviteeId) {
+        if (!username) {
             await session.abortTransaction();
             session.endSession();
-            return res.status(400).json({ error: 'User ID is required' });
+            return res.status(400).json({ error: 'Username is required' });
         }
+
+        // Validate input
+        const invitee = await User.findOne({ username }).session(session);
+        if (!invitee) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const inviteeId = invitee._id;
 
         // Check if event exists & get details - do this in a single query
         const event = await Event.findById(eventId).session(session);
@@ -346,7 +379,7 @@ export const handleInvitation = async (req, res) => {
             // Create a notification for the event organizer
             await Notification.create([{
                 userId: invitation.event.organizer,
-                type: 'invitation_accepted',
+                type: 'invitationAccepted',
                 message: `${req.username || 'A user'} has accepted your invitation to ${invitation.event.title || 'your event'}`,
                 relatedId: invitation._id,
                 isRead: false

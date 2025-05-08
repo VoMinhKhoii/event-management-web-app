@@ -8,20 +8,21 @@ import Participation from "../models/Participation.js";
 export const getNotifications = async (req, res) => {
     try {
         const userId = req.userId;
-        console.log("User ID: ", userId);
         const notifications = await Notification.find({ userId })
-        .sort({ createdAt: -1 })
-        .populate({
-          path: 'relatedId',
-          model: 'Participation',
-          populate: {
-            path: 'event',
-            model: 'Event'
-          }
-        })
-        .lean();
-      
+
+            .sort({ createdAt: -1 })
+            .populate({
+                path: 'relatedId',
+                model: 'Participation',
+                populate: [
+                    { path: 'event', model: 'Event' },
+                    { path: 'user', model: 'User', select: 'username avatar email' }
+                ]
+            })
+            .lean();
+
         console.log("Notifications: ", notifications);
+
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });
