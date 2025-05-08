@@ -1,7 +1,7 @@
 import express from 'express';
 import { getAllEvent, getEvent, createEvent, updateEvent, deleteEvent } from '../controllers/eventController.js';
 import { requestToJoinEvent, handleJoinRequest } from '../controllers/eventRequestController.js';
-import { inviteToEvent, handleInvitation } from '../controllers/eventInvitationController.js';
+import { inviteToEvent, handleInvitation, getInvitations } from '../controllers/eventInvitationController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
 import { upload } from '../middleware/fileUpload.js';
 
@@ -15,6 +15,10 @@ router.delete('/:eventId', verifyToken, deleteEvent);
 
 
 // TODO: Ability to cancel request/invitation, GET all requests/invitation associated with a user
+// router.get('/:userId/requests-get', );
+router.get('/:eventId/invitations-get', getInvitations);
+
+
 router.post('/:eventId/request-join', verifyToken, requestToJoinEvent);                 // Request to join public event
 router.put('/:eventId/requests/:requestId', verifyToken, handleJoinRequest);            // Organizer approve/reject join request
 router.post('/:eventId/invite', verifyToken, inviteToEvent);                         // Invite to join private event
