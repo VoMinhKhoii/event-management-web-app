@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext} from 'react';
 import { Link } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
-import { NotificationContext } from '../../context/NotificationContext.jsx'; // adjust path if needed
+import { NotificationContext } from '../../context/notificationContext.jsx'; // adjust path if needed
 const NotificationPage = () => {
     // State to keep track of selected notification/event
     const {notifications, markAsRead, deleteNotification} = useContext(NotificationContext);

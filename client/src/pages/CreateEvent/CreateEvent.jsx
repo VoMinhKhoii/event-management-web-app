@@ -11,6 +11,7 @@ const CreateEvent = () => {
   const fileInputRef = useRef(null);
   const { currentUser } = useContext(AuthContext);
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
   const [formData, setFormData] = useState({
     title: '',
@@ -78,8 +79,12 @@ const CreateEvent = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    if (validateForm()) {
+
+    if (!validateForm() || isSubmitting) return;
+
+
       try {
+        setIsSubmitting(true); // 🔒 disable button
         const fd = new FormData();
 
         // append all non-file fields
@@ -116,8 +121,10 @@ const CreateEvent = () => {
       } catch (error) {
         console.error('Error creating event:', error.message);
         alert(error.message || 'Failed to create event');
+      } finally {
+        setIsSubmitting(false); // 🔓 enable button
       }
-    }
+    
   };
 
   const handleChange = (e) => {
@@ -536,8 +543,9 @@ const CreateEvent = () => {
           type="submit"
           className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
           onClick={handleSubmit}
+          disabled={isSubmitting} // Disable button if submitting
         >
-          Create
+          {isSubmitting ? 'Submitting...' : 'Create Event'}
         </button>
       </div>
     </div>
