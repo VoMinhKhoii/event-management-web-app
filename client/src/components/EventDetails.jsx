@@ -21,6 +21,7 @@ const EventDetails = () => {
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [error, setError] = useState(null);
   const [inviteUsername, setInviteUsername] = useState('');
 
@@ -68,41 +69,65 @@ const EventDetails = () => {
     fetchComments();
   }, [id]);
 
+  const fetchInvitationsAndStats = async () => {
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/invitations-get`);
+
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Failed to fetch invitations');
+        throw new Error('Failed to fetch invitations');
+      }
+
+      const dataArray = data.invitations || [];
+      setInvitations(dataArray);
+      console.log("Fetched invitations:", dataArray); // Debugging line
+
+      // Calculate RSVP rate
+      const acceptedCount = dataArray.filter(inv => inv.status === 'approved').length;
+      const totalRespondedCount = dataArray.filter(inv => inv.status !== 'invited').length;
+
+      if (totalRespondedCount === 0) {
+        setRsvpRate(0);
+      } else {
+        const calculatedRate = Math.round((acceptedCount / totalRespondedCount) * 100);
+        setRsvpRate(calculatedRate);
+      }
+
+
+    } catch (err) {
+      console.error('Error fetching invitations:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchRequests = async () => {
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/requests-get`);
+
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || 'Failed to fetch requests');
+        throw new Error('Failed to fetch requests');
+      }
+
+      const dataArray = data.requests || [];
+
+      setRequests(dataArray);
+
+      console.log("Fetched requests:", data); // Debugging line
+    } catch (err) {
+      console.error('Error fetching requests:', err);
+
+    }
+  }
+
   // If the user is an organizer, fetch invitations and calculate RSVP stats
   useEffect(() => {
     if (!id || !isOrganizer) return;
-
-    const fetchInvitationsAndStats = async () => {
-      try {
-        const response = await fetch(`http://localhost:8800/api/events/${id}/invitations-get`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch invitations');
-        }
-        const data = await response.json();
-
-        const dataArray = data.invitations || [];
-        setInvitations(dataArray);
-
-        // Calculate RSVP rate
-        const acceptedCount = dataArray.filter(inv => inv.status === 'approved').length;
-        const totalRespondedCount = dataArray.filter(inv => inv.status !== 'invited').length;
-
-        if (totalRespondedCount === 0) {
-          setRsvpRate(0);
-        } else {
-          const calculatedRate = Math.round((acceptedCount / totalRespondedCount) * 100);
-          setRsvpRate(calculatedRate);
-        }
-
-
-      } catch (err) {
-        console.error('Error fetching invitations:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchInvitationsAndStats();
+    fetchRequests();
   }, [id, isOrganizer]);
 
   // Set loading to false once event data is loaded
@@ -574,10 +599,10 @@ const EventDetails = () => {
         </div>
 
         {/* Invitations List */}
-        {invitations.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+            {invitations.length > 0 && (
               <button
                 onClick={() => handleSendInviteeReminders()}
                 className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
@@ -587,8 +612,11 @@ const EventDetails = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </button>
-            </div>
-            <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
+            )}
+          </div>
+          
+          {invitations.length > 0 ? (
+            <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
               {invitations.map((invitation) => (
                 <div key={invitation._id || invitation.id} className="flex items-center justify-between pb-3 border-b border-gray-100">
                   <div className="flex items-center">
@@ -614,8 +642,57 @@ const EventDetails = () => {
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-gray-500 text-sm">No invitations yet</p>
+          )}
+        </div>
+
+        {/* Requests List */}
+        <div className="">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg mb-3">Requests</h3>
           </div>
-        )}
+
+          {requests.length > 0 ? (
+            <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+              {requests.map((request) => (
+                <div key={request._id || request.id} className="flex items-center justify-between pb-2">
+                  <div className="flex items-center">
+                    <img
+                      src={request.user?.avatar || '/images/avatar.png'}
+                      alt={request.user?.username || 'User'}
+                      className="w-8 h-8 rounded-full mr-3"
+                    />
+                    <div>
+                      <div className="font-medium">{request.user?.username || request.email}</div>
+                      <div className="text-xs text-gray-500">{request.user?.email || ''}</div>
+                    </div>
+                  </div>
+
+                  {request.status === 'pending' && (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800' rounded-full text-xs font-medium">
+                      Pending
+                    </span>
+                  )}
+
+                  {request.status === 'approved' && (
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      Approved
+                    </span>
+                  )}
+
+                  {request.status === 'rejected' && (
+                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                      Declined
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">No requests</p>
+          )}
+        </div>
 
         {/* Basic Event Info */}
         <div className="space-y-4 pt-2">
@@ -654,25 +731,25 @@ const EventDetails = () => {
         </div>
 
         <div className="mt-4">
-        <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg mb-3">Attendees</h3>
-              <button
-                onClick={() => handleSendAttendeeReminders()}
-                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
-                title="Send reminder"
-              >
-                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </button>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg mb-3">Attendees</h3>
+            <button
+              onClick={() => handleSendAttendeeReminders()}
+              className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
+              title="Send reminder"
+            >
+              <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </button>
+          </div>
 
-          {/*Show attendees */}
-          {invitationStats.accepted.length > 0 ? (
+          {/* Show attendees - both from accepted invitations and approved requests */}
+          {(invitationStats.accepted.length > 0 || requests.filter(req => req.status === 'approved').length > 0) ? (
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-
+              {/* Render accepted invitations */}
               {invitationStats.accepted.map((invitation) => (
-                <div key={invitation._id || invitation.id} className="flex items-center pb-2 border-b border-gray-100">
+                <div key={`inv-${invitation._id || invitation.id}`} className="flex items-center pb-2 border-b border-gray-100">
                   <img
                     src={invitation.user?.avatar || '/images/avatar.png'}
                     alt={invitation.user?.username || 'User'}
@@ -684,6 +761,23 @@ const EventDetails = () => {
                   </div>
                 </div>
               ))}
+              
+              {/* Render approved requests */}
+              {requests
+                .filter(request => request.status === 'approved')
+                .map((request) => (
+                  <div key={request._id} className="flex items-center pb-2 border-b border-gray-100">
+                    <img
+                      src={request.user?.avatar || '/images/avatar.png'}
+                      alt={request.user?.username || 'User'}
+                      className="w-8 h-8 rounded-full mr-3"
+                    />
+                    <div>
+                      <div className="font-medium">{request.user?.username || request.email}</div>
+                      <div className="text-xs text-gray-500">{request.user?.email || ''}</div>
+                    </div>
+                  </div>
+                ))}
             </div>
           ) : (
             <p className="text-gray-500 text-sm">No attendees yet</p>

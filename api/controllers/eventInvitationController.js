@@ -11,7 +11,10 @@ import User from '../models/User.js';
 export const getInvitations = async (req, res) => {
     try {  
         const { eventId } = req.params;
-        const invitations = await Participation.find({ event: eventId }).populate({
+        const invitations = await Participation.find({ 
+            event: eventId,
+            kind: 'Invitation',
+            }).populate({
             path: 'user',
             select: 'username avatar email'
         });
