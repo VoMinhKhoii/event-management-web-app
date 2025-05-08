@@ -4,6 +4,7 @@ import { requestToJoinEvent, handleJoinRequest } from '../controllers/eventReque
 import { inviteToEvent, handleInvitation, getInvitations } from '../controllers/eventInvitationController.js';
 import { verifyToken } from '../middleware/verifyToken.js';
 import { upload } from '../middleware/fileUpload.js';
+import { sendPendingInvitationReminders, sendAttendeeReminders } from '../controllers/eventReminderController.js';
 
 const router = express.Router();
 
@@ -23,5 +24,7 @@ router.post('/:eventId/request-join', verifyToken, requestToJoinEvent);         
 router.put('/:eventId/requests/:requestId', verifyToken, handleJoinRequest);            // Organizer approve/reject join request
 router.post('/:eventId/invite', verifyToken, inviteToEvent);                         // Invite to join event
 router.put('/:eventId/invitations/:invitationId', verifyToken, handleInvitation);    // Receiver accept/reject invitation
+router.post('/:eventId/reminders/pending-invites', verifyToken, sendPendingInvitationReminders);
+router.post('/:eventId/reminders/attendees', verifyToken, sendAttendeeReminders);
 
 export default router;

@@ -5,7 +5,7 @@ import NavPane from './NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/authContext.jsx';
-import { NotificationContext} from '../context/notificationContext.jsx';
+import { NotificationContext } from '../context/notificationContext.jsx';
 
 
 const EventDetails = () => {
@@ -89,10 +89,10 @@ const EventDetails = () => {
         const dataArray = data.invitations || [];
         setInvitations(dataArray);
 
-      // Calculate RSVP rate
+        // Calculate RSVP rate
         const acceptedCount = dataArray.filter(inv => inv.status === 'approved').length;
-        const totalRespondedCount = dataArray.filter(inv =>  inv.status !== 'invited').length;
-        
+        const totalRespondedCount = dataArray.filter(inv => inv.status !== 'invited').length;
+
         if (totalRespondedCount === 0) {
           setRsvpRate(0);
         } else {
@@ -100,7 +100,7 @@ const EventDetails = () => {
           setRsvpRate(calculatedRate);
         }
 
-        
+
       } catch (err) {
         console.error('Error fetching invitations:', err);
       } finally {
@@ -120,7 +120,7 @@ const EventDetails = () => {
 
   // Calculate invitation statistics for organizer view
   const invitationStats = {
-    
+
     total: invitations.length,
     accepted: invitations.filter(inv => inv.status === 'approved'),
     pending: invitations.filter(inv => inv.status === 'pending'),
@@ -269,29 +269,69 @@ const EventDetails = () => {
     }
   };
 
-  const handleSendReminder = async (userId) => {
-    if (!isOrganizer) return;
-    const notification = {
-      userId, // The user to whom the reminder is being sent
-      type: 'reminder', // Notification type
-      message: 'You have a pending invitation' ,
-      relatedId: null, // The event ID,
-      data: `Reminder: Don't forget about the event "${eventData.title}" happening on ${eventData.startDate} at ${eventData.startTime}.`
-    };
-    try {
-      sendNotification(notification); // Send the reminder notification using the context
+  const handleSendInviteeReminders = async () => {
+    if (!isOrganizer || !eventData._id) return;
 
-      // Show notification or success message
-      alert('Reminder sent successfully');
+    if (!window.confirm('Send reminders to all users with pending invitations?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/reminders/pending-invites`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to send reminders');
+        return;
+      }
+
+      alert(`${data.count} reminders sent successfully`);
     } catch (err) {
-      console.error('Error sending reminder:', err);
-      setError('Failed to send reminder. Please try again.');
+      console.error('Error sending reminders:', err);
+      alert('Failed to send reminders');
+    }
+  };
+
+  const handleSendAttendeeReminders = async () => {
+    if (!isOrganizer || !id) return;
+
+    if (!window.confirm('Send reminders to all attendees?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/reminders/attendees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to send reminders');
+        return;
+      }
+
+      alert(`${data.count} reminders sent successfully`);
+    } catch (err) {
+      console.error('Error sending reminders:', err);
+      alert('Failed to send reminders');
     }
   };
 
   const handleSendInvite = async (username) => {
     if (!isOrganizer) return;
-  
+
     try {
       const response = await fetch(`http://localhost:8800/api/events/${id}/invite`, {
         method: 'POST',
@@ -301,14 +341,14 @@ const EventDetails = () => {
         credentials: 'include',
         body: JSON.stringify({ username: username })
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         alert(data.error || 'Failed to send invitation');
         return;
       }
-  
+
       // Show notification or success message
       alert(data.message || 'Invitation sent successfully');
 
@@ -500,10 +540,9 @@ const EventDetails = () => {
           <div className="flex items-center mb-2">
             <div className="w-full bg-gray-200 rounded-full h-4 mr-2">
               <div
-                className={`h-4 rounded-full ${
-                  rsvpRate >= 80 ? 'bg-green-500' :
+                className={`h-4 rounded-full ${rsvpRate >= 80 ? 'bg-green-500' :
                   rsvpRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
+                  }`}
                 style={{ width: `${rsvpRate}%` }}
               ></div>
             </div>
@@ -612,7 +651,18 @@ const EventDetails = () => {
         {/* Invitations List */}
         {invitations.length > 0 && (
           <div>
-            <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+              <button
+                onClick={() => handleSendInviteeReminders()}
+                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
+                title="Send reminder"
+              >
+                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-4 max-h-[320px] overflow-y-auto pr-1">
               {invitations.map((invitation) => (
                 <div key={invitation._id || invitation.id} className="flex items-center justify-between pb-3 border-b border-gray-100">
@@ -635,18 +685,6 @@ const EventDetails = () => {
                     >
                       {invitation.status === 'invited' ? ' Pending' : invitation.status === 'approved' ? ' Accepted' : 'Rejected'}
                     </span>
-
-                    {invitation.status === 'invited' && (
-                      <button
-                        onClick={() => handleSendReminder(invitation.user._id)}
-                        className="ml-2 p-1 text-gray-400 hover:text-gray-600"
-                        title="Send reminder"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -691,12 +729,23 @@ const EventDetails = () => {
         </div>
 
         <div className="mt-4">
-          <h3 className="font-semibold text-lg mb-3">Attendees</h3>
-          
+        <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg mb-3">Attendees</h3>
+              <button
+                onClick={() => handleSendAttendeeReminders()}
+                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
+                title="Send reminder"
+              >
+                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
+            </div>
+
           {/*Show attendees */}
           {invitationStats.accepted.length > 0 ? (
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-              
+
               {invitationStats.accepted.map((invitation) => (
                 <div key={invitation._id || invitation.id} className="flex items-center pb-2 border-b border-gray-100">
                   <img
