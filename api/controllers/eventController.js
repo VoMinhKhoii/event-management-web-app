@@ -1,8 +1,10 @@
 import Event from '../models/Event.js';
 import Participation from '../models/Participation.js';
 import { logActivity } from '../middleware/logActivity.js';
+import { detectEventChanges } from '../utils/eventHelpers.js';
 import fs from 'fs';
 import https from 'https';
+import mongoose from 'mongoose';
 
 // GET /api/events
 export const getAllEvent = async (req, res) => {
@@ -155,6 +157,9 @@ export const createEvent = async (req, res) => {
 
 // PUT /api/events/:eventId
 export const updateEvent = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     let imageUrl = null;
 
@@ -217,8 +222,9 @@ export const updateEvent = async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
 
-    const existingEvent = await Event.findById(req.params.eventId);
+    const existingEvent = await Event.findById(req.params.eventId).session(session);
     if (!existingEvent) {
+      await session.abortTransaction();
       return res.status(404).json({ error: 'Event not found' });
     }
 
@@ -226,6 +232,9 @@ export const updateEvent = async (req, res) => {
       ...req.body,
       image: imageUrl || existingEvent.image // use new image if uploaded, otherwise keep existing
     };
+
+    // check if any value was changed when submitting event update
+    const changes = detectEventChanges(existingEvent, updateData);
 
     const updatedEvent = await Event.findByIdAndUpdate(req.params.eventId, updateData, {
       new: true,
@@ -240,9 +249,43 @@ export const updateEvent = async (req, res) => {
       { eventTitle: updatedEvent.title }
     );
 
+    // only send notif if there were actual changes
+    if (changes) {
+      // get all approved attendees
+      const participations = await Participation.find({
+        event: req.params.eventId,
+        status: 'approved'
+      }).session(session);
 
+      if (participations.length > 0) {
+        const notifications = participations.map(participation => ({
+          userId: participation.user,
+          type: 'eventUpdate',
+          message: `Event "${updatedEvent.title}" has been updated.`,
+          relatedId: updatedEvent._id,
+          data: {
+            changes,
+            message: `The event "${updatedEvent.title}" has been updated with new information.`,
+            event: {
+              title: updatedEvent.title,
+              startDate: updatedEvent.startDate,
+              startTime: updatedEvent.startTime,
+              location: updatedEvent.location
+            }
+          },
+          isRead: false
+        }));
+
+        await Notification.insertMany(notifications, { session });
+      }
+    }
+
+    await session.commitTransaction();
     res.status(200).json(updatedEvent);
   } catch (err) {
+    await session.abortTransaction();
+    console.error('Error updating event:', err);
+
     // clean-up temp file if exists
     if (req.file?.path && fs.existsSync(req.file.path)) {
       try {
@@ -256,6 +299,8 @@ export const updateEvent = async (req, res) => {
       error: 'Failed to update event',
       message: err.message
     });
+  } finally {
+    session.endSession();
   }
 };
 
