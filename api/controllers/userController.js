@@ -26,7 +26,7 @@ export const getUser = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
 
-        const { firstName, lastName, username, email, password } = req.body;
+        const { firstName, lastName, username, email, password, currentPassword } = req.body;
 
 
         // Check if user exists
@@ -59,11 +59,23 @@ export const updateUser = async (req, res) => {
         if (email) user.email = email;
 
 
-        // Update password if provided
         if (password && password.trim() !== '') {
+            if (!currentPassword) {
+                return res.status(400).json({ message: 'Current password is required to update password' });
+            }
+            // Verify if the current password is correct
+            const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ message: 'Current password is incorrect' });
+            }
+            
+            const isSamePassword = await bcrypt.compare(password, user.password);
+            if (isSamePassword) {
+                return res.status(400).json({ message: 'New password must be different from current password' });
+            }
+            
             user.password = await bcrypt.hash(password, 10);
         }
-
         // Save updated user
         const updatedUser = await user.save();
         console.log('User profile updated:', updatedUser);

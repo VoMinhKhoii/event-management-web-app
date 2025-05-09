@@ -84,7 +84,7 @@ const CreateEvent = () => {
 
 
       try {
-        setIsSubmitting(true); // 🔒 disable button
+        setIsSubmitting(true); // disable button
         const fd = new FormData();
 
         // append all non-file fields

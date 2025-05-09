@@ -97,18 +97,20 @@ describe('User API Tests', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-
   it('should update user avatar when authenticated', async () => {
     const token = generateToken(EXISTING_USER_ID);
-    const avatarUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbCFD9hBq5ZBfdDqHa1IPFZORSL3EkPSxU2tomxsaeiOcuOyQMbUhNN-htl5xLTtZwvMU&usqp=CAU';
     
+
+    const testImagePath = path.join(__dirname, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbCFD9hBq5ZBfdDqHa1IPFZORSL3EkPSxU2tomxsaeiOcuOyQMbUhNN-htl5xLTtZwvMU&usqp=CAU');
+    
+   
     const res = await request(app)
-      .put(`/api/users/${EXISTING_USER_ID}/avatar`)
+      .post(`/api/users/${EXISTING_USER_ID}/avatar`)
       .set('Cookie', [`token=${token}`])
-      .send({ avatarUrl: avatarUrl });
+      .attach('avatar', testImagePath); 
     
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('avatar', avatarUrl);
+    expect(res.body).toHaveProperty('avatar');
     expect(res.body).toHaveProperty('message', 'Avatar updated successfully');
   });
 
