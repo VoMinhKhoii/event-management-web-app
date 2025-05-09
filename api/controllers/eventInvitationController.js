@@ -9,12 +9,12 @@ import User from '../models/User.js';
 
 // GET /api/events/:eventId/invitations/:userId
 export const getInvitations = async (req, res) => {
-    try {  
+    try {
         const { eventId } = req.params;
-        const invitations = await Participation.find({ 
+        const invitations = await Participation.find({
             event: eventId,
             kind: 'Invitation',
-            }).populate({
+        }).populate({
             path: 'user',
             select: 'username avatar email'
         });
@@ -40,7 +40,7 @@ export const inviteToEvent = async (req, res) => {
     try {
         // Begin transaction
         session.startTransaction();
-        
+
         const { eventId } = req.params;
         const { username } = req.body;
         const inviterId = req.userId;
@@ -75,7 +75,7 @@ export const inviteToEvent = async (req, res) => {
             session.endSession();
             return res.status(400).json({ error: 'Cannot invite to an event that has ended' });
         }
-        
+
         if (event.status === 'cancelled') {
             await session.abortTransaction();
             session.endSession();
@@ -111,8 +111,8 @@ export const inviteToEvent = async (req, res) => {
 
         if (existingParticipation) {
             let errorMessage, statusDetails;
-            
-            switch(existingParticipation.status) {
+
+            switch (existingParticipation.status) {
                 case 'approved':
                     errorMessage = 'User is already attending this event';
                     statusDetails = 'already_attending';
@@ -133,7 +133,7 @@ export const inviteToEvent = async (req, res) => {
                     errorMessage = 'User already has a participation record for this event';
                     statusDetails = 'existing_record';
             }
-            
+
             await session.abortTransaction();
             session.endSession();
             return res.status(400).json({
@@ -194,11 +194,11 @@ export const inviteToEvent = async (req, res) => {
 export const handleInvitation = async (req, res) => {
     // Start a session for the transaction
     const session = await mongoose.startSession();
-    
+
     try {
         // Begin transaction
         session.startTransaction();
-        
+
         const { eventId, invitationId } = req.params;
         const { action } = req.body; // 'accept' / 'decline'
         const userId = req.userId;
@@ -226,15 +226,21 @@ export const handleInvitation = async (req, res) => {
             session.endSession();
             return res.status(400).json({ error: 'This invitation has already been processed' });
         }
-        
+
         // Check if event is still active
         if (invitation.event.status === 'ended' || invitation.event.status === 'cancelled') {
             await session.abortTransaction();
             session.endSession();
-            return res.status(400).json({ 
-                error: `Cannot respond to an invitation for an event that is ${invitation.event.status}` 
+            return res.status(400).json({
+                error: `Cannot respond to an invitation for an event that is ${invitation.event.status}`
             });
         }
+
+        const event = await Event.findById(invitation.event._id)
+            .select('title organizer startDate startTime endTime location')
+            .populate('organizer', 'username email firstName lastName')
+            .session(session)
+            .lean();
 
         if (action === 'accept') {
             // Check capacity within transaction
@@ -243,68 +249,68 @@ export const handleInvitation = async (req, res) => {
                 session.endSession();
                 return res.status(400).json({ error: 'Event at maximum capacity' });
             }
-            
+
             // Get current event dates and times
             const targetStartDate = invitation.event.startDate;
             const targetEndDate = invitation.event.endDate;
             const targetStartTime = invitation.event.startTime;
             const targetEndTime = invitation.event.endTime;
-            
+
             // Find conflicting participations of ANY type (both invitations and requests)
             const conflictingParticipations = await Participation.find({
                 user: userId,
                 status: 'approved',
                 _id: { $ne: invitationId }
             }).session(session)
-            .populate({
-                path: 'event',
-                match: {
-                    // Only return events that overlap with the target timeframe
-                    $and: [
-                        // Event hasn't ended before our event starts
-                        {
-                            $or: [
-                                { endDate: { $gt: targetStartDate } },
-                                { 
-                                    $and: [
-                                        { endDate: targetStartDate },
-                                        { endTime: { $gte: targetStartTime } }
-                                    ]
-                                }
-                            ]
-                        },
-                        // Event doesn't start after our event ends
-                        {
-                            $or: [
-                                { startDate: { $lt: targetEndDate } },
-                                {
-                                    $and: [
-                                        { startDate: targetEndDate },
-                                        { startTime: { $lte: targetEndTime } }
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    // Skip events that are cancelled
-                    status: { $ne: 'cancelled' }
-                },
-                select: 'title startDate startTime endDate endTime'
-            });
-            
+                .populate({
+                    path: 'event',
+                    match: {
+                        // Only return events that overlap with the target timeframe
+                        $and: [
+                            // Event hasn't ended before our event starts
+                            {
+                                $or: [
+                                    { endDate: { $gt: targetStartDate } },
+                                    {
+                                        $and: [
+                                            { endDate: targetStartDate },
+                                            { endTime: { $gte: targetStartTime } }
+                                        ]
+                                    }
+                                ]
+                            },
+                            // Event doesn't start after our event ends
+                            {
+                                $or: [
+                                    { startDate: { $lt: targetEndDate } },
+                                    {
+                                        $and: [
+                                            { startDate: targetEndDate },
+                                            { startTime: { $lte: targetEndTime } }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        // Skip events that are cancelled
+                        status: { $ne: 'cancelled' }
+                    },
+                    select: 'title startDate startTime endDate endTime'
+                });
+
             // Find events the user is organizing that overlap with this timeframe
             const conflictingOrganizedEvents = await Event.find({
                 organizer: userId,
                 _id: { $ne: eventId },
                 status: { $nin: ['cancelled', 'ended'] },
-                
+
                 // Check for overlapping timeframe
                 $and: [
                     // Event hasn't ended before our event starts
                     {
                         $or: [
                             { endDate: { $gt: targetStartDate } },
-                            { 
+                            {
                                 $and: [
                                     { endDate: targetStartDate },
                                     { endTime: { $gte: targetStartTime } }
@@ -326,11 +332,11 @@ export const handleInvitation = async (req, res) => {
                     }
                 ]
             }).session(session)
-            .select('title startDate startTime endDate endTime');
-            
+                .select('title startDate startTime endDate endTime');
+
             // Process conflicts
             const conflicts = [];
-            
+
             // Process participation conflicts (filter out null events from populate match)
             conflictingParticipations.forEach(participation => {
                 if (participation.event) {
@@ -342,7 +348,7 @@ export const handleInvitation = async (req, res) => {
                     });
                 }
             });
-            
+
             // Process organizing conflicts
             conflictingOrganizedEvents.forEach(event => {
                 conflicts.push({
@@ -351,11 +357,13 @@ export const handleInvitation = async (req, res) => {
                     role: 'Organizer'
                 });
             });
-            
+
+            console.log('Conflicts:', conflicts);
+
             if (conflicts.length > 0) {
                 await session.abortTransaction();
                 session.endSession();
-                return res.status(400).json({ 
+                return res.status(400).json({
                     error: 'Scheduling conflict detected',
                     conflicts: conflicts
                 });
@@ -365,47 +373,95 @@ export const handleInvitation = async (req, res) => {
             // Important: Use the base Participation model since we're updating a field common to all types
             await Participation.findByIdAndUpdate(
                 invitationId,
-                { 
+                {
                     status: 'approved',
                     respondedAt: new Date()
                 },
                 { session }
             );
-            
+
             // Update event capacity
             await Event.findByIdAndUpdate(
                 eventId,
                 { $inc: { curAttendees: 1 } },
                 { session }
             );
-            
+
+            const sender = await User.findById(invitation.user)
+                .select('username email firstName lastName avatar')
+                .session(session)
+                .lean();
+
+            if (!sender) {
+                await session.abortTransaction();
+                throw new Error('Recipient not found');
+            }
+
             // Create a notification for the event organizer
             await Notification.create([{
                 userId: invitation.event.organizer,
                 type: 'invitationAccepted',
-                message: `${req.username || 'A user'} has accepted your invitation to ${invitation.event.title || 'your event'}`,
+                message: `Invitation accepted`,
                 relatedId: invitation._id,
+                data: {
+                    message: `${sender.username || 'A user'} has accepted your invitation to ${invitation.event.title || 'your event'}.
+                    
+                    ${sender.firstName} ${sender.lastName},
+                    ${sender.email}`,
+
+                    notificationSender: {
+                        username: sender.username,
+                        email: sender.email,
+                        avatar: sender.avatar,
+                        firstName: sender.firstName,
+                        lastName: sender.lastName
+                    },
+                },
                 isRead: false
             }], { session });
-            
+
         } else if (action === 'decline') {
             // Update invitation status
             // Important: Use the base Participation model since we're updating a field common to all types
             await Participation.findByIdAndUpdate(
                 invitationId,
-                { 
+                {
                     status: 'rejected',
                     respondedAt: new Date()
                 },
                 { session }
             );
-            
+
+            const sender = await User.findById(invitation.user)
+                .select('username email firstName lastName avatar')
+                .session(session)
+                .lean();
+
+            if (!sender) {
+                await session.abortTransaction();
+                throw new Error('Recipient not found');
+            }
+
             // Create a notification for the event organizer
             await Notification.create([{
                 userId: invitation.event.organizer,
                 type: 'invitationDeclined',
-                message: `${req.username || 'A user'} has declined your invitation to ${invitation.event.title || 'your event'}`,
+                message: `Invitation declined`,
                 relatedId: invitation._id,
+                data: {
+                    message: `${sender.username || 'A user'} has declined your invitation to ${invitation.event.title || 'your event'}.
+                
+                    ${sender.firstName} ${sender.lastName},
+                    ${sender.email}`,
+
+                    notificationSender: {
+                        username: sender.username,
+                        email: sender.email,
+                        avatar: sender.avatar,
+                        firstName: sender.firstName,
+                        lastName: sender.lastName
+                    },
+                },
                 isRead: false
             }], { session });
 
@@ -421,11 +477,11 @@ export const handleInvitation = async (req, res) => {
             .session(session)
             .populate('event', 'title startDate startTime location')
             .populate('invitedBy', 'username email'); // Include invitedBy which is specific to Invitation
-        
+
         // Commit the transaction
         await session.commitTransaction();
         session.endSession();
-        
+
         res.status(200).json({
             invitation: updatedInvitation,
             message: `Invitation ${action === 'accept' ? 'accepted' : 'declined'} successfully`
@@ -436,7 +492,7 @@ export const handleInvitation = async (req, res) => {
         session.endSession();
         console.error('Error handling invitation:', err);
         res.status(500).json({ error: 'Failed to process invitation', message: err.message });
-    } finally{
+    } finally {
         if (session) {
             session.endSession();
         }
