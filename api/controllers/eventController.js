@@ -10,16 +10,16 @@ import mongoose from 'mongoose';
 // GET /api/events
 export const getAllEvent = async (req, res) => {
   try {
-    const { public: isPublic, organizerId, bookingId } = req.query;
+    const { public: isPublic, organizerId, participantId } = req.query;
     const filter = {};
 
     if (isPublic) filter.publicity = true;
     if (organizerId) filter.organizer = organizerId;
     const events = await Event.find(filter).populate('organizer');
 
-    if (bookingId) {
+    if (participantId) {
       const participations = await Participation.find({
-        user: bookingId,
+        user: participantId,
         status: 'approved'
       }).select('event'); // Only get event field
 
