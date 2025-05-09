@@ -45,6 +45,17 @@ export const inviteToEvent = async (req, res) => {
         const { username } = req.body;
         const inviterId = req.userId;
 
+        const organizer = await User.findById(inviterId)
+            .select('username email firstName lastName avatar')
+            .session(session)
+            .lean();
+
+        if (!organizer) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ error: 'Organizer not found' });
+        }
+
         if (!username) {
             await session.abortTransaction();
             session.endSession();
@@ -161,6 +172,15 @@ export const inviteToEvent = async (req, res) => {
             type: 'invitation',
             message: `You've been invited to ${event.title}`,
             relatedId: invitation._id,
+            data: {
+                notificationSender: {
+                    username: organizer.username,
+                    email: organizer.email,
+                    avatar: organizer.avatar,
+                    firstName: organizer.firstName,
+                    lastName: organizer.lastName
+                },
+            },
             isRead: false
         }], { session });
 

@@ -76,7 +76,7 @@ const ProfilePage = () => {
     setIsLoadingEvents(true);
     setEventsError(null);
     try {
-      const response = await fetch(`http://localhost:8800/api/events/?bookingId=${currentUser._id}`, {
+      const response = await fetch(`http://localhost:8800/api/events/?participantId=${currentUser._id}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

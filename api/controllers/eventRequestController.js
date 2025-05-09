@@ -39,6 +39,16 @@ export const requestToJoinEvent = async (req, res) => {
         const { eventId } = req.params;
         const userId = req.userId;
 
+        const requestingUser = await User.findById(userId)
+            .select('username email firstName lastName avatar')
+            .session(session)
+            .lean();
+
+        if (!requestingUser) {
+            await session.abortTransaction();
+            throw new Error('User not found');
+        }
+
         // Check if event exists with minimal data projection
         const event = await Event.findById(eventId)
             .select('title organizer status publicity curAttendees maxAttendees startDate startTime endDate endTime')
@@ -228,8 +238,6 @@ export const requestToJoinEvent = async (req, res) => {
             customMessage: req.body.message || ''
         }], { session }).then(requests => requests[0]);
 
-        const requestingUser = await User.findById(userId).select('username').lean();
-        console.log('Requesting user:', requestingUser);
 
         // Create notification for organizer
         await Notification.create([{
@@ -237,6 +245,15 @@ export const requestToJoinEvent = async (req, res) => {
             type: 'joinRequest',
             message: `${requestingUser.username || 'A user'} has requested to join your event`,
             relatedId: request._id,
+            data: {
+                notificationSender: {
+                    username: requestingUser.username,
+                    email: requestingUser.email,
+                    avatar: requestingUser.avatar,
+                    firstName: requestingUser.firstName,
+                    lastName: requestingUser.lastName
+                },
+            },
             isRead: false
         }], { session });
 
