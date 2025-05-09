@@ -339,7 +339,6 @@ const ProfilePage = () => {
               </svg>
             </button>
           </div>
-
           <div className="mt-2 space-y-5 text-gray-600">
           {isEditing && (
             <>
@@ -374,7 +373,13 @@ const ProfilePage = () => {
               </div>
             </>
           )}
-
+          {!isEditing && (
+          <h1 className="text-2xl font-bold text-gray-900">
+            {profileInfo.firstName && profileInfo.lastName 
+              ? `${profileInfo.firstName} ${profileInfo.lastName}`
+              : profileInfo.username}
+          </h1>
+          )}
           <div className="flex items-center">
             <div className={`${isEditing ? 'w-48' : 'w-30'} flex items-center`}>
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

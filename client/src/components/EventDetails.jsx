@@ -148,7 +148,7 @@ const EventDetails = () => {
 
     total: invitations.length,
     accepted: invitations.filter(inv => inv.status === 'approved'),
-    pending: invitations.filter(inv => inv.status === 'pending'),
+    pending: invitations.filter(inv => inv.status === 'invited'),
     declined: invitations.filter(inv => inv.status === 'rejected')
   };
 
