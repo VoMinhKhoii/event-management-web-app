@@ -9,14 +9,25 @@ export const getNotifications = async (req, res) => {
     try {
         const userId = req.userId;
         const notifications = await Notification.find({ userId })
-
             .sort({ createdAt: -1 })
             .populate({
                 path: 'relatedId',
                 model: 'Participation',
                 populate: [
-                    { path: 'event', model: 'Event' },
-                    { path: 'user', model: 'User', select: 'username avatar email' }
+                    { 
+                        path: 'event', 
+                        model: 'Event',
+                        populate: {
+                            path: 'organizer',
+                            model: 'User',
+                            select: 'username avatar email'
+                        } 
+                    },
+                    { 
+                        path: 'user', 
+                        model: 'User', 
+                        select: 'username avatar email' 
+                    }
                 ]
             })
             .lean();

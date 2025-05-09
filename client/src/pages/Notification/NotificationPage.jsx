@@ -571,8 +571,32 @@ const NotificationPage = () => {
                                                     <p className="text-gray-600 mb-8">
                                                         {selectedEvent.description}
                                                     </p>
+                                                    
+                                                    {/* Display summary if available */}
+                                                    {selectedEvent.summary && (
+                                                        <>
+                                                        <h2 className="text-2xl font-semibold mb-4">Description</h2>
+                                                        <p className="text-gray-600 mb-8 whitespace-pre-line">{selectedEvent.summary}</p>
+                                                        </>
+                                                    )}
+                                                    </section>
+
+                                                    {/* Add Organizer Information */}
+                                                    <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                                                    <h2 className="text-xl font-bold mb-4">Organized by</h2>
+                                                    <div className="flex items-center">
+                                                        <img
+                                                        src={selectedEvent.organizer?.avatar || '/images/avatar.png'}
+                                                        alt={selectedEvent.organizer?.name || 'Organizer'}
+                                                        className="w-12 h-12 rounded-full mr-4"
+                                                        />
+                                                        <div>
+                                                        <h3 className="font-medium text-lg">{selectedEvent.organizer?.username || 'Event Organizer'}</h3>
+                                                        <p className="text-gray-500">{selectedEvent.organizer?.email || ''}</p>
+                                                        </div>
+                                                    </div>
                                                 </section>
-                                            </div>
+                                                </div>
                                         )}
 
                                     {(selectedNotification.type === "eventReminder" ||

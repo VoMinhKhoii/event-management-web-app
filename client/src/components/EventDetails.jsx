@@ -542,11 +542,7 @@ const EventDetails = () => {
       ? [eventData.image]
       : ['/images/tech.png']; // Default image as fallback
 
-  // Expectations might be part of the description or a separate field
-  const expectations = eventData.expectations || [
-    "Details about this event will be provided by the organizer",
-    "Check back soon for more information"
-  ];
+ 
 
   // Render the user's sidebar for regular attendees
   const renderAttendeeRightSidebar = () => {
@@ -1009,21 +1005,8 @@ const EventDetails = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-              {expectations.length > 0 && (
-                <>
-                  <h3 className="text-xl font-semibold mb-4">What to expect</h3>
-                  <ul className="space-y-3">
-                    {expectations.map((item, index) => (
-                      <li key={index} className="flex items-center gap-3 text-gray-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+              <h2 className="text-2xl font-semibold mb-4">Description</h2>
+              <p className="text-gray-600 mb-8">{eventData.summary}</p>
             </section>
 
             <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
