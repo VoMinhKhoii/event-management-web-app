@@ -254,10 +254,13 @@ const NotificationPage = () => {
                                         <div
                                             key={notification._id}
                                             className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent &&
-                                                    notification.relatedId?.event?._id &&
-                                                    selectedEvent._id === notification.relatedId.event._id
-                                                    ? 'bg-gray-100'
-                                                    : ''
+
+
+                                                notification.relatedId?.event?._id &&
+                                                selectedEvent._id === notification.relatedId.event._id
+                                                ? 'bg-gray-100'
+                                                : ''
+
                                                 }`}
                                             onClick={() => handleNotificationClick(notification)}
                                         >
@@ -304,7 +307,7 @@ const NotificationPage = () => {
                                 </div>
                             ) : selectedEvent === null ? (
                                 // Show notification details if there is no associated event
-                                <div className="p-6">
+                                <div className="p-6 whitespace-pre-line">
                                     <h1 className="text-2xl font-bold mb-4">Notification Details</h1>
                                     <p className="text-gray-600">{selectedNotification.data}</p>
                                 </div>
@@ -313,6 +316,7 @@ const NotificationPage = () => {
                                 <div className="max-h-[calc(100vh-160px)]">
                                     {/* Event Image */}
                                     {selectedNotification.type === 'joinRequest' || selectedNotification.type === 'invitation' ||  selectedNotification.type === 'invitationDeclined' && (
+
                                         <div className="relative h-[400px]">
 
                                             <img

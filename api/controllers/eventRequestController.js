@@ -7,6 +7,26 @@ import Participation from '../models/Participation.js';
 import Invitation from '../models/Invitation.js';
 import User from '../models/User.js';
 
+export const getRequests = async (req, res) => {
+    try {  
+        const { eventId } = req.params;
+        const requests = await Participation.find({ 
+            event: eventId,
+            kind: 'Request',
+            }).populate({
+            path: 'user',
+            select: 'username avatar email'
+        });
+        if (!requests) {
+            return res.status(404).json({ error: 'No requests found' });
+        }
+        res.status(200).json({ requests });
+    } catch (err) {
+        console.error('Error fetching invitations:', err);
+        res.status(500).json({ error: 'Failed to fetch invitations', message: err.message });
+    }
+};
+
 // POST /api/events/:eventId/request-join
 export const requestToJoinEvent = async (req, res) => {
     console.log('Memory before function:', process.memoryUsage().heapUsed / 1024 / 1024, 'MB');
