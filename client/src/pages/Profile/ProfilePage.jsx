@@ -309,6 +309,67 @@ const ProfilePage = () => {
     }
   };
 
+  const SettingsTab = () => {
+    const navigate = useNavigate();
+    const { updateUser } = useContext(AuthContext);
+    
+    const handleLogout = async () => {
+      try {
+        const res = await fetch(`http://localhost:8800/api/auth/logout`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+  
+        if (!res.ok) {
+          throw new Error('Logout failed');
+        }
+        
+        // Clear user data
+        updateUser(null);
+        
+        // Redirect to login page
+        navigate('/login');
+      } catch (error) {
+        console.error('Logout error:', error);
+        alert('Failed to log out. Please try again.');
+      }
+    };
+  
+    return (
+      <div className="py-6">
+        {/* Account Management */}
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-8 border border-gray-100">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">Account Management</h3>
+                <p className="text-gray-500 mt-1">Manage your account settings and preferences</p>
+              </div>
+              <div className="bg-blue-50 p-2 rounded-full">
+                <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Logout Button */}
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-8 py-3 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white font-medium shadow-lg hover:shadow-xl transform transition-all duration-200 hover:-translate-y-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-['Poppins']">
       <NavPane />
@@ -555,67 +616,7 @@ const ProfilePage = () => {
         </div>
 
         {/* Tab content */}
-        {activeTab === 'settings' && (
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-xl font-semibold mb-6">Notification Settings</h2>
-            <div className="space-y-6">
-              {/* Notification toggles */}
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">Get Event Notifications</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={notifications.events}
-                    onChange={() => handleNotificationChange('events')}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#569DBA]"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">Get Offer's Notifications</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={notifications.offers}
-                    onChange={() => handleNotificationChange('offers')}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#569DBA]"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">Dark Mode</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={notifications.darkMode}
-                    onChange={() => handleNotificationChange('darkMode')}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#569DBA]"></div>
-                </label>
-              </div>
-
-              <div className="pt-6">
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full sm:w-auto px-8 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                  {isLoggingOut ? 'Logging out...' : 'Log Out'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === 'settings' && <SettingsTab />}
 
         {activeTab === 'bookings' && (
           <div className="bg-white rounded-lg shadow-md p-8">

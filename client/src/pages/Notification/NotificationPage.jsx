@@ -64,7 +64,10 @@ const NotificationPage = () => {
                 }
                 return;
             }
-
+            setSelectedNotification(prev => ({
+            ...prev,
+            relatedId: { ...prev.relatedId, status: 'approved' }
+        }));
             // Refresh notifications to get updated data
             await markAsRead(selectedNotification._id);
 
@@ -315,7 +318,7 @@ const NotificationPage = () => {
                                 // Show event details if the notification has an associated event
                                 <div className="max-h-[calc(100vh-160px)]">
                                     {/* Event Image */}
-                                    {(selectedNotification.type === 'joinRequest' || selectedNotification.type === 'invitation' ||  selectedNotification.type === 'invitationDeclined') && (
+                                    {(selectedNotification.type === 'joinRequest' || selectedNotification.type === 'invitation' ||  selectedNotification.type === 'invitationDeclined' || selectedNotification.type === 'invitationAccepted') && (
 
                                         <div className="relative h-[400px]">
 
