@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import NavPane from './NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
@@ -24,6 +24,12 @@ const EventDetails = () => {
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState(null);
   const [inviteUsername, setInviteUsername] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const resultsRef = useRef(null);
+  const inputRef = useRef(null);
 
   const { sendNotification } = useContext(NotificationContext); // Use the notification context
 
@@ -378,29 +384,86 @@ const EventDetails = () => {
     }
   };
 
-  // const handleJoinRequest = async () => {
-  //   if (!currentUser) {
-  //     // Redirect to login if not logged in
-  //     window.location.href = '/login';
-  //     return;
-  //   }
+  // Add useEffect to fetch users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('http://localhost:8800/api/users', {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const userData = await response.json();
+        setUsers(userData);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+    
+    fetchUsers();
+  }, []);
 
-  //   try {
-  //     const response = await fetch(`/api/events/${id}/join`, {
-  //       method: 'POST',
-  //     });
+  // Update filtered results without applying filters to the main view
+  const updateFilteredResults = (term = inviteUsername) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
 
-  //     if (!response.ok) {
-  //       throw new Error('Failed to request to join');
-  //     }
+    const searchLower = term.toLowerCase();
+    
+    // Search for exact username matches first
+    const exactUsernameMatches = users.filter(user => 
+      (user.username || '').toLowerCase() === searchLower
+    );
+    
+    // Then search for usernames containing the search string
+    const usernameMatches = users.filter(user => 
+      (user.username || '').toLowerCase().includes(searchLower) &&
+      (user.username || '').toLowerCase() !== searchLower
+    );
+    
+    // Combine all results
+    const results = [...exactUsernameMatches, ...usernameMatches];
+    setSearchResults(results);
+    setShowResults(results.length > 0);
+  };
 
-  //     // Show success message
-  //     alert('Your request to join has been submitted');
-  //   } catch (err) {
-  //     console.error('Error requesting to join:', err);
-  //     setError('Failed to send join request. Please try again.');
-  //   }
-  // };
+  // Handle search when user types each character
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setInviteUsername(term);
+    
+    if (selectedUser) {
+      setSelectedUser(null);
+    }
+    
+    updateFilteredResults(term);
+  };
+
+  // Handle when user selects a search result
+  const handleUserSelect = (user) => {
+    setSelectedUser(user);
+    setInviteUsername(user.username);
+    setShowResults(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (resultsRef.current && !resultsRef.current.contains(event.target) && 
+          inputRef.current && !inputRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (isLoading) {
     return (
@@ -428,37 +491,6 @@ const EventDetails = () => {
       </div>
     );
   }
-
-  // // Format date and time for display
-  // const formatDate = (dateString) => {
-  //   if (!dateString) return '';
-  //   const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  //   return new Date(dateString).toLocaleDateString(undefined, options);
-  // };
-
-  // const formatTime = (startTime, endTime) => {
-  //   if (!startTime) return '';
-
-  //   const formatTimeString = (timeString) => {
-  //     if (!timeString) return '';
-
-  //     if (typeof timeString === 'string' && timeString.includes(':')) {
-  //       return timeString;
-  //     }
-
-  //     try {
-  //       const date = new Date(timeString);
-  //       return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  //     } catch (e) {
-  //       return timeString;
-  //     }
-  //   };
-
-  //   const formattedStartTime = formatTimeString(startTime);
-  //   const formattedEndTime = endTime ? formatTimeString(endTime) : '';
-
-  //   return formattedEndTime ? `${formattedStartTime} - ${formattedEndTime}` : formattedStartTime;
-  // };
 
   // Ensure we have an array of images, even if there's just one or none
   const images = eventData.images && eventData.images.length
@@ -582,13 +614,56 @@ const EventDetails = () => {
             handleSendInvite(inviteUsername);
           }} className="space-y-4">
             <label className="block text-sm font-medium">Username</label>
-            <input
-              type="string"
-              placeholder="Enter username"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-black"
-              value={inviteUsername}
-              onChange={(e) => setInviteUsername(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Enter username"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none text-black"
+                value={inviteUsername}
+                onChange={handleSearch}
+                onFocus={() => {
+                  if (inviteUsername) updateFilteredResults(inviteUsername);
+                }}
+                autoComplete="off"
+              />
+              
+              {/* Dropdown for search results */}
+              {showResults && (
+                <ul
+                  ref={resultsRef}
+                  className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-md shadow-lg overflow-hidden max-h-60 overflow-y-auto border border-gray-200"
+                >
+                  {searchResults.length > 0 ? (
+                    searchResults.map(user => (
+                      <li 
+                        key={user._id}
+                        className="border-b border-gray-100 last:border-b-0"
+                        onClick={() => handleUserSelect(user)}
+                      >
+                        <div className="p-3 hover:bg-gray-50 cursor-pointer">
+                          <div className="flex items-center">
+                            <img
+                              src={user.avatar || '/images/avatar.png'}
+                              alt={user.username}
+                              className="w-8 h-8 rounded-full mr-3"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900">{user.username}</div>
+                              <div className="text-sm text-gray-500 break-all whitespace-normal max-w-[220px]">{user.email}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="p-4 text-center text-gray-500">
+                      No users found matching "{inviteUsername}"
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
             <button
               type="submit"
               className="w-full py-2 bg-white text-[#569DBA] rounded-lg hover:bg-opacity-90 transition-colors"
@@ -627,7 +702,7 @@ const EventDetails = () => {
                     />
                     <div>
                       <div className="font-medium text-sm">{invitation.user?.username || invitation.email}</div>
-                      <div className="text-xs text-gray-500">{invitation.user?.email || ''}</div>
+                      <div className="text-xs text-gray-500 break-all whitespace-normal max-w-[180px]">{invitation.user?.email || ''}</div>
                     </div>
                   </div>
                   <div className="flex items-center">
@@ -852,28 +927,40 @@ const EventDetails = () => {
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-8">
           <div className="lg:col-span-2">
-            <h1 className="text-[32px] md:text-[42px] lg:text-[52px] font-bold mb-4">{eventData.title}</h1>
+            <h1 className='text-[32px] md:text-[42px] lg:text-[52px] font-bold break-words mr-2'>{eventData.title}</h1>
 
-            <div className="flex flex-wrap items-center gap-4 md:gap-6 text-gray-600 mb-8">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{eventData.startDate}</span>
+            <div className="flex justify-between items-center mb-8">
+              <div className='flex flex-wrap items-center gap-4 md:gap-6 text-gray-600'>
+
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{eventData.startDate}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{eventData.startTime} - {eventData.endTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{eventData.location}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{eventData.startTime} - {eventData.endTime}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{eventData.location}</span>
-              </div>
+
+              {isOrganizer && (
+                <Link
+                  to={`/event/${id}/edit`}
+                  className='flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap'
+                >
+                  Edit
+                </Link>
+              )}
             </div>
 
             <section className="mb-8">
