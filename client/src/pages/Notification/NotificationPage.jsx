@@ -659,7 +659,7 @@ const NotificationPage = () => {
                                                 <div className="bg-white p-6">
                                                     {/* Message content */}
                                                     <div className="text-gray-700 whitespace-pre-line mb-6">
-                                                        {selectedNotification.data.message}
+                                                        {selectedNotification.data?.message}
                                                     </div>
                                                 </div>
                                             </div>
