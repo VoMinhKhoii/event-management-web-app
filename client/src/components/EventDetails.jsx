@@ -148,7 +148,7 @@ const EventDetails = () => {
 
     total: invitations.length,
     accepted: invitations.filter(inv => inv.status === 'approved'),
-    pending: invitations.filter(inv => inv.status === 'pending'),
+    pending: invitations.filter(inv => inv.status === 'invited'),
     declined: invitations.filter(inv => inv.status === 'rejected')
   };
 
@@ -384,6 +384,49 @@ const EventDetails = () => {
     }
   };
 
+   
+  const handleJoinRequest = async () => {
+    if (!currentUser) {
+      alert("Please login to request joining this event.");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to request to join "${eventData.title}"?`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8800/api/events/${id}/request-join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ message: '' }) // Optional custom message
+      });
+      const data = await response.json();
+    
+      if (!response.ok) {
+        
+        if (response.status === 400 && data.conflicts) {
+          const conflictMessages = data.conflicts.map(conflict => 
+            `• ${conflict.eventTitle} (${conflict.eventTime})`
+          ).join('\n');
+          
+          alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
+        } else {
+          
+          alert(data.message || 'Failed to send join request');
+        }
+        return;
+      }
+      
+      
+      alert('Your request to join has been sent successfully!');
+      
+    } catch (err) {
+      alert('Error requesting to join event:');
+      
+    }
+  };
   // Add useEffect to fetch users
   useEffect(() => {
     const fetchUsers = async () => {
@@ -499,11 +542,7 @@ const EventDetails = () => {
       ? [eventData.image]
       : ['/images/tech.png']; // Default image as fallback
 
-  // Expectations might be part of the description or a separate field
-  const expectations = eventData.expectations || [
-    "Details about this event will be provided by the organizer",
-    "Check back soon for more information"
-  ];
+ 
 
   // Render the user's sidebar for regular attendees
   const renderAttendeeRightSidebar = () => {
@@ -511,7 +550,7 @@ const EventDetails = () => {
       <div className="bg-white rounded-lg border border-gray-200 p-[12px] sticky top-24">
         <button
           className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8"
-        // onClick={handleJoinRequest}
+        onClick={handleJoinRequest}
         >
           Request to join
         </button>
@@ -676,19 +715,24 @@ const EventDetails = () => {
         {/* Invitations List */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg mb-3">Invitations</h3>
-            {invitations.length > 0 && (
-              <button
-                onClick={() => handleSendInviteeReminders()}
-                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
-                title="Send reminder"
-              >
-                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </button>
-            )}
-          </div>
+          <h3 className="font-semibold text-lg mb-3">Invitations</h3>
+          {invitations.length > 0 && (
+            <button
+              onClick={() => handleSendInviteeReminders()}
+              className={`ml-2 p-2 rounded-full transition-all duration-300 group ${
+                invitationStats.pending.length > 0 
+                  ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100" 
+                  : "text-gray-300 cursor-not-allowed"
+              }`}
+              disabled={invitationStats.pending.length === 0}
+              title={invitationStats.pending.length > 0 ? "Send reminder" : "No pending invitations"}
+            >
+              <svg className={`w-5 h-5 ${invitationStats.pending.length > 0 ? "group-hover:animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </button>
+          )}
+        </div>
           
           {invitations.length > 0 ? (
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
@@ -966,21 +1010,8 @@ const EventDetails = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-              {expectations.length > 0 && (
-                <>
-                  <h3 className="text-xl font-semibold mb-4">What to expect</h3>
-                  <ul className="space-y-3">
-                    {expectations.map((item, index) => (
-                      <li key={index} className="flex items-center gap-3 text-gray-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+              <h2 className="text-2xl font-semibold mb-4">Description</h2>
+              <p className="text-gray-600 mb-8">{eventData.summary}</p>
             </section>
 
             <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">

@@ -10,23 +10,24 @@ import mongoose from 'mongoose';
 // GET /api/events
 export const getAllEvent = async (req, res) => {
   try {
-    const { public: isPublic, organizerId, bookingId } = req.query;
-    const filter = {};
+    const { public: isPublic, organizerId, participantId } = req.query;
+
+    const filter = {status: { $ne: 'ended' } }; // Exclude ended events
+
 
     if (isPublic) filter.publicity = true;
     if (organizerId) filter.organizer = organizerId;
-    const events = await Event.find(filter).populate('organizer');
+    const events = await Event.find(filter).populate('organizer').sort({ createdAt: -1 });
 
-    if (bookingId) {
+    if (participantId) {
       const participations = await Participation.find({
-        user: bookingId,
-        kind: 'Request',
+        user: participantId,
         status: 'approved'
       }).select('event'); // Only get event field
 
       const participantEventIds = participations.map(p => p.event);
 
-      const joinedEvents = await Event.find({ _id: { $in: participantEventIds } }).populate('organizer');
+      const joinedEvents = await Event.find({ _id: { $in: participantEventIds } }).populate('organizer').sort({ createdAt: -1 });
 
       if (organizerId) {
         const allEvents = [...events, ...joinedEvents];
