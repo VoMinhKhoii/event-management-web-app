@@ -20,7 +20,6 @@ export const getAllEvent = async (req, res) => {
     if (bookingId) {
       const participations = await Participation.find({
         user: bookingId,
-        kind: 'Request',
         status: 'approved'
       }).select('event'); // Only get event field
 
