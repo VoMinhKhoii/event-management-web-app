@@ -69,7 +69,7 @@ export const sendPendingInvitationReminders = async (req, res) => {
                 type: 'invitationReminder',
                 message: `Reminder: You have a pending invitation to ${event.title}`,
                 relatedId: invitation._id,
-                data: { 
+                data: {
                     message: `You are invited to attend the "${event.title}" on ${event.startDate} from ${event.startTime} to ${event.endTime} at ${event.location}.
                 
                 We have sent an invitation to your account. Kindly check your notifications to confirm your attendance at your earliest convenience.
@@ -79,11 +79,13 @@ export const sendPendingInvitationReminders = async (req, res) => {
                 Best regards,
                 
                 ${event.organizer.firstName} ${event.organizer.lastName},
-                ${event.organizer.email}`, 
-                    organizer: {
+                ${event.organizer.email}`,
+                    notificationSender: {
                         username: event.organizer.username,
                         email: event.organizer.email,
-                        avatar: event.organizer.avatar
+                        avatar: event.organizer.avatar,
+                        firstName: event.organizer.firstName,
+                        lastName: event.organizer.lastName
                     },
                 },
                 isRead: false
@@ -176,7 +178,7 @@ export const sendAttendeeReminders = async (req, res) => {
                 type: 'eventReminder',
                 message: `Reminder: Event "${event.title}" is coming up`,
                 relatedId: attendee._id,
-                data: { 
+                data: {
                     message: `This is a friendly reminder that ${event.title} will take place on ${event.startDate} from ${event.startTime} to ${event.endTime || 'TBD'} at ${event.location || 'TBD'}.
                 
                     We look forward to your participation.
@@ -184,11 +186,13 @@ export const sendAttendeeReminders = async (req, res) => {
                     Regards,
                 
                     ${event.organizer.firstName} ${event.organizer.lastName},
-                    ${event.organizer.email}`, 
-                    organizer: {
+                    ${event.organizer.email}`,
+                    notificationSender: {
                         username: event.organizer.username,
                         email: event.organizer.email,
-                        avatar: event.organizer.avatar
+                        avatar: event.organizer.avatar,
+                        firstName: event.organizer.firstName,
+                        lastName: event.organizer.lastName
                     },
                 },
                 isRead: false

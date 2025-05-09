@@ -5,8 +5,7 @@ import NavPane from "../../components/NavPane.jsx";
 import { NotificationContext } from "../../context/notificationContext.jsx"; // adjust path if needed
 const NotificationPage = () => {
     // State to keep track of selected notification/event
-    const { notifications, markAsRead, deleteNotification } =
-        useContext(NotificationContext);
+    const { notifications, markAsRead, deleteNotification } = useContext(NotificationContext);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
 
@@ -298,22 +297,20 @@ const NotificationPage = () => {
                                         <div
                                             key={notification._id}
                                             className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent &&
-                                                    notification.relatedId?.event?._id &&
-                                                    selectedEvent._id === notification.relatedId.event._id
-                                                    ? "bg-gray-100"
-                                                    : ""
+                                                notification.relatedId?.event?._id &&
+                                                selectedEvent._id === notification.relatedId.event._id
+                                                ? "bg-gray-100"
+                                                : ""
                                                 }`}
                                             onClick={() => handleNotificationClick(notification)}
                                         >
                                             <div className="flex items-center">
                                                 <img
                                                     src={
-                                                        notification.type === "eventReminder" ||
-                                                            notification.type === "invitationReminder"
-                                                            ? notification.data?.organizer?.avatar ||
-                                                            "/images/avatar.png"
-                                                            : notification.relatedId?.user?.avatar ||
-                                                            "/images/avatar.png"
+                                                        notification.data?.notificationSender?.avatar ||
+                                                        notification.data?.organizer?.avatar ||
+                                                        notification.relatedId?.user?.avatar ||
+                                                        "/images/avatar.png"
                                                     }
                                                     alt="User avatar"
                                                     className="w-10 h-10 rounded-full mr-3"
@@ -321,12 +318,10 @@ const NotificationPage = () => {
                                                 <div>
                                                     <div className="flex items-center">
                                                         <span className="text-gray-800">
-                                                            {notification.type === "eventReminder" ||
-                                                                notification.type === "invitationReminder"
-                                                                ? notification.data?.organizer?.username ||
-                                                                "Event Organizer"
-                                                                : notification.relatedId?.user?.username ||
-                                                                "A user"}
+                                                            {notification.data?.notificationSender?.username ||
+                                                                notification.data?.organizer?.username ||
+                                                                notification.relatedId?.user?.username ||
+                                                                "User"}
                                                         </span>
                                                     </div>
                                                     <p className="text-gray-600">
@@ -593,32 +588,31 @@ const NotificationPage = () => {
                                                         <div className="flex items-center">
                                                             <img
                                                                 src={
-                                                                    selectedNotification.data?.notificationSender
-                                                                        ?.avatar || "/images/avatar.png"
+                                                                    selectedNotification.data?.notificationSender?.avatar ||
+                                                                    selectedNotification.data?.organizer?.avatar ||
+                                                                    selectedNotification.relatedId?.user?.avatar ||
+                                                                    "/images/avatar.png"
                                                                 }
                                                                 alt="Sender"
                                                                 className="w-12 h-12 rounded-full mr-4"
                                                             />
                                                             <div>
                                                                 <h3 className="font-medium text-lg">
-                                                                    {selectedNotification.type ===
-                                                                        "invitationAccepted" ||
-                                                                        selectedNotification.type ===
-                                                                        "invitationDeclined"
-                                                                        ? selectedNotification.data
-                                                                            ?.notificationSender?.username
-                                                                        : selectedNotification.data
-                                                                            ?.notificationSender?.username ||
-                                                                        "Event Organizer"}
+                                                                    {selectedNotification.data?.notificationSender?.username ||
+                                                                        selectedNotification.data?.organizer?.username ||
+                                                                        selectedNotification.relatedId?.user?.username ||
+                                                                        "User"}
                                                                 </h3>
                                                                 <p className="text-gray-500 text-sm">
-                                                                    {
-                                                                        selectedNotification.data?.notificationSender
-                                                                            ?.email
-                                                                    }
-                                                                    {selectedNotification.data?.notificationSender
-                                                                        ?.firstName &&
-                                                                        ` (${selectedNotification.data.notificationSender.firstName} ${selectedNotification.data.notificationSender.lastName})`}
+                                                                    {selectedNotification.data?.notificationSender?.email ||
+                                                                        selectedNotification.data?.organizer?.email ||
+                                                                        selectedNotification.relatedId?.user?.email ||
+                                                                        ""}
+
+                                                                    {(selectedNotification.data?.notificationSender?.firstName ||
+                                                                        selectedNotification.data?.organizer?.firstName) &&
+                                                                        ` (${selectedNotification.data.notificationSender?.firstName || selectedNotification.data.organizer?.firstName} 
+                                                                        ${selectedNotification.data.notificationSender?.lastName || selectedNotification.data.organizer?.lastName})`}
                                                                 </p>
                                                             </div>
                                                         </div>
