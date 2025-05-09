@@ -11,7 +11,9 @@ import mongoose from 'mongoose';
 export const getAllEvent = async (req, res) => {
   try {
     const { public: isPublic, organizerId, participantId } = req.query;
+
     const filter = {status: { $ne: 'ended' } }; // Exclude ended events
+
 
     if (isPublic) filter.publicity = true;
     if (organizerId) filter.organizer = organizerId;
