@@ -11,6 +11,7 @@ export const getNotifications = async (req, res) => {
         const notifications = await Notification.find({ userId })
 
             .sort({ createdAt: -1 })
+            .populate('notificationSender', 'username avatar email firstName lastName')
             .populate({
                 path: 'relatedId',
                 model: 'Participation',

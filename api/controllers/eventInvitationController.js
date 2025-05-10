@@ -171,15 +171,9 @@ export const inviteToEvent = async (req, res) => {
             userId: inviteeId,
             type: 'invitation',
             message: `You've been invited to ${event.title}`,
+            notificationSender: inviterId,
             relatedId: invitation._id,
             data: {
-                notificationSender: {
-                    username: organizer.username,
-                    email: organizer.email,
-                    avatar: organizer.avatar,
-                    firstName: organizer.firstName,
-                    lastName: organizer.lastName
-                },
             },
             isRead: false
         }], { session });
@@ -423,19 +417,12 @@ export const handleInvitation = async (req, res) => {
                 type: 'invitationAccepted',
                 message: `Invitation accepted`,
                 relatedId: invitation._id,
+                notificationSender: userId,
                 data: {
                     message: `${sender.username || 'A user'} has accepted your invitation to ${invitation.event.title || 'your event'}.
                     
                     ${sender.firstName} ${sender.lastName},
                     ${sender.email}`,
-
-                    notificationSender: {
-                        username: sender.username,
-                        email: sender.email,
-                        avatar: sender.avatar,
-                        firstName: sender.firstName,
-                        lastName: sender.lastName
-                    },
                 },
                 isRead: false
             }], { session });

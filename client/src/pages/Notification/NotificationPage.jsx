@@ -3,7 +3,10 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import NavPane from "../../components/NavPane.jsx";
 import { NotificationContext } from "../../context/notificationContext.jsx"; // adjust path if needed
+import { AuthContext } from "../../context/authContext.jsx";
 const NotificationPage = () => {
+    // Add current user context for avatar handling
+    const { currentUser } = useContext(AuthContext);
     // State to keep track of selected notification/event
     const { notifications, markAsRead, deleteNotification } = useContext(NotificationContext);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -307,9 +310,9 @@ const NotificationPage = () => {
                                             <div className="flex items-center">
                                                 <img
                                                     src={
+                                                        notification.notificationSender?.avatar ||
                                                         notification.data?.notificationSender?.avatar ||
                                                         notification.data?.organizer?.avatar ||
-                                                        notification.relatedId?.user?.avatar ||
                                                         "/images/avatar.png"
                                                     }
                                                     alt="User avatar"
@@ -318,9 +321,9 @@ const NotificationPage = () => {
                                                 <div>
                                                     <div className="flex items-center">
                                                         <span className="text-gray-800">
-                                                            {notification.data?.notificationSender?.username ||
+                                                            {notification.notificationSender?.username ||
+                                                                notification.data?.notificationSender?.username ||
                                                                 notification.data?.organizer?.username ||
-                                                                notification.relatedId?.user?.username ||
                                                                 "User"}
                                                         </span>
                                                     </div>
@@ -588,6 +591,8 @@ const NotificationPage = () => {
                                                         <div className="flex items-center">
                                                             <img
                                                                 src={
+                                                                    // Check populated reference first, then fallback to embedded data
+                                                                    selectedNotification.notificationSender?.avatar ||
                                                                     selectedNotification.data?.notificationSender?.avatar ||
                                                                     selectedNotification.data?.organizer?.avatar ||
                                                                     selectedNotification.relatedId?.user?.avatar ||
@@ -598,21 +603,28 @@ const NotificationPage = () => {
                                                             />
                                                             <div>
                                                                 <h3 className="font-medium text-lg">
-                                                                    {selectedNotification.data?.notificationSender?.username ||
+                                                                    {selectedNotification.notificationSender?.username ||
+                                                                        selectedNotification.data?.notificationSender?.username ||
                                                                         selectedNotification.data?.organizer?.username ||
                                                                         selectedNotification.relatedId?.user?.username ||
                                                                         "User"}
                                                                 </h3>
                                                                 <p className="text-gray-500 text-sm">
-                                                                    {selectedNotification.data?.notificationSender?.email ||
+                                                                    {selectedNotification.notificationSender?.email ||
+                                                                        selectedNotification.data?.notificationSender?.email ||
                                                                         selectedNotification.data?.organizer?.email ||
                                                                         selectedNotification.relatedId?.user?.email ||
                                                                         ""}
 
-                                                                    {(selectedNotification.data?.notificationSender?.firstName ||
+                                                                    {(selectedNotification.notificationSender?.firstName ||
+                                                                        selectedNotification.data?.notificationSender?.firstName ||
                                                                         selectedNotification.data?.organizer?.firstName) &&
-                                                                        ` (${selectedNotification.data.notificationSender?.firstName || selectedNotification.data.organizer?.firstName} 
-                                                                        ${selectedNotification.data.notificationSender?.lastName || selectedNotification.data.organizer?.lastName})`}
+                                                                        ` (${selectedNotification.notificationSender?.firstName ||
+                                                                        selectedNotification.data?.notificationSender?.firstName ||
+                                                                        selectedNotification.data?.organizer?.firstName} 
+                                                                        ${selectedNotification.notificationSender?.lastName ||
+                                                                        selectedNotification.data?.notificationSender?.lastName ||
+                                                                        selectedNotification.data?.organizer?.lastName})`}
                                                                 </p>
                                                             </div>
                                                         </div>
