@@ -30,6 +30,28 @@ export const getNotifications = async (req, res) => {
     }
 };
 
+export const getNewCount = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const since = parseInt(req.query.since) || 0;
+
+        console.log(`Checking for notifications for user ${userId} since ${new Date(since)}`);
+
+        // Count notifications created after the "since" timestamp
+        const count = await Notification.countDocuments({
+            userId,
+            createdAt: { $gt: new Date(since) }
+        });
+
+        console.log(`Found ${count} new notifications`);
+
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error getting new notification count:', error);
+        res.status(500).json({ error: 'Failed to get new notification count' });
+    }
+};
+
 // @desc    Mark a notification as read
 // @route   PATCH /api/notifications/:notificationId/read
 // @access  Private

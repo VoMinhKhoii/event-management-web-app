@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomePage from './pages/Home/HomePage.jsx';
 import Calendar from './pages/Calendar/Calendar.jsx';
@@ -15,8 +15,20 @@ import AdminDashboard from './Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
 import { eventCommentsLoader } from "./lib/loaders";
 import EditEvent from './pages/EditEvent/EditEvent.jsx';
+import { NotificationContext } from './context/notificationContext.jsx';
+import { AuthContext } from './context/authContext.jsx';
 
 function App() {
+  const { fetchNewCount } = useContext(NotificationContext);
+  const { currentUser } = useContext(AuthContext);
+
+  // Fetch notifications when the app loads and user is logged in
+  useEffect(() => {
+    if (currentUser) {
+      console.log("App initialized with user, checking for notifications");
+      fetchNewCount();
+    }
+  }, [currentUser, fetchNewCount]);
   const router = createBrowserRouter([
     {
       path: "/",

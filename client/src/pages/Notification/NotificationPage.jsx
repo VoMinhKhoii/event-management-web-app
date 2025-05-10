@@ -8,17 +8,126 @@ const NotificationPage = () => {
     // Add current user context for avatar handling
     const { currentUser } = useContext(AuthContext);
     // State to keep track of selected notification/event
-    const { notifications, markAsRead, deleteNotification } = useContext(NotificationContext);
+    const { markAsRead, deleteNotification, markAllAsSeen } = useContext(NotificationContext);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedNotification, setSelectedNotification] = useState(null);
-
+    const [selectedNotificationId, setSelectedNotificationId] = useState(null);
+    const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [lastUpdated, setLastUpdated] = useState(null);
+
+    // Fetch notifications with caching 
+    const fetchNotifications = async (forceRefresh = false) => {
+
+
+        // Try to get cached data first
+        const cachedData = localStorage.getItem('userNotifications');
+        const cacheTimestamp = localStorage.getItem('userNotificationsTimestamp');
+        const FIFTEEN_MINUTES = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+        // Use cached data if it exists, is not expired, and force refresh is not requested
+        if (
+            cachedData &&
+            cacheTimestamp &&
+            Date.now() - parseInt(cacheTimestamp) < FIFTEEN_MINUTES &&
+            !forceRefresh
+        ) {
+            const notificationData = JSON.parse(cachedData);
+            setNotifications(notificationData);
+            setLastUpdated(new Date(parseInt(cacheTimestamp)));
+            setIsLoading(false);
+            return; // Exit early - no need to fetch
+        }
+
+        if (notifications.length === 0 || forceRefresh) {
+            setIsLoading(true);
+        }
+
+        try {
+            // Fetch fresh data
+            const response = await fetch('http://localhost:8800/api/notifications', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch notifications');
+            }
+
+            const notificationData = await response.json();
+
+            // Update notifications
+            setNotifications(notificationData);
+
+            // Cache the data
+            localStorage.setItem('userNotifications', JSON.stringify(notificationData));
+            localStorage.setItem('userNotificationsTimestamp', Date.now().toString());
+            setLastUpdated(new Date());
+
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            setError("Failed to load notifications. Please try again.");
+
+            // If there's cached data, use it as fallback on error
+            if (cachedData) {
+                const notificationData = JSON.parse(cachedData);
+                setNotifications(notificationData);
+                setLastUpdated(new Date(parseInt(cacheTimestamp)));
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Helper function to update notification cache
+    const updateNotificationCache = (id, updates) => {
+        // Update in-memory notifications
+        setNotifications(prev =>
+            prev.map(item =>
+                item._id === id
+                    ? { ...item, ...updates }
+                    : item
+            )
+        );
+
+        // Update localStorage cache
+        const cachedData = localStorage.getItem('userNotifications');
+        if (cachedData) {
+            const notificationData = JSON.parse(cachedData);
+            const updatedNotifications = notificationData.map(item =>
+                item._id === id
+                    ? { ...item, ...updates }
+                    : item
+            );
+            localStorage.setItem('userNotifications', JSON.stringify(updatedNotifications));
+        }
+    };
+
+    // Effect to load notifications on component mount
+    useEffect(() => {
+        const isReload = window.performance
+            .getEntriesByType('navigation')
+            .some((nav) => nav.type === 'reload');
+
+        fetchNotifications(isReload); // Force refresh if the page was reloaded
+        markAllAsSeen();
+    }, []);
+
+
 
     // Handle notification click
     const handleNotificationClick = async (notification) => {
+        setSelectedNotificationId(notification._id);
         if (notification.isRead === false) {
-            markAsRead(notification._id);
+            try {
+                await markAsRead(notification._id);
+                // Update notification cache
+                updateNotificationCache(notification._id, { isRead: true });
+            } catch (err) {
+                console.error("Failed to mark notification as read:", err);
+            }
         }
 
         if (notification.relatedId !== null) {
@@ -27,7 +136,7 @@ const NotificationPage = () => {
         } else {
             setSelectedEvent(null); // No associated event
         }
-        console.log("Selected notification data:", notification);
+
         setSelectedNotification(notification);
     };
 
@@ -79,6 +188,7 @@ const NotificationPage = () => {
 
             // Refresh notifications to get updated data
             await markAsRead(selectedNotification._id);
+            updateNotificationCache(selectedNotification._id, { isRead: true });
 
             // Show success message
             alert("You have successfully accepted the invitation");
@@ -289,51 +399,61 @@ const NotificationPage = () => {
                                     height: "calc(100vh - 120px)",
                                 }}
                             >
-                                <div className="p-4 border-b border-gray-200">
+                                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                                     <h2 className="text-2xl font-semibold">Primary</h2>
                                 </div>
                                 <div
                                     className="divide-y divide-gray-200 overflow-y-auto"
                                     style={{ height: "calc(100vh - 185px)" }}
                                 >
-                                    {notifications.map((notification) => (
-                                        <div
-                                            key={notification._id}
-                                            className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedEvent &&
-                                                notification.relatedId?.event?._id &&
-                                                selectedEvent._id === notification.relatedId.event._id
-                                                ? "bg-gray-100"
-                                                : ""
-                                                }`}
-                                            onClick={() => handleNotificationClick(notification)}
-                                        >
-                                            <div className="flex items-center">
-                                                <img
-                                                    src={
-                                                        notification.notificationSender?.avatar ||
-                                                        notification.data?.notificationSender?.avatar ||
-                                                        notification.data?.organizer?.avatar ||
-                                                        "/images/avatar.png"
-                                                    }
-                                                    alt="User avatar"
-                                                    className="w-10 h-10 rounded-full mr-3"
-                                                />
-                                                <div>
-                                                    <div className="flex items-center">
-                                                        <span className="text-gray-800">
-                                                            {notification.notificationSender?.username ||
-                                                                notification.data?.notificationSender?.username ||
-                                                                notification.data?.organizer?.username ||
-                                                                "User"}
-                                                        </span>
+                                    {isLoading ? (
+                                        <div className="p-8 text-center text-gray-500">
+                                            <p>Loading notifications...</p>
+                                        </div>
+                                    ) : notifications.length === 0 ? (
+                                        <div className="p-8 text-center text-gray-500">
+                                            <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                            </svg>
+                                            <p>No notifications</p>
+                                        </div>
+                                    ) : (
+                                        notifications.map((notification) => (
+                                            <div
+                                                key={notification._id}
+                                                className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedNotificationId === notification._id
+                                                        ? "bg-gray-100"
+                                                        : ""
+                                                    }`}
+                                                onClick={() => handleNotificationClick(notification)}
+                                            >
+                                                <div className="flex items-center">
+                                                    <img
+                                                        src={
+                                                            notification.notificationSender?.avatar ||
+                                                            notification.data?.notificationSender?.avatar ||
+                                                            notification.data?.organizer?.avatar ||
+                                                            "/images/avatar.png"
+                                                        }
+                                                        alt="User avatar"
+                                                        className="w-10 h-10 rounded-full mr-3"
+                                                    />
+                                                    <div>
+                                                        <div className="flex items-center">
+                                                            <span className={`${!notification.isRead ? "font-medium" : "text-gray-800"}`}>
+                                                                {notification.notificationSender?.username ||
+                                                                    notification.data?.notificationSender?.username ||
+                                                                    notification.data?.organizer?.username ||
+                                                                    "User"}
+                                                            </span>
+                                                        </div>
+                                                        <p className={`${!notification.isRead ? "font-medium" : "text-gray-800"}`}>
+                                                            {notification.message}
+                                                        </p>
                                                     </div>
-                                                    <p className="text-gray-600">
-                                                        {notification.message}
-                                                    </p>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        )))}
                                 </div>
                             </div>
                         </div>
@@ -344,25 +464,39 @@ const NotificationPage = () => {
                             {selectedNotification === null ? (
                                 // Default message when no notification is selected
                                 <div className="flex flex-col items-center justify-center h-full min-h-[calc(100vh-160px)]">
-                                    <svg
-                                        className="w-16 h-16 text-gray-300 mb-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="1.5"
-                                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                                        />
-                                    </svg>
-                                    <h3 className="text-xl font-medium text-gray-700 mb-2">
-                                        No notification selected
-                                    </h3>
-                                    <p className="text-gray-500">
-                                        Select a notification from the list to view details
-                                    </p>
+                                    {error ? (
+                                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                            <p>{error}</p>
+                                            <button
+                                                className="underline text-sm mt-2"
+                                                onClick={() => fetchNotifications(true)}
+                                            >
+                                                Try again
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <svg
+                                                className="w-16 h-16 text-gray-300 mb-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="1.5"
+                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                                />
+                                            </svg>
+                                            <h3 className="text-xl font-medium text-gray-700 mb-2">
+                                                No notification selected
+                                            </h3>
+                                            <p className="text-gray-500">
+                                                Select a notification from the list to view details
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
                             ) : selectedEvent === null ? (
                                 // Show notification details if there is no associated event
