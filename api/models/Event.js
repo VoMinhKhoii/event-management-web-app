@@ -52,7 +52,6 @@ const eventSchema = mongoose.Schema({
         required: [true, "Please add an image"]
     },
 
-
     maxAttendees: {
         type: Number,
         required: [true, "Please choose the max number of attendees"]
