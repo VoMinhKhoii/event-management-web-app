@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import NavPane from './NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
@@ -10,11 +10,11 @@ import { NotificationContext } from '../context/notificationContext.jsx';
 
 const EventDetails = () => {
   const { id } = useParams();
-  console.log("Event ID from URL parameters:", id); // Add this debugging line
   const eventData = useLoaderData(); // Get event data from loader
-
   const { currentUser } = useContext(AuthContext);
+  const navigate = useNavigate();
 
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -38,6 +38,44 @@ const EventDetails = () => {
 
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
+
+  // check event access permissions
+  useEffect(() => {
+    if (eventData) {
+      // if event is private, check if user has access
+      if (!eventData.publicity) {
+        let hasAccess = false;
+
+        // check if is organizer
+        if (currentUser && eventData.organizer &&
+          (currentUser._id === eventData.organizer._id ||
+            currentUser.email === eventData.organizer.email)) {
+          hasAccess = true;
+        }
+
+        // check if user is approved invitee
+        if (!hasAccess && currentUser && eventData.invitations) {
+          hasAccess = eventData.invitations.some(
+            inv => inv.user?._id === currentUser._id && inv.status === 'approved'
+          );
+        }
+
+        // check if user has approved request
+        if (!hasAccess && currentUser && eventData.requests) {
+          hasAccess = eventData.requests.some(
+            req => req.user?._id === currentUser._id && req.status === 'approved'
+          );
+        }
+
+        if (!hasAccess) {
+          alert("You don't have permission to view this event.");
+          navigate('/home');
+          return;
+        }
+      }
+      setCheckingAccess(false);
+    }
+  }, [eventData, currentUser, navigate]);
 
   useEffect(() => {
     // Check if user is the organizer of this event
@@ -384,7 +422,7 @@ const EventDetails = () => {
     }
   };
 
-   
+
   const handleJoinRequest = async () => {
     if (!currentUser) {
       alert("Please login to request joining this event.");
@@ -403,28 +441,28 @@ const EventDetails = () => {
         body: JSON.stringify({ message: '' }) // Optional custom message
       });
       const data = await response.json();
-    
+
       if (!response.ok) {
-        
+
         if (response.status === 400 && data.conflicts) {
-          const conflictMessages = data.conflicts.map(conflict => 
+          const conflictMessages = data.conflicts.map(conflict =>
             `• ${conflict.eventTitle} (${conflict.eventTime})`
           ).join('\n');
-          
+
           alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
         } else {
-          
+
           alert(data.message || 'Failed to send join request');
         }
         return;
       }
-      
-      
+
+
       alert('Your request to join has been sent successfully!');
-      
+
     } catch (err) {
       alert('Error requesting to join event:');
-      
+
     }
   };
   // Add useEffect to fetch users
@@ -434,18 +472,18 @@ const EventDetails = () => {
         const response = await fetch('http://localhost:8800/api/users', {
           credentials: 'include'
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch users');
         }
-        
+
         const userData = await response.json();
         setUsers(userData);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
     };
-    
+
     fetchUsers();
   }, []);
 
@@ -458,18 +496,18 @@ const EventDetails = () => {
     }
 
     const searchLower = term.toLowerCase();
-    
+
     // Search for exact username matches first
-    const exactUsernameMatches = users.filter(user => 
+    const exactUsernameMatches = users.filter(user =>
       (user.username || '').toLowerCase() === searchLower
     );
-    
+
     // Then search for usernames containing the search string
-    const usernameMatches = users.filter(user => 
+    const usernameMatches = users.filter(user =>
       (user.username || '').toLowerCase().includes(searchLower) &&
       (user.username || '').toLowerCase() !== searchLower
     );
-    
+
     // Combine all results
     const results = [...exactUsernameMatches, ...usernameMatches];
     setSearchResults(results);
@@ -480,11 +518,11 @@ const EventDetails = () => {
   const handleSearch = (e) => {
     const term = e.target.value;
     setInviteUsername(term);
-    
+
     if (selectedUser) {
       setSelectedUser(null);
     }
-    
+
     updateFilteredResults(term);
   };
 
@@ -498,17 +536,17 @@ const EventDetails = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (resultsRef.current && !resultsRef.current.contains(event.target) && 
-          inputRef.current && !inputRef.current.contains(event.target)) {
+      if (resultsRef.current && !resultsRef.current.contains(event.target) &&
+        inputRef.current && !inputRef.current.contains(event.target)) {
         setShowResults(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (isLoading) {
+  if (checkingAccess || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -542,11 +580,7 @@ const EventDetails = () => {
       ? [eventData.image]
       : ['/images/tech.png']; // Default image as fallback
 
-  // Expectations might be part of the description or a separate field
-  const expectations = eventData.expectations || [
-    "Details about this event will be provided by the organizer",
-    "Check back soon for more information"
-  ];
+
 
   // Render the user's sidebar for regular attendees
   const renderAttendeeRightSidebar = () => {
@@ -554,7 +588,7 @@ const EventDetails = () => {
       <div className="bg-white rounded-lg border border-gray-200 p-[12px] sticky top-24">
         <button
           className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8"
-        onClick={handleJoinRequest}
+          onClick={handleJoinRequest}
         >
           Request to join
         </button>
@@ -670,7 +704,7 @@ const EventDetails = () => {
                 }}
                 autoComplete="off"
               />
-              
+
               {/* Dropdown for search results */}
               {showResults && (
                 <ul
@@ -679,7 +713,7 @@ const EventDetails = () => {
                 >
                   {searchResults.length > 0 ? (
                     searchResults.map(user => (
-                      <li 
+                      <li
                         key={user._id}
                         className="border-b border-gray-100 last:border-b-0"
                         onClick={() => handleUserSelect(user)}
@@ -723,16 +757,20 @@ const EventDetails = () => {
             {invitations.length > 0 && (
               <button
                 onClick={() => handleSendInviteeReminders()}
-                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
-                title="Send reminder"
+                className={`ml-2 p-2 rounded-full transition-all duration-300 group ${invitationStats.pending.length > 0
+                    ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                    : "text-gray-300 cursor-not-allowed"
+                  }`}
+                disabled={invitationStats.pending.length === 0}
+                title={invitationStats.pending.length > 0 ? "Send reminder" : "No pending invitations"}
               >
-                <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-5 h-5 ${invitationStats.pending.length > 0 ? "group-hover:animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </button>
             )}
           </div>
-          
+
           {invitations.length > 0 ? (
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
               {invitations.map((invitation) => (
@@ -879,7 +917,7 @@ const EventDetails = () => {
                   </div>
                 </div>
               ))}
-              
+
               {/* Render approved requests */}
               {requests
                 .filter(request => request.status === 'approved')
@@ -1009,21 +1047,8 @@ const EventDetails = () => {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
               <p className="text-gray-600 mb-8">{eventData.description}</p>
-              {expectations.length > 0 && (
-                <>
-                  <h3 className="text-xl font-semibold mb-4">What to expect</h3>
-                  <ul className="space-y-3">
-                    {expectations.map((item, index) => (
-                      <li key={index} className="flex items-center gap-3 text-gray-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+              <h2 className="text-2xl font-semibold mb-4">Description</h2>
+              <p className="text-gray-600 mb-8">{eventData.summary}</p>
             </section>
 
             <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
