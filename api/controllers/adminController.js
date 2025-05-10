@@ -3,11 +3,11 @@ import Activity from '../models/Activity.js';
 export const getRecentActivities = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
         const activities = await Activity.find()
-            .sort({ timestamp: -1 })
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
             .populate('userId', 'username avatar')

@@ -15,6 +15,7 @@ import AdminSettingPage from './Admin/AdminSettingPage.jsx';
 import AdminDashboard from './Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
 import { eventCommentsLoader } from "./lib/loaders";
+import EditEvent from './pages/EditEvent/EditEvent.jsx';
 
 function App() {
   const router = createBrowserRouter([
@@ -55,8 +56,13 @@ function App() {
       element: <Calendar />
     },
     {
-      path: "/event/:eventId",
+      path: "/event/:id",
       element: <EventDetails />,
+      loader: singleEventLoader
+    },
+    {
+      path: "/event/:id/edit",
+      element: <EditEvent />,
       loader: singleEventLoader
     },
     {
