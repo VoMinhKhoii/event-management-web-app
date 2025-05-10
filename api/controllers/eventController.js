@@ -2,6 +2,7 @@ import Event from '../models/Event.js';
 import Participation from '../models/Participation.js';
 import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
+import Settings from '../models/Settings.js';
 import { detectEventChanges } from '../utils/eventHelpers.js';
 import fs from 'fs';
 import https from 'https';
@@ -126,13 +127,12 @@ export const createEvent = async (req, res) => {
     }
     const maxAllowed = settings.eventSettings.maxAttendeesPerEvent;
     if (req.body.maxAttendees && req.body.maxAttendees > maxAllowed) {
-      return res.status(400).json({
-        error: `maxAttendees cannot exceed system limit of ${maxAllowed}`
+      return res.status(500).json({
+        message: `Maximum capacity exceeded. System limit: ${maxAllowed}`
       });
     }
 
     // Create event data
-
     const eventData = {
       ...req.body,
       organizer: req.userId,
@@ -231,13 +231,15 @@ export const updateEvent = async (req, res) => {
         req.write(payload);
         req.end();
       });
-
+      
       imageUrl = response.secure_url;
 
       // clean-up temp file
       fs.unlinkSync(req.file.path);
     }
 
+
+    // Check if the event exists
     const existingEvent = await Event.findById(req.params.eventId).session(session);
     if (!existingEvent) {
       await session.abortTransaction();
@@ -246,8 +248,22 @@ export const updateEvent = async (req, res) => {
 
     const updateData = {
       ...req.body,
-      image: imageUrl || existingEvent.image // use new image if uploaded, otherwise keep existing
+      image: imageUrl || existingEvent.image,
     };
+
+    // Fetch current attendee limit
+    const settings = await Settings.findOne();
+    if (!settings || !settings.eventSettings) {
+      await session.abortTransaction();
+      return res.status(500).json({ error: 'Event settings not configured' });
+    }
+    const maxAllowed = settings.eventSettings.maxAttendeesPerEvent;
+    if (updateData.maxAttendees && updateData.maxAttendees > maxAllowed) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: `System limit exceeded. Current maximum event capacity: ${maxAllowed}`
+    });
+    }
 
     // check if any value was changed when submitting event update
     const changes = detectEventChanges(existingEvent, updateData);
