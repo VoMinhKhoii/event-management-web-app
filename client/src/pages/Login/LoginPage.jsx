@@ -9,6 +9,7 @@ const LoginPage = () => {
     const navigate = useNavigate();
     const { updateUser } = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAdminLoading, setIsAdminLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -46,21 +47,77 @@ const LoginPage = () => {
                 credentials: 'include' // Important for storing cookies
             });
 
+            // Check if the response is JSON before trying to parse it
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Server returned ${res.status}: Expected JSON but got ${contentType || 'unknown content type'}`);
+            }
+
             const data = await res.json();
 
             if (!res.ok) {
-                console.error("No user data in response");
-                throw new Error(data.message || 'Login failed');
+                throw new Error(data.message || `Login failed with status: ${res.status}`);
             }
+
+            if (!data.user) {
+                throw new Error('No user data in response');
+            }
+
             updateUser(data.user);
             console.log('Login successful:', data);
             navigate('/home'); // Redirect to home page after successful login
 
         } catch (err) {
             console.error('Login error:', err);
-            alert(err.message || 'Something went wrong. Please try again.');
+            setError(err.message || 'Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleAdminLogin = async (e) => {
+        e.preventDefault();
+        setIsAdminLoading(true);
+        setError(null);
+
+        try {
+            const res = await fetch('http://localhost:8800/api/auth/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: formData.username,
+                    password: formData.password
+                }),
+                credentials: 'include'
+            });
+
+            // Check if the response is JSON before trying to parse it
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Server returned ${res.status}: Expected JSON but got ${contentType || 'unknown content type'}`);
+            }
+
+            const data = await res.json();  
+
+            if (!res.ok) {
+                throw new Error(data.message || `Admin login failed with status: ${res.status}`);
+            }
+
+            if (!data.user) {
+                throw new Error('No user data in response');
+            }
+
+            updateUser({...data.user, isAdmin: true});
+            console.log('Admin login successful:', data);
+            navigate('/admin/dashboard'); // Redirect to admin dashboard after successful login
+
+        } catch (err) {
+            console.error('Admin login error:', err);
+            setError(err.message || 'Admin login failed. Please verify your credentials.');
+        } finally {
+            setIsAdminLoading(false);
         }
     };
 
@@ -126,13 +183,36 @@ const LoginPage = () => {
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="text-[16px] w-full bg-[#569DBA] text-white py-[12px] rounded-full hover:bg-opacity-90 transition-colors mt-4"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Logging in...' : 'Log in'}
-                    </button>
+                    <div className="space-y-3">
+                        <button
+                            type="submit"
+                            className="text-[16px] w-full bg-[#569DBA] text-white py-[12px] rounded-full hover:bg-opacity-90 transition-colors"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? 'Logging in...' : 'Log in'}
+                        </button>
+                        
+                        <div className="relative flex items-center justify-center">
+                            <hr className="w-full border-gray-300" />
+                            <span className="absolute bg-white px-2 text-xs text-gray-500">OR</span>
+                        </div>
+                        
+                        <button
+                            type="button"
+                            onClick={handleAdminLogin}
+                            className="text-[16px] w-full bg-gray-800 text-white py-[12px] rounded-full hover:bg-gray-700 transition-colors flex items-center justify-center"
+                            disabled={isAdminLoading}
+                        >
+                            {isAdminLoading ? 'Processing...' : (
+                                <>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+                                    </svg>
+                                    Login as Admin
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </form>
 
                 <p className="text-[16px] text-center mt-6">
@@ -145,4 +225,5 @@ const LoginPage = () => {
         </div>
     );
 }
+
 export default LoginPage;

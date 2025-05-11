@@ -16,7 +16,7 @@ const AdminSettingPage = () => {
 
     const [formErrors, setFormErrors] = useState({});
 
-    // Fetch current settings from MongoDB
+    // Fetch current settings from Setting Obj MongoDB
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -61,7 +61,7 @@ const AdminSettingPage = () => {
         const errors = validateForm();
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
-            setMessage({ type: 'error', text: 'Please fix the errors before saving' });
+            setMessage({ type: 'error', text: 'Input error. Please fix before saving' });
             return;
         }
         
