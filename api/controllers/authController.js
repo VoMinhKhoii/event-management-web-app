@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Admin from '../models/Admin.js';
 import { logActivity } from '../middleware/logActivity.js';
 
-const signup = async (req, res) => {
+export const signup = async (req, res) => {
     try {
         
         const { firstName, lastName, username, email, password } = req.body;
@@ -39,7 +40,7 @@ const signup = async (req, res) => {
     }
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
@@ -51,6 +52,83 @@ const login = async (req, res) => {
 
         // Check password
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Admin not found' });
+        }
+
+        // Update user status to online
+        user.status = 'online';
+        await user.save();
+
+        //30 days
+        const age = 1000 * 60 * 60 * 24 * 30;
+
+        
+        // Generate JWT token
+        const token = jwt.sign({ 
+            id: user._id 
+        },
+            process.env.JWT_SECRET, { 
+                expiresIn: age 
+            });
+
+        // Convert Mongoose document to plain object and remove password
+        const userObject = user.toObject();
+        delete userObject.password;
+
+        res.cookie('token', token, {
+                    httpOnly: true, 
+                    // Not using https
+                    // secure: true 
+                    maxAge: age
+                }).status(200).json({
+                    message: 'Login successful',
+                    user: userObject
+                });
+                    
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const logout = async (req, res) => {
+    try {
+        // Extract user ID from token
+        const token = req.cookies.token;
+        if (token) {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const userId = decoded.id;
+            
+            // Update user status to offline
+            await User.findByIdAndUpdate(userId, { status: 'offline' });
+        }
+        
+        // Clear the cookie and respond
+        res.clearCookie("token").status(200).json({
+            message: "User logged out successfully",
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+        // Still clear the cookie even if there's an error
+        res.clearCookie("token").status(200).json({
+            message: "User logged out successfully",
+        });
+    }
+}
+
+export const adminLogin = async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Check if user exists
+        const user = await Admin.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        // No encrypting nothing niggaaaaaa
+        const isPasswordValid = (password == user.password);
 
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid credentials' });
@@ -90,30 +168,3 @@ const login = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-const logout = async (req, res) => {
-    try {
-        // Extract user ID from token
-        const token = req.cookies.token;
-        if (token) {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const userId = decoded.id;
-            
-            // Update user status to offline
-            await User.findByIdAndUpdate(userId, { status: 'offline' });
-        }
-        
-        // Clear the cookie and respond
-        res.clearCookie("token").status(200).json({
-            message: "User logged out successfully",
-        });
-    } catch (error) {
-        console.error("Logout error:", error);
-        // Still clear the cookie even if there's an error
-        res.clearCookie("token").status(200).json({
-            message: "User logged out successfully",
-        });
-    }
-}
-
-export { signup, login, logout };
