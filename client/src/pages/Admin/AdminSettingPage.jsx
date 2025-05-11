@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { FiSave, FiRefreshCw, FiSettings } from 'react-icons/fi';
-import AdminNavPane from '../components/AdminNavPane';
+import AdminNavPane from '../../components/AdminNavPane';
 
 const AdminSettingPage = () => {
     const [activeMenu, setActiveMenu] = useState('settings');

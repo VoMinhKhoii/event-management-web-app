@@ -1,13 +1,14 @@
-/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/authContext.jsx';
+import { AdminAuthContext } from '../../context/adminAuthContext';
 import { useContext } from 'react';
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const { updateUser } = useContext(AuthContext);
+    const { updateAdmin } = useContext(AdminAuthContext);
     const [isLoading, setIsLoading] = useState(false);
     const [isAdminLoading, setIsAdminLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -50,7 +51,7 @@ const LoginPage = () => {
             // Check if the response is JSON before trying to parse it
             const contentType = res.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                throw new Error(`Server returned ${res.status}: Expected JSON but got ${contentType || 'unknown content type'}`);
+                throw new Error(`Login failed with status: ${res.status}`);
             }
 
             const data = await res.json();
@@ -81,7 +82,8 @@ const LoginPage = () => {
         setError(null);
 
         try {
-            const res = await fetch('http://localhost:8800/api/auth/admin/login', {
+            // Use the specific admin login endpoint
+            const res = await fetch('http://localhost:8800/api/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -93,7 +95,6 @@ const LoginPage = () => {
                 credentials: 'include'
             });
 
-            // Check if the response is JSON before trying to parse it
             const contentType = res.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 throw new Error(`Server returned ${res.status}: Expected JSON but got ${contentType || 'unknown content type'}`);
@@ -106,12 +107,13 @@ const LoginPage = () => {
             }
 
             if (!data.user) {
-                throw new Error('No user data in response');
+                throw new Error('No admin data in response');
             }
 
-            updateUser({...data.user, isAdmin: true});
+            // Store admin user data
+            updateAdmin(data.user);
             console.log('Admin login successful:', data);
-            navigate('/admin/dashboard'); // Redirect to admin dashboard after successful login
+            navigate('/admin/dashboard');
 
         } catch (err) {
             console.error('Admin login error:', err);

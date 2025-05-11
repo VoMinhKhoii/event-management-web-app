@@ -9,13 +9,16 @@ import LandingPage from './pages/Landing/LandingPage.jsx';
 import LoginPage from './pages/Login/LoginPage.jsx';
 import SignUpPage from './pages/SignUp/SignUpPage.jsx';
 import NotificationPage from './pages/Notification/NotificationPage.jsx';
-import AdminUserPage from './Admin/AdminUserPage.jsx';
-import AdminEventsPage from './Admin/AdminEventsPage.jsx';
-import AdminSettingPage from './Admin/AdminSettingPage.jsx';
-import AdminDashboard from './Admin/AdminDashboard.jsx';
+import AdminUserPage from './pages/Admin/AdminUserPage.jsx';
+import AdminEventsPage from './pages/Admin/AdminEventsPage.jsx';
+import AdminSettingPage from './pages/Admin/AdminSettingPage.jsx';
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
 import { singleEventLoader } from "./lib/loaders";
 import { eventCommentsLoader } from "./lib/loaders";
 import EditEvent from './pages/EditEvent/EditEvent.jsx';
+import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import AdminRoute from './routes/AdminRoute.jsx';
+
 
 function App() {
   const router = createBrowserRouter([
@@ -29,19 +32,31 @@ function App() {
     },
     {
       path: "/admin/dashboard",
-      element: <AdminDashboard />
+      element: 
+      <AdminRoute>
+        <AdminDashboard />
+      </AdminRoute>
     },
     {
-      path: "/admin/userpage",
-      element: <AdminUserPage />
+      path: "admin/userpage",
+      element: 
+        <AdminRoute>
+          <AdminUserPage />
+        </AdminRoute>
     },
     {
       path: "/admin/events",
-      element: <AdminEventsPage />
+      element: 
+      <AdminRoute>
+        <AdminEventsPage />
+      </AdminRoute>
     },
     {
       path: "/admin/setting",
-      element: <AdminSettingPage />
+      element: 
+      <AdminRoute>
+        <AdminSettingPage />
+      </AdminRoute>
     },
     {
       path: "/signup",
@@ -49,33 +64,54 @@ function App() {
     },
     {
       path: "/home",
-      element: <HomePage />
+      element: 
+      <ProtectedRoute>
+        <HomePage />
+      </ProtectedRoute>
     },
     {
       path: "/calendar",
-      element: <Calendar />
+      element: 
+      <ProtectedRoute>
+        <Calendar />
+      </ProtectedRoute>
     },
     {
       path: "/event/:id",
-      element: <EventDetails />,
+      element: 
+      <ProtectedRoute>
+        <EventDetails />
+      </ProtectedRoute>,
       loader: singleEventLoader
     },
     {
       path: "/event/:id/edit",
-      element: <EditEvent />,
+      element: 
+      <ProtectedRoute>
+        <EditEvent />
+      </ProtectedRoute>,
       loader: singleEventLoader
     },
     {
       path: "/profile",
-      element: <Profile />
+      element: 
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>
     },
     {
       path: "/create-event",
-      element: <CreateEvent />
+      element: 
+      <ProtectedRoute>
+        <CreateEvent />
+      </ProtectedRoute>
     },
     {
       path: "/notifications",
-      element: <NotificationPage />
+      element: 
+      <ProtectedRoute> 
+        <NotificationPage />
+      </ProtectedRoute>
     }
   ]);
   return <RouterProvider router={router} />;

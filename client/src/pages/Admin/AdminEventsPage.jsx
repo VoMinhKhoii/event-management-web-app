@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiEye, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 
 // Import custom icons
-import totalEvents from '../assets/total-events.png';
-import rsvpRate from '../assets/rsvp-rate.png';
-import AdminNavPane from '../components/AdminNavPane';  
+import totalEvents from '../../assets/total-events.png';
+import rsvpRate from '../../assets/rsvp-rate.png';
+import AdminNavPane from '../../components/AdminNavPane';  
 
 const AdminEventsPage = () => {
     const navigate = useNavigate();

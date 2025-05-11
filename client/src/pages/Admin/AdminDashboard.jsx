@@ -1,23 +1,23 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import totalUsers from '../assets/total-users.png';
-import totalEvents from '../assets/total-events.png';
-import newUser from '../assets/new-user.png';
-import calendarActive from '../assets/calendar-active.png';
-import calendarInactive from '../assets/calendar-inactive.png';
-import userActive from '../assets/user-active.png';
-import userInactive from '../assets/user-inactive.png';
-import settingActive from '../assets/setting-active.png';
-import settingInactive from '../assets/setting-inactive.png';
-import chartActive from '../assets/chart-active.png';
-import chartInactive from '../assets/chart-inactive.png';
-import rsvpRate from '../assets/rsvp-rate.png';
-import onlineUsersIcon from '../assets/online-users.png';
-import ongoingIcon from '../assets/ongoing.png';
-import upcomingIcon from '../assets/upcoming.png';
-import recentActivityIcon from '../assets/recent-activity.png';
-import AdminNavPane from '../components/AdminNavPane';
+import totalUsers from '../../assets/total-users.png';
+import totalEvents from '../../assets/total-events.png';
+import newUser from '../../assets/new-user.png';
+import calendarActive from '../../assets/calendar-active.png';
+import calendarInactive from '../../assets/calendar-inactive.png';
+import userActive from '../../assets/user-active.png';
+import userInactive from '../../assets/user-inactive.png';
+import settingActive from '../../assets/setting-active.png';
+import settingInactive from '../../assets/setting-inactive.png';
+import chartActive from '../../assets/chart-active.png';
+import chartInactive from '../../assets/chart-inactive.png';
+import rsvpRate from '../../assets/rsvp-rate.png';
+import onlineUsersIcon from '../../assets/online-users.png';
+import ongoingIcon from '../../assets/ongoing.png';
+import upcomingIcon from '../../assets/upcoming.png';
+import recentActivityIcon from '../../assets/recent-activity.png';
+import AdminNavPane from '../../components/AdminNavPane';
 import TimeAgo from 'react-time-ago';
 
 const AdminDashboard = () => {

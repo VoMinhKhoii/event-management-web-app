@@ -38,6 +38,23 @@
             navigate(path);
         };
 
+        const handleLogout = async () => {
+            try {
+                // Call the backend API to log out
+                await fetch('/api/admin/logout', {
+                    method: 'POST',
+                    credentials: 'include', // Include cookies for authentication
+                });
+        
+                // Clear the auth token from local storage
+                localStorage.clear();
+                navigate('/login');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        };
+        
+
         const toggleSidebar = () => {
             setIsSidebarCollapsed(!isSidebarCollapsed);
         };
@@ -184,11 +201,7 @@
                                 <div className="text-xs text-gray-500 mb-1">Logged in as:</div>
                                 <div className="text-sm font-medium mb-3">Admin</div>
                                 <button
-                                    onClick={() => {
-                                        // Clear auth token, session, or user state here
-                                        localStorage.removeItem('token'); // Adjust based on your auth logic
-                                        navigate('/login'); // Redirect to login page
-                                    }}
+                                    onClick={handleLogout}
                                     className="w-full text-center px-3 py-2 text-sm bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition"
                                 >
                                     Logout
