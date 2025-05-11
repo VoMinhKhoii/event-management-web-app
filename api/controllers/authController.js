@@ -54,7 +54,7 @@ export const login = async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Admin not found' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         // Update user status to online
@@ -117,54 +117,3 @@ export const logout = async (req, res) => {
     }
 }
 
-export const adminLogin = async (req, res) => {
-    try {
-        const { username, password } = req.body;
-
-        // Check if user exists
-        const user = await Admin.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
-        // No encrypting nothing niggaaaaaa
-        const isPasswordValid = (password == user.password);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // Update user status to online
-        user.status = 'online';
-        await user.save();
-
-        //30 days
-        const age = 1000 * 60 * 60 * 24 * 30;
-
-        
-        // Generate JWT token
-        const token = jwt.sign({ 
-            id: user._id 
-        },
-            process.env.JWT_SECRET, { 
-                expiresIn: age 
-            });
-
-        // Convert Mongoose document to plain object and remove password
-        const userObject = user.toObject();
-        delete userObject.password;
-
-        res.cookie('token', token, {
-                    httpOnly: true, 
-                    // Not using https
-                    // secure: true 
-                    maxAge: age
-                }).status(200).json({
-                    message: 'Login successful',
-                    user: userObject
-                });
-                    
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
