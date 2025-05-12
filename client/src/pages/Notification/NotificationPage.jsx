@@ -422,17 +422,25 @@ const NotificationPage = () => {
                                             <div
                                                 key={notification._id}
                                                 className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedNotificationId === notification._id
-                                                        ? "bg-gray-100"
-                                                        : ""
+                                                    ? "bg-gray-100"
+                                                    : ""
                                                     }`}
                                                 onClick={() => handleNotificationClick(notification)}
                                             >
                                                 <div className="flex items-center">
                                                     <img
                                                         src={
-                                                            notification.notificationSender?.avatar ||
-                                                            notification.data?.notificationSender?.avatar ||
-                                                            notification.data?.organizer?.avatar ||
+                                                            // Direct sender reference
+                                                            (notification.notificationSender && notification.notificationSender.avatar) ||
+                                                            // Check embedded data sender
+                                                            (notification.data && notification.data.notificationSender && notification.data.notificationSender.avatar) ||
+                                                            // Check organizer in embedded data
+                                                            (notification.data && notification.data.organizer && notification.data.organizer.avatar) ||
+                                                            // Check participation-related user
+                                                            (notification.relatedId && notification.relatedId.user && notification.relatedId.user.avatar) ||
+                                                            // Check event organizer through participation
+                                                            (notification.relatedId && notification.relatedId.event &&
+                                                                notification.relatedId.event.organizer && notification.relatedId.event.organizer.avatar) ||
                                                             "/images/avatar.png"
                                                         }
                                                         alt="User avatar"
@@ -441,9 +449,12 @@ const NotificationPage = () => {
                                                     <div>
                                                         <div className="flex items-center">
                                                             <span className={`${!notification.isRead ? "font-medium" : "text-gray-800"}`}>
-                                                                {notification.notificationSender?.username ||
-                                                                    notification.data?.notificationSender?.username ||
-                                                                    notification.data?.organizer?.username ||
+                                                                {(notification.notificationSender && notification.notificationSender.username) ||
+                                                                    (notification.data && notification.data.notificationSender && notification.data.notificationSender.username) ||
+                                                                    (notification.data && notification.data.organizer && notification.data.organizer.username) ||
+                                                                    (notification.relatedId && notification.relatedId.user && notification.relatedId.user.username) ||
+                                                                    (notification.relatedId && notification.relatedId.event &&
+                                                                        notification.relatedId.event.organizer && notification.relatedId.event.organizer.username) ||
                                                                     "User"}
                                                             </span>
                                                         </div>
@@ -576,7 +587,7 @@ const NotificationPage = () => {
                                                         </div>
                                                     )}
 
-                                                {/* For join request notifications (NEW) */}
+                                                {/* For join request notifications */}
                                                 {selectedNotification.type === "joinRequest" &&
                                                     selectedNotification.relatedId.status === "pending" && (
                                                         <div className="absolute bottom-0 left-0 right-0 flex justify-between p-4">
@@ -708,32 +719,32 @@ const NotificationPage = () => {
                                                     <p className="text-gray-600 mb-8">
                                                         {selectedEvent.description}
                                                     </p>
-                                                    
+
                                                     {/* Display summary if available */}
                                                     {selectedEvent.summary && (
                                                         <>
-                                                        <h2 className="text-2xl font-semibold mb-4">Description</h2>
-                                                        <p className="text-gray-600 mb-8 whitespace-pre-line">{selectedEvent.summary}</p>
+                                                            <h2 className="text-2xl font-semibold mb-4">Description</h2>
+                                                            <p className="text-gray-600 mb-8 whitespace-pre-line">{selectedEvent.summary}</p>
                                                         </>
                                                     )}
-                                                    </section>
+                                                </section>
 
-                                                    {/* Add Organizer Information */}
-                                                    <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+                                                {/* Add Organizer Information */}
+                                                <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
                                                     <h2 className="text-xl font-bold mb-4">Organized by</h2>
                                                     <div className="flex items-center">
                                                         <img
-                                                        src={selectedEvent.organizer?.avatar || '/images/avatar.png'}
-                                                        alt={selectedEvent.organizer?.name || 'Organizer'}
-                                                        className="w-12 h-12 rounded-full mr-4"
+                                                            src={selectedEvent.organizer?.avatar || '/images/avatar.png'}
+                                                            alt={selectedEvent.organizer?.name || 'Organizer'}
+                                                            className="w-12 h-12 rounded-full mr-4"
                                                         />
                                                         <div>
-                                                        <h3 className="font-medium text-lg">{selectedEvent.organizer?.username || 'Event Organizer'}</h3>
-                                                        <p className="text-gray-500">{selectedEvent.organizer?.email || ''}</p>
+                                                            <h3 className="font-medium text-lg">{selectedEvent.organizer?.username || 'Event Organizer'}</h3>
+                                                            <p className="text-gray-500">{selectedEvent.organizer?.email || ''}</p>
                                                         </div>
                                                     </div>
                                                 </section>
-                                                </div>
+                                            </div>
                                         )}
 
                                     {(selectedNotification.type === "eventReminder" ||
@@ -744,16 +755,21 @@ const NotificationPage = () => {
                                         selectedNotification.type === "requestDeclined") && (
                                             <div className="p-6">
                                                 {/* Email-like header */}
-                                                <div className="bg-white mb-2 p-4">
+                                                <div className="bg-white pt-6 px-6">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center">
                                                             <img
                                                                 src={
-                                                                    // Check populated reference first, then fallback to embedded data
-                                                                    selectedNotification.notificationSender?.avatar ||
-                                                                    selectedNotification.data?.notificationSender?.avatar ||
-                                                                    selectedNotification.data?.organizer?.avatar ||
-                                                                    selectedNotification.relatedId?.user?.avatar ||
+                                                                    (selectedNotification.notificationSender && selectedNotification.notificationSender.avatar) ||
+                                                                    // Check embedded data sender
+                                                                    (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.avatar) ||
+                                                                    // Check organizer in embedded data
+                                                                    (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.avatar) ||
+                                                                    // Check participation-related user
+                                                                    (selectedNotification.relatedId && selectedNotification.relatedId.user && selectedNotification.relatedId.user.avatar) ||
+                                                                    // Check event organizer through participation
+                                                                    (selectedNotification.relatedId && selectedNotification.relatedId.event &&
+                                                                        selectedNotification.relatedId.event.organizer && selectedNotification.relatedId.event.organizer.avatar) ||
                                                                     "/images/avatar.png"
                                                                 }
                                                                 alt="Sender"
@@ -768,21 +784,26 @@ const NotificationPage = () => {
                                                                         "User"}
                                                                 </h3>
                                                                 <p className="text-gray-500 text-sm">
-                                                                    {selectedNotification.notificationSender?.email ||
-                                                                        selectedNotification.data?.notificationSender?.email ||
-                                                                        selectedNotification.data?.organizer?.email ||
-                                                                        selectedNotification.relatedId?.user?.email ||
+                                                                    {/* Apply same robust pattern for email */}
+                                                                    {(selectedNotification.notificationSender && selectedNotification.notificationSender.email) ||
+                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.email) ||
+                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.email) ||
+                                                                        (selectedNotification.relatedId && selectedNotification.relatedId.user && selectedNotification.relatedId.user.email) ||
+                                                                        (selectedNotification.relatedId && selectedNotification.relatedId.event &&
+                                                                            selectedNotification.relatedId.event.organizer && selectedNotification.relatedId.event.organizer.email) ||
                                                                         ""}
 
-                                                                    {(selectedNotification.notificationSender?.firstName ||
-                                                                        selectedNotification.data?.notificationSender?.firstName ||
-                                                                        selectedNotification.data?.organizer?.firstName) &&
-                                                                        ` (${selectedNotification.notificationSender?.firstName ||
-                                                                        selectedNotification.data?.notificationSender?.firstName ||
-                                                                        selectedNotification.data?.organizer?.firstName} 
-                                                                        ${selectedNotification.notificationSender?.lastName ||
-                                                                        selectedNotification.data?.notificationSender?.lastName ||
-                                                                        selectedNotification.data?.organizer?.lastName})`}
+                                                                    {/* Full name display with robust checks */}
+                                                                    {((selectedNotification.notificationSender && selectedNotification.notificationSender.firstName) ||
+                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.firstName) ||
+                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.firstName)) &&
+                                                                        ` (${(selectedNotification.notificationSender && selectedNotification.notificationSender.firstName) ||
+                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.firstName) ||
+                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.firstName)} 
+                                                                            ${(selectedNotification.notificationSender && selectedNotification.notificationSender.lastName) ||
+                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.lastName) ||
+                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.lastName) ||
+                                                                        ""})`}
                                                                 </p>
                                                             </div>
                                                         </div>
