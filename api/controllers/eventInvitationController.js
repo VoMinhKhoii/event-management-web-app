@@ -174,6 +174,7 @@ export const inviteToEvent = async (req, res) => {
             notificationSender: inviterId,
             relatedId: invitation._id,
             data: {
+
             },
             isRead: false
         }], { session });

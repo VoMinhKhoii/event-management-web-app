@@ -116,7 +116,6 @@ const NotificationPage = () => {
     }, []);
 
 
-
     // Handle notification click
     const handleNotificationClick = async (notification) => {
         setSelectedNotificationId(notification._id);
@@ -136,7 +135,6 @@ const NotificationPage = () => {
         } else {
             setSelectedEvent(null); // No associated event
         }
-
         setSelectedNotification(notification);
     };
 
@@ -189,6 +187,7 @@ const NotificationPage = () => {
             // Refresh notifications to get updated data
             await markAsRead(selectedNotification._id);
             updateNotificationCache(selectedNotification._id, { isRead: true });
+
 
             // Show success message
             alert("You have successfully accepted the invitation");
@@ -400,6 +399,7 @@ const NotificationPage = () => {
                                 }}
                             >
                                 <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+
                                     <h2 className="text-2xl font-semibold">Primary</h2>
                                 </div>
                                 <div

@@ -1,9 +1,10 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Admin from '../models/Admin.js';
 import { logActivity } from '../middleware/logActivity.js';
 
-const signup = async (req, res) => {
+export const signup = async (req, res) => {
     try {
         
         const { firstName, lastName, username, email, password } = req.body;
@@ -39,7 +40,7 @@ const signup = async (req, res) => {
     }
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
@@ -91,7 +92,7 @@ const login = async (req, res) => {
     }
 };
 
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
     try {
         // Extract user ID from token
         const token = req.cookies.token;
@@ -116,4 +117,3 @@ const logout = async (req, res) => {
     }
 }
 
-export { signup, login, logout };

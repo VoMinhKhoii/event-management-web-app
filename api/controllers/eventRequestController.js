@@ -247,6 +247,7 @@ export const requestToJoinEvent = async (req, res) => {
             relatedId: request._id,
             notificationSender: userId,
             data: {
+
             },
             isRead: false
         }], { session });
@@ -395,6 +396,7 @@ export const handleJoinRequest = async (req, res) => {
                 message: `Request to join ${joinRequest.event.title} - approved`,
                 relatedId: requestId,
                 notificationSender: organizerId,
+
                 data: {
                     message: `Your request to join "${joinRequest.event.title}" has been approved by the organizer.
 
@@ -406,6 +408,7 @@ export const handleJoinRequest = async (req, res) => {
 
                     ${event.organizer.firstName} ${event.organizer.lastName},
                     ${event.organizer.email}`
+
                 },
                 isRead: false
             }], { session });
