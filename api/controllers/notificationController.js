@@ -9,14 +9,26 @@ export const getNotifications = async (req, res) => {
     try {
         const userId = req.userId;
         const notifications = await Notification.find({ userId })
-
             .sort({ createdAt: -1 })
+            .populate('notificationSender', 'username avatar email firstName lastName')
             .populate({
                 path: 'relatedId',
                 model: 'Participation',
                 populate: [
-                    { path: 'event', model: 'Event' },
-                    { path: 'user', model: 'User', select: 'username avatar email' }
+                    { 
+                        path: 'event', 
+                        model: 'Event',
+                        populate: {
+                            path: 'organizer',
+                            model: 'User',
+                            select: 'username avatar email'
+                        } 
+                    },
+                    { 
+                        path: 'user', 
+                        model: 'User', 
+                        select: 'username avatar email' 
+                    }
                 ]
             })
             .lean();
@@ -26,6 +38,28 @@ export const getNotifications = async (req, res) => {
         res.status(200).json(notifications);
     } catch (error) {
         res.status(500).json({ error: "Server error", error });
+    }
+};
+
+export const getNewCount = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const since = parseInt(req.query.since) || 0;
+
+        console.log(`Checking for notifications for user ${userId} since ${new Date(since)}`);
+
+        // Count notifications created after the "since" timestamp
+        const count = await Notification.countDocuments({
+            userId,
+            createdAt: { $gt: new Date(since) }
+        });
+
+        console.log(`Found ${count} new notifications`);
+
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error getting new notification count:', error);
+        res.status(500).json({ error: 'Failed to get new notification count' });
     }
 };
 

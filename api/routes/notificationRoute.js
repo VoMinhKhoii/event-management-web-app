@@ -1,5 +1,5 @@
 import express from "express";
-import {getNotifications, markAsRead, createNotification, deleteNotification} from "../controllers/notificationController.js";
+import {getNotifications, markAsRead, createNotification, deleteNotification, getNewCount} from "../controllers/notificationController.js";
 import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
@@ -25,6 +25,11 @@ router.post("/",verifyToken, createNotification);
 // @desc    Delete a notification
 // @access  Private
 router.delete("/:notificationId",verifyToken, deleteNotification);
+
+// @route   GET /api/notifications/new
+// @desc    Get the count of new notifications since a given date
+// @access  Private
+router.get("/new", verifyToken, getNewCount);
 
 
 

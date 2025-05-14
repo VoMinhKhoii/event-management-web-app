@@ -4,11 +4,11 @@ const notificationSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: "users" 
+        ref: "users"
     },
     type: {
         type: String,
-        enum: ['invitation', 'joinRequest', 'eventUpdate', 'reminder', 'message', 'invitationDeclined', 'invitationAccepted', 'requestDeclined', 'requestApproved'],
+        enum: ['invitation', 'joinRequest', 'eventUpdate', 'eventReminder', 'invitationReminder', 'message', 'invitationDeclined', 'invitationAccepted', 'requestDeclined', 'requestApproved'],
         required: true
     },
     message: {
@@ -19,9 +19,14 @@ const notificationSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: false,
     },
+    notificationSender: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",  // Reference to the User model
+        required: false
+    },
     data: {
         type: mongoose.Schema.Types.Mixed // For additional context data
-    },  
+    },
     isRead: {
         type: Boolean,
         default: false
