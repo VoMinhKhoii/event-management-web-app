@@ -116,9 +116,6 @@ const NotificationPage = () => {
     }, []);
 
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-
     // Handle notification click
     const handleNotificationClick = async (notification) => {
         setSelectedNotificationId(notification._id);
