@@ -102,7 +102,7 @@ const EventDetails = () => {
         // Add this when fetching comments
         const normalizedComments = data.map(comment => ({
           ...comment,
-          replies: comment.replies || []  // Ensure replies is always an array and prevent data inconsistency
+          replies: sortRepliesByDate(comment.replies || [])  // Ensure replies is always an array and prevent data inconsistency
         }));
         setComments(normalizedComments);
       } catch (err) {
@@ -190,6 +190,17 @@ const EventDetails = () => {
     pending: invitations.filter(inv => inv.status === 'invited'),
     declined: invitations.filter(inv => inv.status === 'rejected')
   };
+
+  const sortRepliesByDate = (replies) => {
+  if (!replies || !Array.isArray(replies)) return [];
+  
+  // Create a copy of the array to avoid mutation issues
+  return [...replies].sort((a, b) => {
+    const dateA = new Date(a.createdAt || a.time || 0);
+    const dateB = new Date(b.createdAt || b.time || 0);
+    return dateB - dateA; // Sort by descending order (newest first)
+  });
+};
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -454,7 +465,7 @@ const EventDetails = () => {
           alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
         } else {
 
-          alert(data.message || 'Failed to send join request');
+          alert(data.error || 'Failed to send join request');
         }
         return;
       }
@@ -762,11 +773,11 @@ const EventDetails = () => {
             {invitations.length > 0 && (
               <button
                 onClick={() => handleSendInviteeReminders()}
-                className={`ml-2 p-2 rounded-full transition-all duration-300 group ${invitationStats.pending.length > 0
+                className={`ml-2 p-2 rounded-full transition-all duration-300 group ${(invitationStats.pending.length > 0 && eventData.status !== 'ended' && eventData.status !== 'ongoing' && eventData.status !== 'cancelled')
                     ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
                     : "text-gray-300 cursor-not-allowed"
                   }`}
-                disabled={invitationStats.pending.length === 0}
+                disabled={invitationStats.pending.length === 0 || !isOrganizer || eventData.status === 'ended' || eventData.status === 'ongoing' || eventData.status === 'cancelled'} 
                 title={invitationStats.pending.length > 0 ? "Send reminder" : "No pending invitations"}
               >
                 <svg className={`w-5 h-5 ${invitationStats.pending.length > 0 ? "group-hover:animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -897,8 +908,13 @@ const EventDetails = () => {
             <h3 className="font-semibold text-lg mb-3">Attendees</h3>
             <button
               onClick={() => handleSendAttendeeReminders()}
-              className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
+              className={`ml-2 p-2 rounded-full transition-all duration-300 group ${(invitationStats.accepted.length > 0 && eventData.status !== 'ended' && eventData.status !== 'ongoing' && eventData.status !== 'cancelled')
+                    ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                    : "text-gray-300 cursor-not-allowed"
+                  }`}
               title="Send reminder"
+              disabled={ !isOrganizer || eventData.status === 'ended' || eventData.status === 'ongoing' || eventData.status === 'cancelled'}
+
             >
               <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -1051,9 +1067,9 @@ const EventDetails = () => {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">About this event</h2>
-              <p className="text-gray-600 mb-8">{eventData.description}</p>
-              <h2 className="text-2xl font-semibold mb-4">Description</h2>
               <p className="text-gray-600 mb-8">{eventData.summary}</p>
+              <h2 className="text-2xl font-semibold mb-4">Description</h2>
+              <p className="text-gray-600 mb-8">{eventData.description}</p>
             </section>
 
             <section className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
