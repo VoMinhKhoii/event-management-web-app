@@ -3,6 +3,7 @@ import Participation from '../models/Participation.js';
 import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
 import Settings from '../models/Settings.js';
+
 import { detectEventChanges } from '../utils/eventHelpers.js';
 import fs from 'fs';
 import https from 'https';
@@ -120,6 +121,8 @@ export const createEvent = async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
 
+    
+    
     // Fetch the system settings and check for attendee limits
     const settings = await Settings.findOne();
     if (!settings || !settings.eventSettings) {
@@ -132,15 +135,14 @@ export const createEvent = async (req, res) => {
       });
     }
 
-    // Create event data
-    const eventData = {
+    const newEvent = new Event({
       ...req.body,
-      organizer: req.userId,
+      organizer: req.userId, // Set organizer as current user
       maxAttendees: req.body.maxAttendees || maxAllowed,
       image: imageUrl
-    };
+    });
+    
 
-    const newEvent = new Event(eventData);
     await newEvent.save();
 
     await logActivity(
@@ -231,15 +233,12 @@ export const updateEvent = async (req, res) => {
         req.write(payload);
         req.end();
       });
-      
       imageUrl = response.secure_url;
 
       // clean-up temp file
       fs.unlinkSync(req.file.path);
     }
 
-
-    // Check if the event exists
     const existingEvent = await Event.findById(req.params.eventId).session(session);
     if (!existingEvent) {
       await session.abortTransaction();
@@ -248,6 +247,7 @@ export const updateEvent = async (req, res) => {
 
     const updateData = {
       ...req.body,
+
       image: imageUrl || existingEvent.image,
     };
 
@@ -264,6 +264,7 @@ export const updateEvent = async (req, res) => {
         message: `System limit exceeded. Current maximum event capacity: ${maxAllowed}`
     });
     }
+
 
     // check if any value was changed when submitting event update
     const changes = detectEventChanges(existingEvent, updateData);

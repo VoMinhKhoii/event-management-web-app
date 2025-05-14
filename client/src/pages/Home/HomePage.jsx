@@ -16,12 +16,12 @@ const HomePage = () => {
   const [isFiltered, setIsFiltered] = useState(false);
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]); // Store filtered events
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
 
     // Fetch events with caching 
   const fetchEvents = async (forceRefresh = false) => {
-    setLoading(true);
+    
   
     // Try to get cached data first
     const cachedData = localStorage.getItem('homePageEvents');
@@ -35,6 +35,7 @@ const HomePage = () => {
         Date.now() - parseInt(cacheTimestamp) < THIRTY_MINUTES &&
         !forceRefresh
       ) {
+        console.log("Using cached data");
         const events = JSON.parse(cachedData);
         setEvents(events);
         setFilteredEvents(isFiltered ? applyAllFilters(events) : events); // Apply any current filters
@@ -42,6 +43,8 @@ const HomePage = () => {
         setLoading(false);
         return; // Exit early - no need to fetch
       }
+
+      setLoading(true);
       try {
         // Fetch fresh data
         const response = await fetch('http://localhost:8800/api/events?public=true', {

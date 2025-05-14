@@ -48,6 +48,7 @@ const LoginPage = () => {
                 credentials: 'include' // Important for storing cookies
             });
 
+
             // Check if the response is JSON before trying to parse it
             const contentType = res.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
@@ -64,13 +65,14 @@ const LoginPage = () => {
                 throw new Error('No user data in response');
             }
 
+
             updateUser(data.user);
             console.log('Login successful:', data);
             navigate('/home'); // Redirect to home page after successful login
 
         } catch (err) {
             console.error('Login error:', err);
-            setError(err.message || 'Something went wrong. Please try again.');
+            alert(err.message || 'Something went wrong. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -184,7 +186,6 @@ const LoginPage = () => {
                             </button>
                         </div>
                     </div>
-
                     <div className="space-y-3">
                         <button
                             type="submit"
@@ -215,6 +216,7 @@ const LoginPage = () => {
                             )}
                         </button>
                     </div>
+
                 </form>
 
                 <p className="text-[16px] text-center mt-6">
@@ -227,5 +229,4 @@ const LoginPage = () => {
         </div>
     );
 }
-
 export default LoginPage;
