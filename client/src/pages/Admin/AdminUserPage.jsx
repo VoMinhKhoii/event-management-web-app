@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiX } from 'react-icons/fi';
-import AdminNavPane from '../components/AdminNavPane';
+import AdminNavPane from '../../components/AdminNavPane';
 
 const AdminUserPage = () => {
     const navigate = useNavigate();

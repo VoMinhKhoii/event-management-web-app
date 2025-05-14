@@ -245,14 +245,9 @@ export const requestToJoinEvent = async (req, res) => {
             type: 'joinRequest',
             message: `${requestingUser.username || 'A user'} has requested to join your event`,
             relatedId: request._id,
+            notificationSender: userId,
             data: {
-                notificationSender: {
-                    username: requestingUser.username,
-                    email: requestingUser.email,
-                    avatar: requestingUser.avatar,
-                    firstName: requestingUser.firstName,
-                    lastName: requestingUser.lastName
-                },
+
             },
             isRead: false
         }], { session });
@@ -400,6 +395,8 @@ export const handleJoinRequest = async (req, res) => {
                 type: 'requestApproved',
                 message: `Request to join ${joinRequest.event.title} - approved`,
                 relatedId: requestId,
+                notificationSender: organizerId,
+
                 data: {
                     message: `Your request to join "${joinRequest.event.title}" has been approved by the organizer.
 
@@ -410,13 +407,8 @@ export const handleJoinRequest = async (req, res) => {
                     Best regards,
 
                     ${event.organizer.firstName} ${event.organizer.lastName},
-                    ${event.organizer.email}`,
+                    ${event.organizer.email}`
 
-                    notificationSender: {
-                        username: event.organizer.username,
-                        email: event.organizer.email,
-                        avatar: event.organizer.avatar
-                    },
                 },
                 isRead: false
             }], { session });

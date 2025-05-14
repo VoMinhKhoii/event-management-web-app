@@ -5,13 +5,12 @@ import { verifyToken } from '../middleware/verifyToken.js';
 
 const router = express.Router();
 
-// Register route
+// Register route user
 router.post('/signup', signup);
-
-// Login route
+// Login route user
 router.post('/login', login);
-
-// Logout route
 router.post('/logout', logout);
+
+
 
 export default router;

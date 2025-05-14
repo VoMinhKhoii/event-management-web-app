@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+
 import NavPane from './NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
@@ -10,10 +11,10 @@ import { NotificationContext } from '../context/notificationContext.jsx';
 
 const EventDetails = () => {
   const { id } = useParams();
+  console.log("Event ID from URL parameters:", id); // Add this debugging line
   const eventData = useLoaderData(); // Get event data from loader
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
-
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -362,6 +363,7 @@ const EventDetails = () => {
     }
   };
 
+
   const handleSendAttendeeReminders = async () => {
     if (!isOrganizer || !id) return;
 
@@ -589,6 +591,7 @@ const EventDetails = () => {
         <button
           className="w-full py-[8px] bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-lg font-regular mb-8"
           onClick={handleJoinRequest}
+
         >
           Request to join
         </button>
@@ -713,7 +716,9 @@ const EventDetails = () => {
                 >
                   {searchResults.length > 0 ? (
                     searchResults.map(user => (
-                      <li
+
+                      <li 
+
                         key={user._id}
                         className="border-b border-gray-100 last:border-b-0"
                         onClick={() => handleUserSelect(user)}
@@ -770,6 +775,7 @@ const EventDetails = () => {
               </button>
             )}
           </div>
+
 
           {invitations.length > 0 ? (
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
@@ -917,7 +923,6 @@ const EventDetails = () => {
                   </div>
                 </div>
               ))}
-
               {/* Render approved requests */}
               {requests
                 .filter(request => request.status === 'approved')

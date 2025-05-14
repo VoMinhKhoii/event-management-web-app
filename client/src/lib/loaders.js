@@ -7,8 +7,8 @@
 export const singleEventLoader = async ({ params }) => {
     try {
         const eventId = params.id;
-        const apiBaseUrl = 'http://localhost:8800/api/events';
-        const eventResponse = await fetch(`${apiBaseUrl}/${eventId}`, {
+
+        const eventResponse = await fetch(`http://localhost:8800/api/events/${eventId}`,{
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include' // This is critical for sending cookies/session

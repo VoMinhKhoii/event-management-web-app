@@ -69,6 +69,8 @@ export const sendPendingInvitationReminders = async (req, res) => {
                 type: 'invitationReminder',
                 message: `Reminder: You have a pending invitation to ${event.title}`,
                 relatedId: invitation._id,
+                notificationSender: organizerId,
+
                 data: {
                     message: `You are invited to attend the "${event.title}" on ${event.startDate} from ${event.startTime} to ${event.endTime} at ${event.location}.
                 
@@ -80,13 +82,6 @@ export const sendPendingInvitationReminders = async (req, res) => {
                 
                 ${event.organizer.firstName} ${event.organizer.lastName},
                 ${event.organizer.email}`,
-                    notificationSender: {
-                        username: event.organizer.username,
-                        email: event.organizer.email,
-                        avatar: event.organizer.avatar,
-                        firstName: event.organizer.firstName,
-                        lastName: event.organizer.lastName
-                    },
                 },
                 isRead: false
             });
@@ -178,6 +173,8 @@ export const sendAttendeeReminders = async (req, res) => {
                 type: 'eventReminder',
                 message: `Reminder: Event "${event.title}" is coming up`,
                 relatedId: attendee._id,
+                notificationSender: organizerId,
+
                 data: {
                     message: `This is a friendly reminder that ${event.title} will take place on ${event.startDate} from ${event.startTime} to ${event.endTime || 'TBD'} at ${event.location || 'TBD'}.
                 
@@ -187,13 +184,6 @@ export const sendAttendeeReminders = async (req, res) => {
                 
                     ${event.organizer.firstName} ${event.organizer.lastName},
                     ${event.organizer.email}`,
-                    notificationSender: {
-                        username: event.organizer.username,
-                        email: event.organizer.email,
-                        avatar: event.organizer.avatar,
-                        firstName: event.organizer.firstName,
-                        lastName: event.organizer.lastName
-                    },
                 },
                 isRead: false
             });

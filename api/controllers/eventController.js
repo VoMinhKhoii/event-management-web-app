@@ -2,6 +2,8 @@ import Event from '../models/Event.js';
 import Participation from '../models/Participation.js';
 import Notification from '../models/Notification.js';
 import { logActivity } from '../middleware/logActivity.js';
+import Settings from '../models/Settings.js';
+
 import { detectEventChanges } from '../utils/eventHelpers.js';
 import fs from 'fs';
 import https from 'https';
@@ -41,8 +43,6 @@ export const getAllEvent = async (req, res) => {
   }
 };
 
-
-
 // GET /api/events/:eventId
 export const getEvent = async (req, res) => {
   try {
@@ -56,9 +56,10 @@ export const getEvent = async (req, res) => {
   }
 };
 
-// POST /api/events 
+// POST /api/events
 export const createEvent = async (req, res) => {
   try {
+
     let imageUrl = null;
 
     // handle image upload if file exists
@@ -120,15 +121,30 @@ export const createEvent = async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
 
+    
+    
+    // Fetch the system settings and check for attendee limits
+    const settings = await Settings.findOne();
+    if (!settings || !settings.eventSettings) {
+      return res.status(500).json({ error: 'Event settings not configured' });
+    }
+    const maxAllowed = settings.eventSettings.maxAttendeesPerEvent;
+    if (req.body.maxAttendees && req.body.maxAttendees > maxAllowed) {
+      return res.status(500).json({
+        message: `Maximum capacity exceeded. System limit: ${maxAllowed}`
+      });
+    }
+
     const newEvent = new Event({
       ...req.body,
       organizer: req.userId, // Set organizer as current user
+      maxAttendees: req.body.maxAttendees || maxAllowed,
       image: imageUrl
     });
+    
 
     await newEvent.save();
 
-    // Log this activity
     await logActivity(
       req.userId,
       'created',
@@ -138,8 +154,8 @@ export const createEvent = async (req, res) => {
     );
 
     const populatedEvent = await Event.findById(newEvent._id).populate('organizer');
-
     res.status(201).json(populatedEvent);
+
   } catch (err) {
     // clean-up temp file if exists
     if (req.file?.path && fs.existsSync(req.file.path)) {
@@ -217,7 +233,6 @@ export const updateEvent = async (req, res) => {
         req.write(payload);
         req.end();
       });
-
       imageUrl = response.secure_url;
 
       // clean-up temp file
@@ -232,8 +247,24 @@ export const updateEvent = async (req, res) => {
 
     const updateData = {
       ...req.body,
-      image: imageUrl || existingEvent.image // use new image if uploaded, otherwise keep existing
+
+      image: imageUrl || existingEvent.image,
     };
+
+    // Fetch current attendee limit
+    const settings = await Settings.findOne();
+    if (!settings || !settings.eventSettings) {
+      await session.abortTransaction();
+      return res.status(500).json({ error: 'Event settings not configured' });
+    }
+    const maxAllowed = settings.eventSettings.maxAttendeesPerEvent;
+    if (updateData.maxAttendees && updateData.maxAttendees > maxAllowed) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: `System limit exceeded. Current maximum event capacity: ${maxAllowed}`
+    });
+    }
+
 
     // check if any value was changed when submitting event update
     const changes = detectEventChanges(existingEvent, updateData);
