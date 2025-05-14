@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiEye, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 
 // Import custom icons
-import totalEvents from '../assets/total-events.png';
-import rsvpRate from '../assets/rsvp-rate.png';
-import AdminNavPane from '../components/AdminNavPane';
+import totalEvents from '../../assets/total-events.png';
+import rsvpRate from '../../assets/rsvp-rate.png';
+import AdminNavPane from '../../components/AdminNavPane';  
 
 const AdminEventsPage = () => {
     const navigate = useNavigate();
@@ -60,6 +60,7 @@ const AdminEventsPage = () => {
                 let totalRsvpRate = 0;
                 let eventsWithRsvp = 0;
                 
+                // RSVP Rate
                 eventData.forEach(event => {
                     if (event.attendees && event.maxAttendees && event.maxAttendees > 0) {
                         const eventRsvpRate = Math.round((event.attendees.length / event.maxAttendees) * 100);
@@ -67,9 +68,9 @@ const AdminEventsPage = () => {
                         eventsWithRsvp++;
                     }
                 });
-                
                 const averageRsvpRate = eventsWithRsvp > 0 ? Math.round(totalRsvpRate / eventsWithRsvp) : 0;
                 
+                // Set stats
                 setStats({
                     totalEvents,
                     averageRsvpRate
@@ -297,9 +298,47 @@ const AdminEventsPage = () => {
         console.log('Edit event:', eventId);
     };
 
-    const handleDeleteEvent = (eventId) => {
-        console.log('Delete event:', eventId);
+    const handleDeleteEvent = async (eventId) => {
+        try {
+            const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            //Don't need error testing for this since an event can't be deleted if it doesn't exist
+            
+            const updatedEvents = events.filter(event => event._id !== eventId);
+            setEvents(updatedEvents);
+    
+            // Reapply filters if filter was active
+            if (isFiltered) {
+                const updatedFilteredEvents = filteredEvents.filter(event => event._id !== eventId);
+                setFilteredEvents(updatedFilteredEvents);
+            }
+    
+            // Update stats
+            const totalEvents = updatedEvents.length;
+            let totalRsvpRate = 0;
+            let eventsWithRsvp = 0;
+    
+            updatedEvents.forEach(event => {
+                if (event.attendees && event.maxAttendees && event.maxAttendees > 0) {
+                    const eventRsvpRate = Math.round((event.attendees.length / event.maxAttendees) * 100);
+                    totalRsvpRate += eventRsvpRate;
+                    eventsWithRsvp++;
+                }
+            });
+    
+            const averageRsvpRate = eventsWithRsvp > 0 ? Math.round(totalRsvpRate / eventsWithRsvp) : 0;
+    
+            setStats({ totalEvents, averageRsvpRate });
+    
+        } catch (error) {
+            console.error('Error deleting event:', error);
+            alert('Failed to delete event. Please try again.');
+        }
     };
+    
 
     return (
         <div className="flex h-screen bg-gray-50 font-[Poppins]">
