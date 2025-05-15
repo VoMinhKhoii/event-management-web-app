@@ -91,10 +91,10 @@ const EditEvent = () => {
             const endDateTime = new Date(`${endDate}T${endTime}`);
 
             // 1. Start date can't be today
-            if (new Date(startDate).toDateString() === today.toDateString()) {
-                alert("The start date cannot be today.");
-                return false;
-            }
+            // if (new Date(startDate).toDateString() === today.toDateString()) {
+            //     alert("The start date cannot be today.");
+            //     return false;
+            // }
 
             // 2. Start date can't be in the past
             if (new Date(startDate) < today) {
