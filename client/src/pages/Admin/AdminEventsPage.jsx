@@ -26,8 +26,13 @@ const AdminEventsPage = () => {
         totalEvents: 0,
         averageRsvpRate: 0
     });
+    const [deleteEvent, setDeleteEvent] = useState(0);
+    const [eventRsvpRates, setEventRsvpRates] = useState({});
+
+
     const [activeMenu, setActiveMenu] = useState('events');
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isRsvpLoading, setIsRsvpLoading] = useState(false);
     
     // For search dropdown functionality
     const [showResults, setShowResults] = useState(false);
@@ -56,25 +61,11 @@ const AdminEventsPage = () => {
                 // Calculate stats
                 const totalEvents = eventData.length;
                 
-                // Calculate average RSVP rate
-                let totalRsvpRate = 0;
-                let eventsWithRsvp = 0;
-                
-                // RSVP Rate
-                eventData.forEach(event => {
-                    if (event.attendees && event.maxAttendees && event.maxAttendees > 0) {
-                        const eventRsvpRate = Math.round((event.attendees.length / event.maxAttendees) * 100);
-                        totalRsvpRate += eventRsvpRate;
-                        eventsWithRsvp++;
-                    }
-                });
-                const averageRsvpRate = eventsWithRsvp > 0 ? Math.round(totalRsvpRate / eventsWithRsvp) : 0;
-                
                 // Set stats
-                setStats({
-                    totalEvents,
-                    averageRsvpRate
-                });
+                setStats(prevStats => ({
+                    ...prevStats,
+                    totalEvents
+                }));
                 
             } catch (error) {
                 console.error('Error fetching events:', error);
@@ -82,9 +73,42 @@ const AdminEventsPage = () => {
                 setIsLoading(false);
             }
         };
-        
+
+        const fetchRSVP = async () => {
+            try {
+                const response = await fetch(`http://localhost:8800/api/events/invitations-get`);
+
+                const data = await response.json();
+                if (!response.ok) throw new Error('Failed to fetch invitations');
+
+                const dataArray = data.invitations || [];
+
+                // Calculate RSVP rate
+                const acceptedCount = dataArray.filter(inv => inv.status === 'approved').length;
+                const totalRespondedCount = dataArray.filter(inv => inv.status !== 'invited').length;
+                console.log("Data: ", dataArray);
+                console.log('Accepted Count:', acceptedCount);
+                console.log('Total Responded Count:', totalRespondedCount);
+
+                if (totalRespondedCount === 0) {
+                    setStats(prevStats => ({
+                        ...prevStats, averageRsvpRate : 0
+                    }));
+                } else {
+                    const calculatedRate = Math.round((acceptedCount / totalRespondedCount) * 100);
+                    setStats(prevStats => ({
+                        ...prevStats, averageRsvpRate : calculatedRate
+                    }));
+                }
+
+            } catch (error) {
+                console.error('Error fetching RSVP:', error);
+            }
+        }
         fetchEvents();
-    }, []);
+        fetchRSVP();
+        
+    }, [deleteEvent]);
 
     // Apply filters when APPLIED filters change (not when input filters change)
     useEffect(() => {
@@ -300,44 +324,70 @@ const AdminEventsPage = () => {
 
     const handleDeleteEvent = async (eventId) => {
         try {
-            const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+            const deleteResponse = await fetch(`http://localhost:8800/api/events/${eventId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
 
             //Don't need error testing for this since an event can't be deleted if it doesn't exist
-            
-            const updatedEvents = events.filter(event => event._id !== eventId);
-            setEvents(updatedEvents);
-    
-            // Reapply filters if filter was active
-            if (isFiltered) {
-                const updatedFilteredEvents = filteredEvents.filter(event => event._id !== eventId);
-                setFilteredEvents(updatedFilteredEvents);
-            }
-    
-            // Update stats
-            const totalEvents = updatedEvents.length;
-            let totalRsvpRate = 0;
-            let eventsWithRsvp = 0;
-    
-            updatedEvents.forEach(event => {
-                if (event.attendees && event.maxAttendees && event.maxAttendees > 0) {
-                    const eventRsvpRate = Math.round((event.attendees.length / event.maxAttendees) * 100);
-                    totalRsvpRate += eventRsvpRate;
-                    eventsWithRsvp++;
-                }
-            });
-    
-            const averageRsvpRate = eventsWithRsvp > 0 ? Math.round(totalRsvpRate / eventsWithRsvp) : 0;
-    
-            setStats({ totalEvents, averageRsvpRate });
+        
+
+            setDeleteEvent(prev => prev + 1);
     
         } catch (error) {
             console.error('Error deleting event:', error);
             alert('Failed to delete event. Please try again.');
         }
     };
+
+    const handleEventRsvp = async (eventId) => {
+
+        try {
+            const response = await fetch(`http://localhost:8800/api/events/invitations-get?eventId=${eventId}`);
+    
+            const data = await response.json();
+            if (!response.ok) throw new Error('Failed to fetch invitations');
+    
+            const dataArray = data.invitations || [];
+    
+            // Calculate RSVP rate
+            const acceptedCount = dataArray.filter(inv => inv.status === 'approved').length;
+            const totalRespondedCount = dataArray.filter(inv => inv.status !== 'invited').length;
+    
+            if (totalRespondedCount === 0) {
+                return 0;
+            } else {
+                const calculatedRate = Math.round((acceptedCount / totalRespondedCount) * 100);
+                return calculatedRate;
+            }
+            
+        } catch (error) {
+            console.error('Error fetching event RSVP:', error);
+        }
+    }
+
+    // Fetch all RSVP rates whenever events change
+    useEffect(() => {
+    if (events.length === 0) return;
+
+    const fetchAllRsvpRates = async () => {
+        setIsRsvpLoading(true);
+        const rates = {};
+        for (const event of events) {
+        try {
+            const rate = await handleEventRsvp(event._id);
+            rates[event._id] = rate;
+        } catch {
+            rates[event._id] = 0;
+        }
+        }
+        setEventRsvpRates(rates);
+        setIsRsvpLoading(false);
+    };
+
+    fetchAllRsvpRates();
+    }, [events, stats]);
+
     
 
     return (
@@ -568,7 +618,7 @@ const AdminEventsPage = () => {
                                             </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {event.attendees ? event.attendees.length : 0} / {event.maxAttendees || 'Unlimited'}
+                                                {event.curAttendees ? event.curAttendees : 0} / {event.maxAttendees || 'Unlimited'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -589,20 +639,25 @@ const AdminEventsPage = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    {event.maxAttendees && event.attendees ? (
+                                                    {isRsvpLoading ? (
+                                                        <span className="text-sm text-gray-500">
+                                                            Loading...
+                                                        </span> ) : 
+                                                    (eventRsvpRates[event._id] !== undefined && eventRsvpRates[event._id] !== 0) ? (
                                                         <>
                                                             <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2 max-w-[100px]">
-                                                                <div 
-                                                                    className={`h-2.5 rounded-full ${
-                                                                        (event.attendees.length / event.maxAttendees * 100) >= 80 ? 'bg-green-500' : 
-                                                                        (event.attendees.length / event.maxAttendees * 100) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                                                    }`} 
-                                                                    style={{ width: `${Math.min((event.attendees.length / event.maxAttendees * 100), 100)}%` }}
-                                                                ></div>
+                                                            <div 
+                                                                className={`h-2.5 rounded-full
+                                                                ${
+                                                                    eventRsvpRates[event._id] >= 80 ? 'bg-green-500' :
+                                                                    eventRsvpRates[event._id] >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                                                }`} 
+                                                                style={{ width: `${Math.min(eventRsvpRates[event._id] || 0, 100)}%` }}
+                                                            ></div>
                                                             </div>
-                                                            <span className="text-sm text-gray-700">
-                                                                {Math.round((event.attendees.length / event.maxAttendees * 100))}%
-                                                            </span>
+                                                            <span className="text-sm text-gray-500">
+                                                                {eventRsvpRates[event._id]}
+                                                            </span> 
                                                         </>
                                                     ) : (
                                                         <span className="text-sm text-gray-500">N/A</span>
