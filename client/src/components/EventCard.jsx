@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EventCard = ({ title, image, startDate, startTime, endTime, location, summary, description, curAttendees, category, eventType, onClick, _id }) => {
+const EventCard = ({ title, image, startDate, startTime, endTime, location, summary, curAttendees, category, eventType, onClick, _id }) => {
   const displayCategory = category || eventType;
   
   // Handle request to join

@@ -257,7 +257,7 @@ const HomePage = () => {
       console.error("Invalid event ID:", eventId);
       return;
     }
-    navigate(`/event/${eventId}`);
+    navigate(`/event/${eventId}`, { state: { source: 'home' } });
   };
 
   return (

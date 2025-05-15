@@ -1,12 +1,12 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 
-import NavPane from './NavPane.jsx';
+import NavPane from '../../components/NavPane.jsx';
 import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
-import { AuthContext } from '../context/authContext.jsx';
-import { NotificationContext } from '../context/notificationContext.jsx';
+import { AuthContext } from '../../context/authContext.jsx';
+import { NotificationContext } from '../../context/notificationContext.jsx';
 
 
 const EventDetails = () => {
@@ -15,6 +15,7 @@ const EventDetails = () => {
   const eventData = useLoaderData(); // Get event data from loader
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +26,7 @@ const EventDetails = () => {
   const [requests, setRequests] = useState([]);
   const [error, setError] = useState(null);
   const [inviteUsername, setInviteUsername] = useState('');
+  const [isInviting, setIsInviting] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -192,15 +194,15 @@ const EventDetails = () => {
   };
 
   const sortRepliesByDate = (replies) => {
-  if (!replies || !Array.isArray(replies)) return [];
-  
-  // Create a copy of the array to avoid mutation issues
-  return [...replies].sort((a, b) => {
-    const dateA = new Date(a.createdAt || a.time || 0);
-    const dateB = new Date(b.createdAt || b.time || 0);
-    return dateB - dateA; // Sort by descending order (newest first)
-  });
-};
+    if (!replies || !Array.isArray(replies)) return [];
+
+    // Create a copy of the array to avoid mutation issues
+    return [...replies].sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.time || 0);
+      const dateB = new Date(b.createdAt || b.time || 0);
+      return dateB - dateA; // Sort by descending order (newest first)
+    });
+  };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -406,8 +408,13 @@ const EventDetails = () => {
   };
 
   const handleSendInvite = async (username) => {
-    if (!isOrganizer) return;
+    if (!isOrganizer || !username.trim() || isInviting) return;
 
+    if (!window.confirm(`Are you sure you want to invite "${username}" to this event?`)) {
+      return;
+    }
+
+    setIsInviting(true);
     try {
       const response = await fetch(`http://localhost:8800/api/events/${id}/invite`, {
         method: 'POST',
@@ -428,10 +435,14 @@ const EventDetails = () => {
       // Show notification or success message
       alert(data.message || 'Invitation sent successfully');
 
+      fetchInvitationsAndStats();
       setInviteUsername('');
     } catch (err) {
       console.error('Error sending invitation:', err);
       setError('Failed to send invitation. Please try again.');
+    } finally {
+      // Re-enable the button after processing completes
+      setIsInviting(false);
     }
   };
 
@@ -702,6 +713,7 @@ const EventDetails = () => {
           {/* Invite Form */}
           <form onSubmit={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             handleSendInvite(inviteUsername);
           }} className="space-y-4">
             <label className="block text-sm font-medium">Username</label>
@@ -728,7 +740,7 @@ const EventDetails = () => {
                   {searchResults.length > 0 ? (
                     searchResults.map(user => (
 
-                      <li 
+                      <li
 
                         key={user._id}
                         className="border-b border-gray-100 last:border-b-0"
@@ -759,9 +771,13 @@ const EventDetails = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 bg-white text-[#569DBA] rounded-lg hover:bg-opacity-90 transition-colors"
+              disabled={isInviting || !inviteUsername.trim()}
+              className={`w-full py-2 ${isInviting
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-[#569DBA] hover:bg-opacity-90"
+                } rounded-lg transition-colors`}
             >
-              Invite
+              {isInviting ? "Sending..." : "Invite"}
             </button>
           </form>
         </div>
@@ -774,10 +790,10 @@ const EventDetails = () => {
               <button
                 onClick={() => handleSendInviteeReminders()}
                 className={`ml-2 p-2 rounded-full transition-all duration-300 group ${(invitationStats.pending.length > 0 && eventData.status !== 'ended' && eventData.status !== 'ongoing' && eventData.status !== 'cancelled')
-                    ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                    : "text-gray-300 cursor-not-allowed"
+                  ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  : "text-gray-300 cursor-not-allowed"
                   }`}
-                disabled={invitationStats.pending.length === 0 || !isOrganizer || eventData.status === 'ended' || eventData.status === 'ongoing' || eventData.status === 'cancelled'} 
+                disabled={invitationStats.pending.length === 0 || !isOrganizer || eventData.status === 'ended' || eventData.status === 'ongoing' || eventData.status === 'cancelled'}
                 title={invitationStats.pending.length > 0 ? "Send reminder" : "No pending invitations"}
               >
                 <svg className={`w-5 h-5 ${invitationStats.pending.length > 0 ? "group-hover:animate-pulse" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -910,11 +926,11 @@ const EventDetails = () => {
             <button
               onClick={() => handleSendAttendeeReminders()}
               className={`ml-2 p-2 rounded-full transition-all duration-300 group ${(invitationStats.accepted.length > 0 && eventData.status !== 'ended' && eventData.status !== 'ongoing' && eventData.status !== 'cancelled')
-                    ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                    : "text-gray-300 cursor-not-allowed"
-                  }`}
+                ? "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                : "text-gray-300 cursor-not-allowed"
+                }`}
               title="Send reminder"
-              disabled={ !isOrganizer || eventData.status === 'ended' || eventData.status === 'ongoing' || eventData.status === 'cancelled'}
+              disabled={!isOrganizer || eventData.status === 'ended' || eventData.status === 'ongoing' || eventData.status === 'cancelled'}
 
             >
               <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1059,6 +1075,7 @@ const EventDetails = () => {
               {isOrganizer && (
                 <Link
                   to={`/event/${id}/edit`}
+                  state={location.state}
                   className='flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2 bg-[#569DBA] text-white rounded-lg hover:bg-opacity-90 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap'
                 >
                   Edit

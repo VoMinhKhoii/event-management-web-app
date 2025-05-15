@@ -112,7 +112,7 @@ const Calendar = () => {
   };
 
   const handleEventClick = (eventId) => {
-    navigate(`/event/${eventId}`);
+    navigate(`/event/${eventId}`, { state: { source: 'calendar' } });
   };
 
   // Generate list view of events for mobile
