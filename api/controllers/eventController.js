@@ -14,10 +14,14 @@ export const getAllEvent = async (req, res) => {
   try {
     const { public: isPublic, organizerId, participantId } = req.query;
 
-    const filter = {}; // Exclude ended events
+    const filter = {}; // Initialize filter object
+    
+    if (isPublic){
+      filter.publicity = true;
+      // Exclude multiple statuses: ended, cancelled, deleted
+      filter.status = { $nin: ['ended', 'cancelled', 'ongoing'] };
+    } 
 
-
-    if (isPublic) filter.publicity = true;
     if (organizerId) filter.organizer = organizerId;
     const events = await Event.find(filter).populate('organizer').sort({ createdAt: -1 });
 

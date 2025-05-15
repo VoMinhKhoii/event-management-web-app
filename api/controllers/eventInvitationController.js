@@ -29,9 +29,6 @@ export const getInvitations = async (req, res) => {
 };
 
 
-
-
-
 // POST /api/events/:eventId/invite
 export const inviteToEvent = async (req, res) => {
     // Start a session for the transaction
@@ -85,6 +82,12 @@ export const inviteToEvent = async (req, res) => {
             await session.abortTransaction();
             session.endSession();
             return res.status(400).json({ error: 'Cannot invite to an event that has ended' });
+        }
+
+        if (event.status === 'ongoing') {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ error: 'Cannot invite to an event that is ongoing' });
         }
 
         if (event.status === 'cancelled') {
@@ -263,6 +266,25 @@ export const handleInvitation = async (req, res) => {
                 await session.abortTransaction();
                 session.endSession();
                 return res.status(400).json({ error: 'Event at maximum capacity' });
+            }
+
+            //Check start time
+            const currentDate = new Date();
+            const eventStartDate = new Date(invitation.event.startDate);
+            const eventStartTime = new Date(`${invitation.event.startDate} ${invitation.event.startTime}`);
+            if (eventStartDate < currentDate || eventStartTime < currentDate) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({ error: 'Event has already started' });
+            }
+
+            //Check ended
+            const eventEndDate = new Date(invitation.event.endDate);
+            const eventEndTime = new Date(`${invitation.event.endDate} ${invitation.event.endTime}`);
+            if (eventEndDate < currentDate || eventEndTime < currentDate) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({ error: 'Event has already ended' });
             }
 
             // Get current event dates and times

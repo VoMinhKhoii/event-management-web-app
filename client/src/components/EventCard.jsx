@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EventCard = ({ title, image, startDate, startTime, endTime, location, description, curAttendees, category, eventType, onClick, _id }) => {
+const EventCard = ({ title, image, startDate, startTime, endTime, location, summary, description, curAttendees, category, eventType, onClick, _id }) => {
   const displayCategory = category || eventType;
   
   // Handle request to join
@@ -89,7 +89,7 @@ const EventCard = ({ title, image, startDate, startTime, endTime, location, desc
         {/* Description with fixed height and overflow handling */}
         <div className=" mt-4 h-[82px] overflow-hidden">
         <p className="text-[#4B5563] text-[18px] line-clamp-3">
-        {description}
+        {summary}
         </p>
         </div>
         

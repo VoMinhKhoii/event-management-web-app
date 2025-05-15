@@ -54,11 +54,5 @@ const updateEventStatuses = async () => {
     }
 };
 
-// Schedule to run every 5 minutes
-// Format: minute hour day month weekday
-const startScheduler = () => {
-    cron.schedule('*/5 * * * *', updateEventStatuses);
-    console.log('Event status updater scheduled to run every 5 minutes');
-};
 
-export default startScheduler;
+export default updateEventStatuses;
