@@ -33,6 +33,11 @@ export const sendPendingInvitationReminders = async (req, res) => {
             throw new Error('Event has already ended');
         }
 
+        // Event has started
+        if (event.status === 'ongoing') {
+            throw new Error('Event has already started');
+        }
+
         if (event.status === 'cancelled') {
             throw new Error('Event has already been cancelled');
         }
@@ -148,6 +153,20 @@ export const sendAttendeeReminders = async (req, res) => {
 
         if (event.organizer._id.toString() !== organizerId) {
             throw new Error('Only the event organizer can send reminders');
+        }
+
+        // Event has started
+        if (event.status === 'ongoing') {
+            throw new Error('Event has already started');
+        }
+
+        // Event has ended
+        if (event.status === 'ended') {
+            throw new Error('Event has already ended');
+        }
+
+        if (event.status === 'cancelled') {
+            throw new Error('Event has already been cancelled');
         }
 
         // Find all confirmed attendees

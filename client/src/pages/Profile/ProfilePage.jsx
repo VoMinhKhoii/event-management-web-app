@@ -26,7 +26,6 @@ const ProfilePage = () => {
   const [userEvents, setUserEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
 
   // Add state for profile image
   const [profileImage, setProfileImage] = useState(currentUser?.avatar || '');
@@ -226,7 +225,6 @@ const ProfilePage = () => {
 
       // Show success message
       alert("Profile updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Profile update error:', error);
       // Display clearer error message to the user
@@ -277,6 +275,7 @@ const ProfilePage = () => {
 
       setProfileImage(data.avatar);
       updateAvatar(data.avatar);
+      alert("Avatar updated successfully!");
     } catch (err) {
       console.error('Upload error', err);
       alert(err.message || 'Failed to upload avatar');

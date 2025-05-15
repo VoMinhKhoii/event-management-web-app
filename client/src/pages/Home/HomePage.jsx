@@ -19,81 +19,132 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-    // Fetch events with caching 
+  // Fetch events with caching 
   const fetchEvents = async (forceRefresh = false) => {
-    
-  
+    // Prevent duplicate fetches if already loading
+    if (loading) return;
+
     // Try to get cached data first
     const cachedData = localStorage.getItem('homePageEvents');
     const cacheTimestamp = localStorage.getItem('homePageEventsTimestamp');
     const THIRTY_MINUTES = 30 * 60 * 1000; // 30 minutes in milliseconds
-  
+
     // Use cached data if it exists, is not expired, and force refresh is not requested
     if (
-        cachedData &&
-        cacheTimestamp &&
-        Date.now() - parseInt(cacheTimestamp) < THIRTY_MINUTES &&
-        !forceRefresh
-      ) {
-        console.log("Using cached data");
+      cachedData &&
+      cacheTimestamp &&
+      Date.now() - parseInt(cacheTimestamp) < THIRTY_MINUTES &&
+      !forceRefresh
+    ) {
+      console.log("Using cached data");
+      const events = JSON.parse(cachedData);
+      setEvents(events);
+      setFilteredEvents(isFiltered ? applyAllFilters(events) : events);
+      setLastUpdated(new Date(parseInt(cacheTimestamp)));
+
+      // Also store in sessionStorage for quicker access within this session
+      sessionStorage.setItem('homePageEvents', cachedData);
+      sessionStorage.setItem('homePageEventsTimestamp', cacheTimestamp);
+
+      setLoading(false);
+      return; // Exit early - no need to fetch
+    }
+
+    setLoading(true);
+    try {
+      // Fetch fresh data
+      const response = await fetch('http://localhost:8800/api/events?public=true', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+
+      const eventData = await response.json();
+
+      // Update all events
+      setEvents(eventData);
+      // Apply any filters to the new data
+      setFilteredEvents(isFiltered ? applyAllFilters(eventData) : eventData);
+
+      // Cache the data in both localStorage and sessionStorage
+      const timestamp = Date.now().toString();
+      localStorage.setItem('homePageEvents', JSON.stringify(eventData));
+      localStorage.setItem('homePageEventsTimestamp', timestamp);
+      sessionStorage.setItem('homePageEvents', JSON.stringify(eventData));
+      sessionStorage.setItem('homePageEventsTimestamp', timestamp);
+
+      setLastUpdated(new Date());
+
+    } catch (error) {
+      console.error("Error fetching events:", error);
+
+      // Try session data first as fallback on error
+      const sessionData = sessionStorage.getItem('homePageEvents');
+      if (sessionData) {
+        const events = JSON.parse(sessionData);
+        setEvents(events);
+        setFilteredEvents(isFiltered ? applyAllFilters(events) : events);
+        setLastUpdated(new Date(parseInt(sessionStorage.getItem('homePageEventsTimestamp') || Date.now())));
+      }
+      // Then try localStorage if no session data
+      else if (cachedData) {
         const events = JSON.parse(cachedData);
         setEvents(events);
-        setFilteredEvents(isFiltered ? applyAllFilters(events) : events); // Apply any current filters
+        setFilteredEvents(isFiltered ? applyAllFilters(events) : events);
         setLastUpdated(new Date(parseInt(cacheTimestamp)));
-        setLoading(false);
-        return; // Exit early - no need to fetch
       }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      setLoading(true);
-      try {
-        // Fetch fresh data
-        const response = await fetch('http://localhost:8800/api/events?public=true', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-  
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-  
-        const eventData = await response.json();
-        
-        // Update all events
-        setEvents(eventData);
-        // Apply any filters to the new data
-        setFilteredEvents(isFiltered ? applyAllFilters(eventData) : eventData); // Apply filters to the new data
-        
-        // Cache the data
-        localStorage.setItem('homePageEvents', JSON.stringify(eventData));
-        localStorage.setItem('homePageEventsTimestamp', Date.now().toString());
-        setLastUpdated(new Date());
-  
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        
-        // If there's cached data, use it as fallback on error
+
+  // First, update your useEffect to be smarter about when to fetch
+  useEffect(() => {
+    const isReload = window.performance
+      .getEntriesByType('navigation')
+      .some((nav) => nav.type === 'reload');
+
+    // Check if we've already fetched data in this browser session
+    const hasFetchedInSession = sessionStorage.getItem('hasFetchedEvents') === 'true';
+
+    if (!hasFetchedInSession || isReload) {
+      // Only fetch if we haven't fetched yet in this session or if page was explicitly reloaded
+      fetchEvents(isReload);
+      sessionStorage.setItem('hasFetchedEvents', 'true');
+    } else {
+      // Use cached data without making API call
+      const sessionData = sessionStorage.getItem('homePageEvents');
+      if (sessionData) {
+        const parsedEvents = JSON.parse(sessionData);
+        setEvents(parsedEvents);
+        setFilteredEvents(isFiltered ? applyAllFilters(parsedEvents) : parsedEvents);
+        setLastUpdated(new Date(parseInt(sessionStorage.getItem('homePageEventsTimestamp') || Date.now())));
+      } else {
+        // Fallback to localStorage if session data is missing
+        const cachedData = localStorage.getItem('homePageEvents');
         if (cachedData) {
-          const events = JSON.parse(cachedData);
-          setEvents(events);
-          setFilteredEvents(applyAllFilters(events));
-          setLastUpdated(new Date(parseInt(cacheTimestamp)));
+          const parsedEvents = JSON.parse(cachedData);
+          setEvents(parsedEvents);
+          setFilteredEvents(isFiltered ? applyAllFilters(parsedEvents) : parsedEvents);
+          setLastUpdated(new Date(parseInt(localStorage.getItem('homePageEventsTimestamp') || Date.now())));
+
+          // Also store in sessionStorage for faster future access
+          sessionStorage.setItem('homePageEvents', cachedData);
+          sessionStorage.setItem('homePageEventsTimestamp', localStorage.getItem('homePageEventsTimestamp'));
+        } else {
+          // If no cached data available, fetch without forcing refresh
+          fetchEvents(false);
         }
-      } finally {
-        setLoading(false);
       }
-    };
+    }
+  }, []);
 
-  
-    useEffect(() => {
-      const isReload = window.performance
-        .getEntriesByType('navigation')
-        .some((nav) => nav.type === 'reload');
-    
-      fetchEvents(isReload); // Force refresh if the page was reloaded
-    }, []);
 
- 
   useEffect(() => {
     if (events.length > 0) {
       const filtered = applyAllFilters(events);
@@ -101,13 +152,13 @@ const HomePage = () => {
     }
   }, [events, filters, isFiltered]);
 
- 
+
   const applyAllFilters = (eventsToFilter = events) => {
     if (!isFiltered) return eventsToFilter;
 
     let result = [...eventsToFilter];
 
-   
+
     if (filters.searchTerm) {
       result = result.filter(event =>
         event.title.toLowerCase().includes(filters.searchTerm.toLowerCase())
@@ -163,17 +214,17 @@ const HomePage = () => {
     return result;
   };
 
-  
+
   const handleSearchAndFilter = (term, category, date) => {
     const newFilters = {
       searchTerm: term || '',
       category: category || '',
       date: date || ''
     };
-    
+
     setFilters(newFilters);
     setIsFiltered(true);
-    
+
     setFilteredEvents(applyAllFilters(events));
   };
 
@@ -206,7 +257,7 @@ const HomePage = () => {
       console.error("Invalid event ID:", eventId);
       return;
     }
-    navigate(`/event/${eventId}`);
+    navigate(`/event/${eventId}`, { state: { source: 'home' } });
   };
 
   return (

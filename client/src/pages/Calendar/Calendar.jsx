@@ -112,7 +112,7 @@ const Calendar = () => {
   };
 
   const handleEventClick = (eventId) => {
-    navigate(`/event/${eventId}`);
+    navigate(`/event/${eventId}`, { state: { source: 'calendar' } });
   };
 
   // Generate list view of events for mobile
@@ -158,12 +158,6 @@ const Calendar = () => {
       return (
         <div className="text-center py-8 text-gray-500">
           <p>No events found for this month</p>
-          <button
-            onClick={() => navigate('/create-event')}
-            className="mt-4 px-4 py-2 bg-[#569DBA] text-white rounded-full hover:bg-opacity-90"
-          >
-            Create an event
-          </button>
         </div>
       );
     }
@@ -225,9 +219,6 @@ const Calendar = () => {
                     </div>
                   )}
                 </div>
-              </div>
-              <div className="bg-[#BFDAE5] rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center text-xs font-medium text-gray-700">
-                {event.date.getDate()}
               </div>
             </div>
           </div>

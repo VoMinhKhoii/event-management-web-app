@@ -1,12 +1,14 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import NavPane from "../../components/NavPane.jsx";
-import { NotificationContext } from "../../context/notificationContext.jsx"; // adjust path if needed
+import { NotificationContext } from "../../context/notificationContext.jsx";
 import { AuthContext } from "../../context/authContext.jsx";
+
 const NotificationPage = () => {
     // Add current user context for avatar handling
     const { currentUser } = useContext(AuthContext);
+    const navigate = useNavigate();
+    const { notificationId } = useParams();
     // State to keep track of selected notification/event
     const { markAsRead, deleteNotification, markAllAsSeen } = useContext(NotificationContext);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -16,10 +18,54 @@ const NotificationPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
+    const [showNotificationList, setShowNotificationList] = useState(true);
+
+    // Check if mobile based on window width
+    useEffect(() => {
+        const checkIfMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+            if (window.innerWidth >= 768) {
+                setShowNotificationList(true);
+            }
+        };
+
+        checkIfMobile();
+        window.addEventListener('resize', checkIfMobile);
+
+        return () => window.removeEventListener('resize', checkIfMobile);
+    }, []);
+
+    // Toggle between notification list and details on mobile
+    const toggleMobileView = () => {
+        if (isMobile) {
+            setShowNotificationList(!showNotificationList);
+        }
+    };
+
+    useEffect(() => {
+        if (notificationId && notifications.length > 0) {
+            const notification = notifications.find(n => n._id === notificationId);
+            if (notification) {
+                handleNotificationClick(notification, false); // false means don't update URL (to avoid loops)
+            }
+        }
+    }, [notificationId, notifications]);
 
     // Fetch notifications with caching 
     const fetchNotifications = async (forceRefresh = false) => {
+        // Check if we've already fetched data in this browser session
+        const hasFetchedInSession = sessionStorage.getItem('hasFetchedNotifications') === 'true';
 
+        if (!forceRefresh && hasFetchedInSession) {
+            const sessionData = sessionStorage.getItem('userNotifications');
+            if (sessionData) {
+                const notificationData = JSON.parse(sessionData);
+                setNotifications(notificationData);
+                setLastUpdated(new Date(parseInt(sessionStorage.getItem('userNotificationsTimestamp') || Date.now())));
+                return;
+            }
+        }
 
         // Try to get cached data first
         const cachedData = localStorage.getItem('userNotifications');
@@ -36,6 +82,12 @@ const NotificationPage = () => {
             const notificationData = JSON.parse(cachedData);
             setNotifications(notificationData);
             setLastUpdated(new Date(parseInt(cacheTimestamp)));
+
+            // Store in sessionStorage for faster access
+            sessionStorage.setItem('userNotifications', JSON.stringify(notificationData));
+            sessionStorage.setItem('userNotificationsTimestamp', cacheTimestamp);
+            sessionStorage.setItem('hasFetchedNotifications', 'true');
+
             setIsLoading(false);
             return; // Exit early - no need to fetch
         }
@@ -64,6 +116,10 @@ const NotificationPage = () => {
             // Cache the data
             localStorage.setItem('userNotifications', JSON.stringify(notificationData));
             localStorage.setItem('userNotificationsTimestamp', Date.now().toString());
+            sessionStorage.setItem('userNotifications', JSON.stringify(notificationData));
+            sessionStorage.setItem('userNotificationsTimestamp', Date.now().toString());
+            sessionStorage.setItem('hasFetchedNotifications', 'true');
+
             setLastUpdated(new Date());
 
         } catch (error) {
@@ -102,6 +158,7 @@ const NotificationPage = () => {
                     : item
             );
             localStorage.setItem('userNotifications', JSON.stringify(updatedNotifications));
+            sessionStorage.setItem('userNotifications', JSON.stringify(updatedNotifications));
         }
     };
 
@@ -115,10 +172,14 @@ const NotificationPage = () => {
         markAllAsSeen();
     }, []);
 
-
     // Handle notification click
-    const handleNotificationClick = async (notification) => {
+    const handleNotificationClick = async (notification, updateUrl = true) => {
         setSelectedNotificationId(notification._id);
+
+        if (updateUrl) {
+            navigate(`/notifications/${notification._id}`);
+        }
+
         if (notification.isRead === false) {
             try {
                 await markAsRead(notification._id);
@@ -135,7 +196,13 @@ const NotificationPage = () => {
         } else {
             setSelectedEvent(null); // No associated event
         }
+
         setSelectedNotification(notification);
+
+        // On mobile, switch to details view
+        if (isMobile) {
+            setShowNotificationList(false);
+        }
     };
 
     // Handle accept invitation
@@ -175,6 +242,7 @@ const NotificationPage = () => {
                     alert(data.error || data.message);
                 } else {
                     setError(data.error || "Failed to accept invitation");
+                    alert(data.error || data.message);
                 }
                 return;
             }
@@ -187,7 +255,6 @@ const NotificationPage = () => {
             // Refresh notifications to get updated data
             await markAsRead(selectedNotification._id);
             updateNotificationCache(selectedNotification._id, { isRead: true });
-
 
             // Show success message
             alert("You have successfully accepted the invitation");
@@ -253,7 +320,7 @@ const NotificationPage = () => {
         }
     };
 
-    // Handle join request approval (for event organizers)
+    // Handle join request approval
     const handleApproveRequest = async (eventId, requestId) => {
         if (!selectedNotification || !selectedEvent) return;
 
@@ -311,7 +378,7 @@ const NotificationPage = () => {
         }
     };
 
-    // Handle join request decline (for event organizers)
+    // Handle join request decline
     const handleDeclineRequest = async (eventId, requestId) => {
         if (!selectedNotification || !selectedEvent) return;
 
@@ -385,270 +452,392 @@ const NotificationPage = () => {
                 {/* Navigation Header */}
                 <NavPane />
 
+                {/* Mobile Navigation Bar - Only show when a notification is selected on mobile */}
+                {isMobile && selectedNotification && !showNotificationList && (
+                    <div className="fixed top-16 z-10 w-full bg-white border-b border-gray-200 p-3 flex items-center">
+                        <button
+                            onClick={toggleMobileView}
+                            className="flex items-center text-blue-600"
+                        >
+                            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Back to notifications
+                        </button>
+                    </div>
+                )}
+
                 <div className="max-w-7xl mx-auto px-4 pt-20 pb-20">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Left Column - Fixed position */}
-                        <div className="md:col-span-1 min-w-[300px]">
-                            <div
-                                className="bg-gray-50 rounded-lg shadow fixed"
-                                style={{
-                                    width: "30%",
-                                    maxWidth: "380px",
-                                    top: "90px",
-                                    height: "calc(100vh - 120px)",
-                                }}
-                            >
-                                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-
-                                    <h2 className="text-2xl font-semibold">Primary</h2>
-                                </div>
+                        {/* Left Column - Fixed position for desktop, normal flow for mobile */}
+                        {(!isMobile || showNotificationList) && (
+                            <div className="md:col-span-1 min-w-0 md:min-w-[300px]">
                                 <div
-                                    className="divide-y divide-gray-200 overflow-y-auto"
-                                    style={{ height: "calc(100vh - 185px)" }}
+                                    className={`bg-gray-50 rounded-lg shadow ${!isMobile
+                                        ? "fixed"
+                                        : "relative"
+                                        }`}
+                                    style={!isMobile ? {
+                                        width: "30%",
+                                        maxWidth: "380px",
+                                        top: "90px",
+                                        height: "calc(100vh - 120px)",
+                                    } : {}}
                                 >
-                                    {isLoading ? (
-                                        <div className="p-8 text-center text-gray-500">
-                                            <p>Loading notifications...</p>
-                                        </div>
-                                    ) : notifications.length === 0 ? (
-                                        <div className="p-8 text-center text-gray-500">
-                                            <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                            </svg>
-                                            <p>No notifications</p>
-                                        </div>
-                                    ) : (
-                                        notifications.map((notification) => (
-                                            <div
-                                                key={notification._id}
-                                                className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedNotificationId === notification._id
-                                                    ? "bg-gray-100"
-                                                    : ""
-                                                    }`}
-                                                onClick={() => handleNotificationClick(notification)}
-                                            >
-                                                <div className="flex items-center">
+                                    <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                                        <h2 className="text-2xl font-semibold">Primary</h2>
+                                    </div>
+                                    <div
+                                        className="divide-y divide-gray-200 overflow-y-auto"
+                                        style={!isMobile ? { height: "calc(100vh - 185px)" } : { maxHeight: "calc(100vh - 185px)" }}
+                                    >
+                                        {isLoading ? (
+                                            <div className="p-8 text-center text-gray-500">
+                                                <p>Loading notifications...</p>
+                                            </div>
+                                        ) : notifications.length === 0 ? (
+                                            <div className="p-8 text-center text-gray-500">
+                                                <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                </svg>
+                                                <p>No notifications</p>
+                                            </div>
+                                        ) : (
+                                            notifications.map((notification) => (
+                                                <div
+                                                    key={notification._id}
+                                                    className={`p-4 hover:bg-gray-100 cursor-pointer transition-colors ${selectedNotificationId === notification._id
+                                                        ? "bg-gray-100"
+                                                        : ""
+                                                        }`}
+                                                    onClick={() => handleNotificationClick(notification)}
+                                                >
+                                                    <div className="flex items-center">
+                                                        <img
+                                                            src={
+                                                                // Direct sender reference
+                                                                (notification.notificationSender && notification.notificationSender.avatar) ||
+                                                                // Check embedded data sender
+                                                                (notification.data && notification.data.notificationSender && notification.data.notificationSender.avatar) ||
+                                                                // Check organizer in embedded data
+                                                                (notification.data && notification.data.organizer && notification.data.organizer.avatar) ||
+                                                                // Check participation-related user
+                                                                (notification.relatedId && notification.relatedId.user && notification.relatedId.user.avatar) ||
+                                                                // Check event organizer through participation
+                                                                (notification.relatedId && notification.relatedId.event &&
+                                                                    notification.relatedId.event.organizer && notification.relatedId.event.organizer.avatar) ||
+                                                                "/images/avatar.png"
+                                                            }
+                                                            alt="User avatar"
+                                                            className="w-10 h-10 rounded-full mr-3"
+                                                        />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center">
+                                                                <span className={`${!notification.isRead ? "font-medium" : "text-gray-800"} truncate`}>
+                                                                    {(notification.notificationSender && notification.notificationSender.username) ||
+                                                                        (notification.data && notification.data.notificationSender && notification.data.notificationSender.username) ||
+                                                                        (notification.data && notification.data.organizer && notification.data.organizer.username) ||
+                                                                        (notification.relatedId && notification.relatedId.user && notification.relatedId.user.username) ||
+                                                                        (notification.relatedId && notification.relatedId.event &&
+                                                                            notification.relatedId.event.organizer && notification.relatedId.event.organizer.username) ||
+                                                                        "User"}
+                                                                </span>
+                                                            </div>
+                                                            <p className={`${!notification.isRead ? "font-medium" : "text-gray-800"} truncate`}>
+                                                                {notification.message}
+                                                            </p>
+                                                        </div>
+                                                        {!notification.isRead && (
+                                                            <div className="w-2 h-2 bg-blue-600 rounded-full ml-2"></div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Right Column - Offset to account for fixed left column on desktop, full width on mobile */}
+                        {(!isMobile || !showNotificationList) && (
+                            <div className={`${!isMobile
+                                ? "md:col-span-3 md:ml-[calc(33.333%-20px)]"
+                                : "w-full"
+                                }`}>
+                                {selectedNotification === null ? (
+                                    // Default message when no notification is selected
+                                    <div className="flex flex-col items-center justify-center h-full min-h-[calc(100vh-160px)]">
+                                        {error ? (
+                                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                                <p>{error}</p>
+                                                <button
+                                                    className="underline text-sm mt-2"
+                                                    onClick={() => fetchNotifications(true)}
+                                                >
+                                                    Try again
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <svg
+                                                    className="w-16 h-16 text-gray-300 mb-4"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="1.5"
+                                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                                    />
+                                                </svg>
+                                                <h3 className="text-xl font-medium text-gray-700 mb-2">
+                                                    No notification selected
+                                                </h3>
+                                                <p className="text-gray-500">
+                                                    Select a notification from the list to view details
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                ) : selectedEvent === null ? (
+                                    // Show notification details if there is no associated event
+                                    <div className="p-6 whitespace-pre-line">
+                                        <h1 className="text-2xl font-bold mb-4">
+                                            Notification Details
+                                        </h1>
+                                        <p className="text-gray-600">{selectedNotification.data}</p>
+                                    </div>
+                                ) : (
+                                    // Show event details if the notification has an associated event
+                                    <div className={`max-h-[calc(100vh-160px)] ${isMobile ? "mt-6" : ""}`}>
+                                        {/* Consistent Email-like header for ALL notification types */}
+                                        <div className="bg-white pt-6 px-6 pb-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="flex items-center mb-3 sm:mb-0">
                                                     <img
                                                         src={
-                                                            // Direct sender reference
-                                                            (notification.notificationSender && notification.notificationSender.avatar) ||
-                                                            // Check embedded data sender
-                                                            (notification.data && notification.data.notificationSender && notification.data.notificationSender.avatar) ||
-                                                            // Check organizer in embedded data
-                                                            (notification.data && notification.data.organizer && notification.data.organizer.avatar) ||
-                                                            // Check participation-related user
-                                                            (notification.relatedId && notification.relatedId.user && notification.relatedId.user.avatar) ||
-                                                            // Check event organizer through participation
-                                                            (notification.relatedId && notification.relatedId.event &&
-                                                                notification.relatedId.event.organizer && notification.relatedId.event.organizer.avatar) ||
+                                                            (selectedNotification.notificationSender && selectedNotification.notificationSender.avatar) ||
+                                                            (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.avatar) ||
+                                                            (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.avatar) ||
+                                                            (selectedNotification.relatedId && selectedNotification.relatedId.user && selectedNotification.relatedId.user.avatar) ||
+                                                            (selectedNotification.relatedId && selectedNotification.relatedId.event &&
+                                                                selectedNotification.relatedId.event.organizer && selectedNotification.relatedId.event.organizer.avatar) ||
                                                             "/images/avatar.png"
                                                         }
-                                                        alt="User avatar"
-                                                        className="w-10 h-10 rounded-full mr-3"
+                                                        alt="Sender"
+                                                        className="w-12 h-12 rounded-full mr-4"
                                                     />
                                                     <div>
-                                                        <div className="flex items-center">
-                                                            <span className={`${!notification.isRead ? "font-medium" : "text-gray-800"}`}>
-                                                                {(notification.notificationSender && notification.notificationSender.username) ||
-                                                                    (notification.data && notification.data.notificationSender && notification.data.notificationSender.username) ||
-                                                                    (notification.data && notification.data.organizer && notification.data.organizer.username) ||
-                                                                    (notification.relatedId && notification.relatedId.user && notification.relatedId.user.username) ||
-                                                                    (notification.relatedId && notification.relatedId.event &&
-                                                                        notification.relatedId.event.organizer && notification.relatedId.event.organizer.username) ||
-                                                                    "User"}
-                                                            </span>
-                                                        </div>
-                                                        <p className={`${!notification.isRead ? "font-medium" : "text-gray-800"}`}>
-                                                            {notification.message}
+                                                        <h3 className="font-medium text-lg">
+                                                            {selectedNotification.notificationSender?.username ||
+                                                                selectedNotification.data?.notificationSender?.username ||
+                                                                selectedNotification.data?.organizer?.username ||
+                                                                selectedNotification.relatedId?.user?.username ||
+                                                                (selectedNotification.relatedId?.event?.organizer?.username) ||
+                                                                "User"}
+                                                        </h3>
+                                                        <p className="text-gray-500 text-sm">
+                                                            {(selectedNotification.notificationSender && selectedNotification.notificationSender.email) ||
+                                                                (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.email) ||
+                                                                (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.email) ||
+                                                                (selectedNotification.relatedId && selectedNotification.relatedId.user && selectedNotification.relatedId.user.email) ||
+                                                                (selectedNotification.relatedId && selectedNotification.relatedId.event &&
+                                                                    selectedNotification.relatedId.event.organizer && selectedNotification.relatedId.event.organizer.email) ||
+                                                                ""}
+
+                                                            {((selectedNotification.notificationSender && selectedNotification.notificationSender.firstName) ||
+                                                                (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.firstName) ||
+                                                                (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.firstName)) &&
+                                                                ` (${(selectedNotification.notificationSender && selectedNotification.notificationSender.firstName) ||
+                                                                (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.firstName) ||
+                                                                (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.firstName)} 
+                                                                    ${(selectedNotification.notificationSender && selectedNotification.notificationSender.lastName) ||
+                                                                (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.lastName) ||
+                                                                (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.lastName) ||
+                                                                ""})`}
                                                         </p>
                                                     </div>
                                                 </div>
+                                                <div className="text-gray-500 text-sm">
+                                                    {new Date(
+                                                        selectedNotification.createdAt
+                                                    ).toLocaleString("en-US", {
+                                                        weekday: "short",
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    })}
+                                                </div>
                                             </div>
-                                        )))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right Column - Offset to account for fixed left column */}
-                        {/* Tao thêm 1 cái giờ nó thu nhỏ bị ngu rồi, có j sửa lại mấy cái này giúp tao */}
-                        <div className="md:col-span-3 md:ml-[calc(33.333%-20px)]">
-                            {selectedNotification === null ? (
-                                // Default message when no notification is selected
-                                <div className="flex flex-col items-center justify-center h-full min-h-[calc(100vh-160px)]">
-                                    {error ? (
-                                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                                            <p>{error}</p>
-                                            <button
-                                                className="underline text-sm mt-2"
-                                                onClick={() => fetchNotifications(true)}
-                                            >
-                                                Try again
-                                            </button>
                                         </div>
-                                    ) : (
-                                        <>
-                                            <svg
-                                                className="w-16 h-16 text-gray-300 mb-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="1.5"
-                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                                                />
-                                            </svg>
-                                            <h3 className="text-xl font-medium text-gray-700 mb-2">
-                                                No notification selected
-                                            </h3>
-                                            <p className="text-gray-500">
-                                                Select a notification from the list to view details
-                                            </p>
-                                        </>
-                                    )}
-                                </div>
-                            ) : selectedEvent === null ? (
-                                // Show notification details if there is no associated event
-                                <div className="p-6 whitespace-pre-line">
-                                    <h1 className="text-2xl font-bold mb-4">
-                                        Notification Details
-                                    </h1>
-                                    <p className="text-gray-600">{selectedNotification.data}</p>
-                                </div>
-                            ) : (
-                                // Show event details if the notification has an associated event
-                                <div className="max-h-[calc(100vh-160px)]">
-                                    {/* Event Image */}
-                                    {(selectedNotification.type === "joinRequest" ||
-                                        selectedNotification.type === "invitation") && (
-                                            <div className="relative h-[400px]">
-                                                <img
-                                                    src={selectedEvent.image}
-                                                    alt={selectedEvent.title}
-                                                    className="w-full h-full object-cover rounded-t-lg"
-                                                />
 
-                                                {/* For invitation notifications */}
-                                                {selectedNotification.type === "invitation" &&
-                                                    selectedNotification.relatedId.status === "invited" && (
-                                                        <div className="absolute bottom-0 left-0 right-0 flex justify-between p-4">
-                                                            <button
-                                                                className="bg-white text-blue-500 font-medium py-2 px-6 rounded-full shadow hover:bg-blue-50 flex items-center"
-                                                                onClick={() =>
-                                                                    handleAcceptInvitation(
-                                                                        selectedEvent._id,
-                                                                        selectedNotification.relatedId._id
-                                                                    )
-                                                                }
-                                                                disabled={isLoading}
-                                                            >
-                                                                <svg
-                                                                    className="w-5 h-5 mr-2"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth="2"
-                                                                        d="M5 13l4 4L19 7"
-                                                                    />
-                                                                </svg>
-                                                                Accept
-                                                            </button>
-                                                            <button
-                                                                className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center"
-                                                                onClick={() =>
-                                                                    handleDeclineInvitation(
-                                                                        selectedEvent._id,
-                                                                        selectedNotification.relatedId._id
-                                                                    )
-                                                                }
-                                                                disabled={isLoading}
-                                                            >
-                                                                <svg
-                                                                    className="w-5 h-5 mr-2"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth="2"
-                                                                        d="M6 18L18 6M6 6l12 12"
-                                                                    />
-                                                                </svg>
-                                                                Decline
-                                                            </button>
-                                                        </div>
-                                                    )}
-
-                                                {/* For join request notifications */}
-                                                {selectedNotification.type === "joinRequest" &&
-                                                    selectedNotification.relatedId.status === "pending" && (
-                                                        <div className="absolute bottom-0 left-0 right-0 flex justify-between p-4">
-                                                            <button
-                                                                className="bg-white text-green-500 font-medium py-2 px-6 rounded-full shadow hover:bg-green-50 flex items-center"
-                                                                onClick={() =>
-                                                                    handleApproveRequest(
-                                                                        selectedEvent._id,
-                                                                        selectedNotification.relatedId._id
-                                                                    )
-                                                                }
-                                                                disabled={isLoading}
-                                                            >
-                                                                <svg
-                                                                    className="w-5 h-5 mr-2"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth="2"
-                                                                        d="M5 13l4 4L19 7"
-                                                                    />
-                                                                </svg>
-                                                                Approve
-                                                            </button>
-                                                            <button
-                                                                className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center"
-                                                                onClick={() =>
-                                                                    handleDeclineRequest(
-                                                                        selectedEvent._id,
-                                                                        selectedNotification.relatedId._id
-                                                                    )
-                                                                }
-                                                                disabled={isLoading}
-                                                            >
-                                                                <svg
-                                                                    className="w-5 h-5 mr-2"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth="2"
-                                                                        d="M6 18L18 6M6 6l12 12"
-                                                                    />
-                                                                </svg>
-                                                                Decline
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                        {/* Show event update message if it's an event update notification */}
+                                        {selectedNotification.type === "eventUpdate" && selectedNotification.data?.message && (
+                                            <div className="px-6 py-4 border-b border-blue-100">
+                                                <div className="text-gray-700 whitespace-pre-line">{selectedNotification.data.message}</div>
                                             </div>
                                         )}
 
-                                    {/* Event Details */}
-                                    {(selectedNotification.type === "invitation" ||
-                                        selectedNotification.type === "joinRequest") && (
+                                        {/* Event Image (for all event-related notification types) */}
+                                        {(selectedNotification.type === "joinRequest" ||
+                                            selectedNotification.type === "invitation" ||
+                                            selectedNotification.type === "eventUpdate") && (
+                                                <div className="relative">
+                                                    <img
+                                                        src={selectedEvent.image || "/images/tech.png"}
+                                                        alt={selectedEvent.title}
+                                                        className="w-full h-[400px] object-cover"
+                                                    />
+
+                                                    {/* Action buttons */}
+                                                    {selectedNotification.type === "invitation" &&
+                                                        selectedNotification.relatedId.status === "invited" && (
+                                                            <div className="absolute bottom-0 left-0 right-0 flex flex-col sm:flex-row justify-between p-4 bg-gradient-to-t from-black/50 to-transparent">
+                                                                <button
+                                                                    className="bg-white text-blue-500 font-medium py-2 px-6 rounded-full shadow hover:bg-blue-50 flex items-center justify-center mb-2 sm:mb-0"
+                                                                    onClick={() =>
+                                                                        handleAcceptInvitation(
+                                                                            selectedEvent._id,
+                                                                            selectedNotification.relatedId._id
+                                                                        )
+                                                                    }
+                                                                    disabled={isLoading}
+                                                                >
+                                                                    <svg
+                                                                        className="w-5 h-5 mr-2"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth="2"
+                                                                            d="M5 13l4 4L19 7"
+                                                                        />
+                                                                    </svg>
+                                                                    Accept
+                                                                </button>
+                                                                <button
+                                                                    className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center justify-center"
+                                                                    onClick={() =>
+                                                                        handleDeclineInvitation(
+                                                                            selectedEvent._id,
+                                                                            selectedNotification.relatedId._id
+                                                                        )
+                                                                    }
+                                                                    disabled={isLoading}
+                                                                >
+                                                                    <svg
+                                                                        className="w-5 h-5 mr-2"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth="2"
+                                                                            d="M6 18L18 6M6 6l12 12"
+                                                                        />
+                                                                    </svg>
+                                                                    Decline
+                                                                </button>
+                                                            </div>
+                                                        )}
+
+                                                    {/* Status indicators */}
+                                                    {selectedNotification.type === "invitation" &&
+                                                        (selectedNotification.relatedId.status === "approved" ||
+                                                            selectedNotification.relatedId.status === "rejected") && (
+                                                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+                                                                <div className="bg-white text-gray-800 font-medium py-2 px-6 rounded-full shadow text-center">
+                                                                    {selectedNotification.relatedId.status === "approved"
+                                                                        ? "✓ You have accepted this invitation"
+                                                                        : "✗ You have declined this invitation"}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                    {/* Join Request */}
+                                                    {selectedNotification.type === "joinRequest" &&
+                                                        selectedNotification.relatedId.status === "pending" && (
+                                                            <div className="absolute bottom-0 left-0 right-0 flex flex-col sm:flex-row justify-between p-4 bg-gradient-to-t from-black/50 to-transparent">
+                                                                <button
+                                                                    className="bg-white text-green-500 font-medium py-2 px-6 rounded-full shadow hover:bg-green-50 flex items-center justify-center mb-2 sm:mb-0"
+                                                                    onClick={() =>
+                                                                        handleApproveRequest(
+                                                                            selectedEvent._id,
+                                                                            selectedNotification.relatedId._id
+                                                                        )
+                                                                    }
+                                                                    disabled={isLoading}
+                                                                >
+                                                                    <svg
+                                                                        className="w-5 h-5 mr-2"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth="2"
+                                                                            d="M5 13l4 4L19 7"
+                                                                        />
+                                                                    </svg>
+                                                                    Approve
+                                                                </button>
+                                                                <button
+                                                                    className="bg-white text-red-500 font-medium py-2 px-6 rounded-full shadow hover:bg-red-50 flex items-center justify-center"
+                                                                    onClick={() =>
+                                                                        handleDeclineRequest(
+                                                                            selectedEvent._id,
+                                                                            selectedNotification.relatedId._id
+                                                                        )
+                                                                    }
+                                                                    disabled={isLoading}
+                                                                >
+                                                                    <svg
+                                                                        className="w-5 h-5 mr-2"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth="2"
+                                                                            d="M6 18L18 6M6 6l12 12"
+                                                                        />
+                                                                    </svg>
+                                                                    Decline
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    {selectedNotification.type === "joinRequest" &&
+                                                        (selectedNotification.relatedId.status === "approved" ||
+                                                            selectedNotification.relatedId.status === "rejected") && (
+                                                            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
+                                                                <div className="bg-white text-gray-800 font-medium py-2 px-6 rounded-full shadow text-center">
+                                                                    {selectedNotification.relatedId.status === "approved"
+                                                                        ? "✓ You have approved this request"
+                                                                        : "✗ You have declined this request"}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                </div>
+                                            )}
+
+                                        {/* Content area - adapt based on notification type */}
+                                        {(selectedNotification.type === "invitation" ||
+                                            selectedNotification.type === "joinRequest" ||
+                                            selectedNotification.type === "eventUpdate") ? (
                                             <div className="p-6">
                                                 <h1 className="text-4xl font-bold mb-4">
                                                     {selectedEvent.title}
@@ -712,6 +901,7 @@ const NotificationPage = () => {
                                                         <span>{selectedEvent.location}</span>
                                                     </div>
                                                 </div>
+
                                                 <section className="mb-8">
                                                     <h2 className="text-2xl font-semibold mb-4">
                                                         About this event
@@ -745,95 +935,19 @@ const NotificationPage = () => {
                                                     </div>
                                                 </section>
                                             </div>
-                                        )}
-
-                                    {(selectedNotification.type === "eventReminder" ||
-                                        selectedNotification.type === "invitationReminder" ||
-                                        selectedNotification.type === "invitationAccepted" ||
-                                        selectedNotification.type === "invitationDeclined" ||
-                                        selectedNotification.type === "requestApproved" ||
-                                        selectedNotification.type === "requestDeclined") && (
-                                            <div className="p-6">
-                                                {/* Email-like header */}
-                                                <div className="bg-white pt-6 px-6">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center">
-                                                            <img
-                                                                src={
-                                                                    (selectedNotification.notificationSender && selectedNotification.notificationSender.avatar) ||
-                                                                    // Check embedded data sender
-                                                                    (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.avatar) ||
-                                                                    // Check organizer in embedded data
-                                                                    (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.avatar) ||
-                                                                    // Check participation-related user
-                                                                    (selectedNotification.relatedId && selectedNotification.relatedId.user && selectedNotification.relatedId.user.avatar) ||
-                                                                    // Check event organizer through participation
-                                                                    (selectedNotification.relatedId && selectedNotification.relatedId.event &&
-                                                                        selectedNotification.relatedId.event.organizer && selectedNotification.relatedId.event.organizer.avatar) ||
-                                                                    "/images/avatar.png"
-                                                                }
-                                                                alt="Sender"
-                                                                className="w-12 h-12 rounded-full mr-4"
-                                                            />
-                                                            <div>
-                                                                <h3 className="font-medium text-lg">
-                                                                    {selectedNotification.notificationSender?.username ||
-                                                                        selectedNotification.data?.notificationSender?.username ||
-                                                                        selectedNotification.data?.organizer?.username ||
-                                                                        selectedNotification.relatedId?.user?.username ||
-                                                                        "User"}
-                                                                </h3>
-                                                                <p className="text-gray-500 text-sm">
-                                                                    {/* Apply same robust pattern for email */}
-                                                                    {(selectedNotification.notificationSender && selectedNotification.notificationSender.email) ||
-                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.email) ||
-                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.email) ||
-                                                                        (selectedNotification.relatedId && selectedNotification.relatedId.user && selectedNotification.relatedId.user.email) ||
-                                                                        (selectedNotification.relatedId && selectedNotification.relatedId.event &&
-                                                                            selectedNotification.relatedId.event.organizer && selectedNotification.relatedId.event.organizer.email) ||
-                                                                        ""}
-
-                                                                    {/* Full name display with robust checks */}
-                                                                    {((selectedNotification.notificationSender && selectedNotification.notificationSender.firstName) ||
-                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.firstName) ||
-                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.firstName)) &&
-                                                                        ` (${(selectedNotification.notificationSender && selectedNotification.notificationSender.firstName) ||
-                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.firstName) ||
-                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.firstName)} 
-                                                                            ${(selectedNotification.notificationSender && selectedNotification.notificationSender.lastName) ||
-                                                                        (selectedNotification.data && selectedNotification.data.notificationSender && selectedNotification.data.notificationSender.lastName) ||
-                                                                        (selectedNotification.data && selectedNotification.data.organizer && selectedNotification.data.organizer.lastName) ||
-                                                                        ""})`}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-gray-500 text-sm">
-                                                            {new Date(
-                                                                selectedNotification.createdAt
-                                                            ).toLocaleString("en-US", {
-                                                                weekday: "short",
-                                                                month: "short",
-                                                                day: "numeric",
-                                                                year: "numeric",
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Email body with structured content */}
-                                                <div className="bg-white p-6">
-                                                    {/* Message content */}
-                                                    <div className="text-gray-700 whitespace-pre-line mb-6">
-                                                        {selectedNotification.data?.message}
-                                                    </div>
+                                        ) : (
+                                            /* For other notification types */
+                                            <div className="bg-white p-6">
+                                                {/* Message content */}
+                                                <div className="text-gray-700 whitespace-pre-line">
+                                                    <p className="mb-6">{selectedNotification.data?.message}</p>
                                                 </div>
                                             </div>
                                         )}
-                                </div>
-                            )}
-                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

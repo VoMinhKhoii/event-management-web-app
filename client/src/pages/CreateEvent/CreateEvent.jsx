@@ -44,10 +44,10 @@ const CreateEvent = () => {
       const endDateTime = new Date(`${endDate}T${endTime}`);
 
       // 1. Start date can't be today
-      if (new Date(startDate).toDateString() === today.toDateString()) {
-        alert("The start date cannot be today.");
-        return false;
-      }
+      // if (new Date(startDate).toDateString() === today.toDateString()) {
+      //   alert("The start date cannot be today.");
+      //   return false;
+      // }
 
       // 2. Start date can't be in the past
       if (new Date(startDate) < today) {
@@ -83,48 +83,48 @@ const CreateEvent = () => {
     if (!validateForm() || isSubmitting) return;
 
 
-      try {
-        setIsSubmitting(true); // disable button
-        const fd = new FormData();
+    try {
+      setIsSubmitting(true); // disable button
+      const fd = new FormData();
 
-        // append all non-file fields
-        Object.entries(formData).forEach(([key, value]) => {
-          if (key !== 'image') {
-            fd.append(key, value);
-          }
-        });
-
-        // append file separately if exists
-        if (formData.image && formData.image instanceof File) {
-          fd.append('image', formData.image);
+      // append all non-file fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== 'image') {
+          fd.append(key, value);
         }
-        fd.append('organizer', currentUser._id);
+      });
 
-        const response = await fetch('http://localhost:8800/api/events', {
-          method: 'POST',
-          credentials: 'include',
-          body: fd,
-        });
-
-        console.log(formData);
-
-        if (!response.ok) {
-          // If response is not in the 200-299 range
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to create event');
-        }
-
-        const data = await response.json();
-        console.log('Event created:', data);
-        alert('Event created successfully!');
-        navigate(`/event/${data._id}`); // Redirect to the event page
-      } catch (error) {
-        console.error('Error creating event:', error.message);
-        alert(error.message || 'Failed to create event');
-      } finally {
-        setIsSubmitting(false); // 🔓 enable button
+      // append file separately if exists
+      if (formData.image && formData.image instanceof File) {
+        fd.append('image', formData.image);
       }
-    
+      fd.append('organizer', currentUser._id);
+
+      const response = await fetch('http://localhost:8800/api/events', {
+        method: 'POST',
+        credentials: 'include',
+        body: fd,
+      });
+
+      console.log(formData);
+
+      if (!response.ok) {
+        // If response is not in the 200-299 range
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create event');
+      }
+
+      const data = await response.json();
+      console.log('Event created:', data);
+      alert('Event created successfully!');
+      navigate(`/event/${data._id}`); // Redirect to the event page
+    } catch (error) {
+      console.error('Error creating event:', error.message);
+      alert(error.message || 'Failed to create event');
+    } finally {
+      setIsSubmitting(false); // 🔓 enable button
+    }
+
   };
 
   const handleChange = (e) => {
@@ -229,7 +229,7 @@ const CreateEvent = () => {
       <NavPane />
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-[80px] pb-1">
         {/* Header with responsive layout */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-[24px] sm:text-[28px] font-semibold">New Event</h1>
@@ -253,7 +253,7 @@ const CreateEvent = () => {
         {/* Responsive grid layout that adapts to screen size */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
           {/* Left Column: Event Form - Full width on mobile, appropriate size on larger screens */}
-          <form className="md:col-span-1 lg:col-span-5 space-y-4">
+          <form className="md:col-span-1 lg:col-span-6 space-y-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title
@@ -400,19 +400,20 @@ const CreateEvent = () => {
           </form>
 
           {/* Middle Column: Description and Image Upload */}
-          <div className="md:col-span-1 lg:col-span-4 space-y-6">
+          <div className="md:col-span-1 lg:col-span-6 space-y-2">
             {/* Description Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                placeholder="Enter event description"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                rows="10"
-              ></textarea>
+              <div className="h-[250px] lg:h-[220px]"> {/* Adjust these values as needed */}
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => handleDescriptionChange(e.target.value)}
+                  placeholder="Enter event description"
+                  className="w-full h-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                ></textarea>
+              </div>
             </div>
 
             {/* Upload Image Section */}
@@ -484,61 +485,10 @@ const CreateEvent = () => {
               </div>
             </div>
           </div>
-
-          {/* Right Column: Invite Participants */}
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Invite Participants
-            </label>
-
-            {privacy ? (
-              // Public event - Show invitation form
-              <div className="bg-[#569DBA] text-white p-4 md:p-6 rounded-lg">
-                {/* Invite Form */}
-                <form onSubmit={(e) => e.preventDefault()} className="mb-6">
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <input
-                    type="email"
-                    placeholder="Enter email"
-                    className="w-full px-3 py-2 mb-4 border border-gray-300 rounded-lg focus:outline-none text-black"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full bg-white text-[#569DBA] py-2 rounded-lg hover:bg-opacity-90 transition-colors"
-                  >
-                    Send Invite
-                  </button>
-                </form>
-              </div>
-            ) : (
-              // Private event - Show message
-              <div className="bg-gray-100 text-gray-700 p-4 md:p-6 rounded-lg h-full min-h-[200px] flex items-center">
-                <div className="flex flex-col items-center justify-center w-full">
-                  <svg
-                    className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.5"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  <p className="text-center font-medium mb-2">Public Event</p>
-                  <p className="text-center text-sm text-gray-500">
-                    Invitations are disabled for Public events. Switch to private mode to enable invitations.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="flex justify-center mt-4 sm:mt-8 pb-8 px-4">
+      <div className="flex justify-center mt-2 sm:mt-8 pb-8 px-4">
         <button
           type="submit"
           className="w-full max-w-[350px] h-[46px] bg-[#569DBA] text-white rounded-full hover:bg-opacity-90 transition-colors text-lg font-regular"
