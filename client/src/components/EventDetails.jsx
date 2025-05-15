@@ -454,7 +454,7 @@ const EventDetails = () => {
           alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
         } else {
 
-          alert(data.message || 'Failed to send join request');
+          alert(data.error || 'Failed to send join request');
         }
         return;
       }
@@ -893,8 +893,9 @@ const EventDetails = () => {
         </div>
 
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-lg mb-3">Attendees</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-lg mb-3">Attendees</h3>
+          {(invitationStats.accepted.length > 0) && (
             <button
               onClick={() => handleSendAttendeeReminders()}
               className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300 group"
@@ -904,7 +905,8 @@ const EventDetails = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </button>
-          </div>
+          )}
+        </div>
 
           {/* Show attendees - both from accepted invitations and approved requests */}
           {(invitationStats.accepted.length > 0 || requests.filter(req => req.status === 'approved').length > 0) ? (
@@ -944,7 +946,6 @@ const EventDetails = () => {
             <p className="text-gray-500 text-sm">No attendees yet</p>
           )}
         </div>
-
       </div>
     );
   };
