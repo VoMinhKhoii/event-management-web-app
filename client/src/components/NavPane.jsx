@@ -18,23 +18,53 @@ const NavPane = () => {
     const navigate = useNavigate();
     const { currentUser, updateUser, updateAvatar } = useContext(AuthContext);
     const { newCount } = useContext(NotificationContext);
-    const [activeMenu, setActiveMenu] = useState('');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Default avatar to use if user has no avatar
     const defaultAvatar = "https://img.freepik.com/premium-vector/cute-boy-smiling-cartoon-kawaii-boy-illustration-boy-avatar-happy-kid_1001605-3447.jpg";
 
-    // Update active menu based on current route
-    useEffect(() => {
+    // Determine active menu directly without using state - eliminates flicker
+    const getActiveMenu = () => {
         const path = location.pathname;
-        if (path.includes('/home')) {
-            setActiveMenu('home');
-        } else if (path.includes('/calendar')) {
-            setActiveMenu('calendar');
-        } else if (path.includes('/notifications')) {
-            setActiveMenu('notifications');
+        
+        // Check if we're viewing an event detail or editing an event
+        if (path.match(/^\/event\/[^/]+$/) || path.match(/^\/event\/[^/]+\/edit$/)) {
+            // Check navigation state
+            if (location.state?.source === 'home') {
+                return 'home';
+            } else if (location.state?.source === 'calendar') {
+                return 'calendar';
+            }
+            
+            // No source state, check if we can infer from sessionStorage
+            const lastActiveMenu = sessionStorage.getItem('lastActiveMenu');
+            if (lastActiveMenu) {
+                return lastActiveMenu;
+            }
         }
-    }, [location]);
+        
+        // Normal path handling
+        if (path.includes('/home')) {
+            return 'home';
+        } else if (path.includes('/calendar')) {
+            return 'calendar';
+        } else if (path.includes('/notifications')) {
+            return 'notifications';
+        }
+        
+        // Default to empty if none match
+        return '';
+    };
+    
+    // Current active menu - computed directly in render
+    const activeMenu = getActiveMenu();
+    
+    // Store the current active menu in sessionStorage for persistence
+    useEffect(() => {
+        if (activeMenu) {
+            sessionStorage.setItem('lastActiveMenu', activeMenu);
+        }
+    }, [activeMenu]);
 
     const toggleMobileMenu = () => {
         setMobileMenuOpen(!mobileMenuOpen);

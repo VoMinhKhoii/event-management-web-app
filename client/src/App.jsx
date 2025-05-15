@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HomePage from './pages/Home/HomePage.jsx';
 import Calendar from './pages/Calendar/Calendar.jsx';
-import EventDetails from './components/EventDetails.jsx';
+import EventDetails from './pages/EventDetails/EventDetails.jsx';
 import Profile from './pages/Profile/ProfilePage.jsx';
 import CreateEvent from './pages/CreateEvent/CreateEvent.jsx';
 import LandingPage from './pages/Landing/LandingPage.jsx';
@@ -13,8 +13,9 @@ import AdminUserPage from './pages/Admin/AdminUserPage.jsx';
 import AdminEventsPage from './pages/Admin/AdminEventsPage.jsx';
 import AdminSettingPage from './pages/Admin/AdminSettingPage.jsx';
 import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
+import ErrorPage from './pages/Error/ErrorPage.jsx';
+import AdminErrorPage from './pages/Error/AdminErrorPage.jsx';
 import { singleEventLoader } from "./lib/loaders";
-import { eventCommentsLoader } from "./lib/loaders";
 import EditEvent from './pages/EditEvent/EditEvent.jsx';
 import ProtectedRoute from './routes/ProtectedRoute.jsx';
 import AdminRoute from './routes/AdminRoute.jsx';
@@ -36,100 +37,141 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <LandingPage />
+      element: <LandingPage />,
+      errorElement: <ErrorPage />
     },
     {
       path: "/login",
-      element: <LoginPage />
+      element: <LoginPage />,
+      errorElement: <ErrorPage />
     },
     {
       path: "/admin/dashboard",
-      element: 
-      <AdminRoute>
-        <AdminDashboard />
-      </AdminRoute>
+      element:
+        <AdminRoute>
+          <AdminDashboard />
+        </AdminRoute>,
+      errorElement: <AdminErrorPage />
     },
     {
       path: "admin/userpage",
-      element: 
+      element:
         <AdminRoute>
           <AdminUserPage />
-        </AdminRoute>
+        </AdminRoute>,
+      errorElement: <AdminErrorPage />
     },
     {
       path: "/admin/events",
-      element: 
-      <AdminRoute>
-        <AdminEventsPage />
-      </AdminRoute>
+      element:
+        <AdminRoute>
+          <AdminEventsPage />
+        </AdminRoute>,
+      errorElement: <AdminErrorPage />,
     },
     {
       path: "/admin/setting",
-      element: 
-      <AdminRoute>
-        <AdminSettingPage />
-      </AdminRoute>
+      element:
+        <AdminRoute>
+          <AdminSettingPage />
+        </AdminRoute>,
+      errorElement: <AdminErrorPage />,
     },
     {
       path: "/signup",
-      element: <SignUpPage />
+      element: <SignUpPage />,
+      errorElement: <ErrorPage />,
     },
     {
       path: "/home",
-      element: 
-      <ProtectedRoute>
-        <HomePage />
-      </ProtectedRoute>
+      element:
+        <ProtectedRoute>
+          <HomePage />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
+      children: [
+        {
+          path: "event/:id",
+          element: <EventDetails />,
+          errorElement: <ErrorPage />,
+          loader: singleEventLoader
+        }
+      ]
     },
     {
       path: "/calendar",
-      element: 
-      <ProtectedRoute>
-        <Calendar />
-      </ProtectedRoute>
+      element:
+        <ProtectedRoute>
+          <Calendar />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
+      children: [
+        {
+          path: "event/:id",
+          element: <EventDetails />,
+          errorElement: <ErrorPage />,
+          loader: singleEventLoader
+        }
+      ]
     },
     {
       path: "/event/:id",
-      element: 
-      <ProtectedRoute>
-        <EventDetails />
-      </ProtectedRoute>,
+      element:
+        <ProtectedRoute>
+          <EventDetails />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
       loader: singleEventLoader
     },
     {
       path: "/event/:id/edit",
-      element: 
-      <ProtectedRoute>
-        <EditEvent />
-      </ProtectedRoute>,
+      element:
+        <ProtectedRoute>
+          <EditEvent />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
       loader: singleEventLoader
     },
-    // {
-    //   path: "/event/:id/edit",
-    //   element: <EditEvent />,
-    //   loader: singleEventLoader
-    // },
     {
       path: "/profile",
-      element: 
-      <ProtectedRoute>
-        <Profile />
-      </ProtectedRoute>
+      element:
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
+      children: [
+        {
+          path: "event/:id",
+          element: <EventDetails />,
+          errorElement: <ErrorPage />,
+          loader: singleEventLoader
+        }
+      ]
     },
     {
       path: "/create-event",
-      element: 
-      <ProtectedRoute>
-        <CreateEvent />
-      </ProtectedRoute>
+      element:
+        <ProtectedRoute>
+          <CreateEvent />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
     },
     {
       path: "/notifications",
-      element: 
-      <ProtectedRoute> 
-        <NotificationPage />
-      </ProtectedRoute>
-    }
+      element:
+        <ProtectedRoute>
+          <NotificationPage />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
+    },
+    {
+      path: "/notifications/:notificationId",
+      element:
+        <ProtectedRoute>
+          <NotificationPage />
+        </ProtectedRoute>,
+      errorElement: <ErrorPage />,
+    },
   ]);
   return <RouterProvider router={router} />;
 }

@@ -242,11 +242,13 @@ export const updateEvent = async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
 
-    const existingEvent = await Event.findById(req.params.eventId).session(session);
+    const existingEvent = await Event.findById(req.params.eventId).session(session).populate('organizer');
     if (!existingEvent) {
       await session.abortTransaction();
       return res.status(404).json({ error: 'Event not found' });
     }
+
+    const organizerId = existingEvent.organizer._id;
 
     const updateData = {
       ...req.body,
@@ -276,7 +278,7 @@ export const updateEvent = async (req, res) => {
       new: true,
       runValidators: true,
       session,
-    });
+    }).populate('organizer');
 
     await logActivity(
       req.userId,
@@ -299,24 +301,22 @@ export const updateEvent = async (req, res) => {
             userId: participation.user,
             type: 'eventUpdate',
             message: `Event "${updatedEvent.title}" has been updated`,
-            relatedId: {
-              _id: updatedEvent._id,
-              event: {
-                _id: updatedEvent._id,
-                title: updatedEvent.title,
-                startDate: updatedEvent.startDate,
-                startTime: updatedEvent.startTime,
-                endTime: updatedEvent.endTime,
-                location: updatedEvent.location,
-                image: updatedEvent.image
-              }
-            },
-            data: `Event "${updatedEvent.title}" has been updated`,
-            isRead: false
+            relatedId: participation._id,
+            notificationSender: organizerId,
+            data: {
+              message: `The event "${updatedEvent.title}" has been updated. Please kindly check the new details.
+              We look forward to your participation.
+                
+              Regards,
+                
+              ${updatedEvent.organizer.firstName} ${updatedEvent.organizer.lastName},
+              ${updatedEvent.organizer.email}`
+              },
+            isRead: false,
           };
         });
 
-        await Notification.create(notifications, { session });
+        await Notification.create(notifications, { session, ordered: true });
       }
     }
 
