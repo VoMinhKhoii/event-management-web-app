@@ -10,17 +10,20 @@ import User from '../models/User.js';
 // GET /api/events/:eventId/invitations/:userId
 export const getInvitations = async (req, res) => {
     try {
-        const { eventId } = req.params;
-        const invitations = await Participation.find({
-            event: eventId,
-            kind: 'Invitation',
-        }).populate({
+        const { eventId } = req.query;
+        const filter = {kind: 'Invitation', status : {$ne: "deleted"}}; // Initialize filter object
+        if (eventId) {
+            filter.event = eventId; // Add eventId to filter if provided
+        }
+
+
+        const invitations = await Participation.find(filter).populate({
             path: 'user',
             select: 'username avatar email'
         });
         if (!invitations) {
             return res.status(404).json({ error: 'No invitations found' });
-        }
+        }   
         res.status(200).json({ invitations });
     } catch (err) {
         console.error('Error fetching invitations:', err);

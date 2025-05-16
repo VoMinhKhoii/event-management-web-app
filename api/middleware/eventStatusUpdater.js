@@ -1,4 +1,3 @@
-import cron from 'node-cron';
 import Event from '../models/Event.js';
 
 // Function to update event statuses

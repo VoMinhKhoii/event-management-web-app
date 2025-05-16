@@ -26,7 +26,7 @@ export const singleEventLoader = async ({ params }) => {
         if (eventData && !eventData.publicity) {
             try {
                 const [invitationsRes, requestsRes] = await Promise.all([
-                    fetch(`http://localhost:8800/api/events/${eventId}/invitations-get`, { credentials: 'include' }),
+                    fetch(`http://localhost:8800/api/events/invitations-get?eventId=${eventId}`, { credentials: 'include' }),
                     fetch(`http://localhost:8800/api/events/${eventId}/requests-get`, { credentials: 'include' })
                 ]);
 
