@@ -11,7 +11,7 @@ import User from '../models/User.js';
 export const getInvitations = async (req, res) => {
     try {
         const { eventId } = req.query;
-        const filter = {kind: 'Invitation'}; // Initialize filter object
+        const filter = {kind: 'Invitation', status : {$ne: "deleted"}}; // Initialize filter object
         if (eventId) {
             filter.event = eventId; // Add eventId to filter if provided
         }
@@ -23,7 +23,7 @@ export const getInvitations = async (req, res) => {
         });
         if (!invitations) {
             return res.status(404).json({ error: 'No invitations found' });
-        }
+        }   
         res.status(200).json({ invitations });
     } catch (err) {
         console.error('Error fetching invitations:', err);

@@ -14,7 +14,7 @@ export const getAllEvent = async (req, res) => {
   try {
     const { public: isPublic, organizerId, participantId } = req.query;
 
-    const filter = {}; // Initialize filter object
+    const filter = { status: { $ne: 'deleted' }}; // Initialize filter object
     
     if (isPublic){
       filter.publicity = true;
@@ -347,12 +347,24 @@ export const updateEvent = async (req, res) => {
 // DELETE /api/events/:eventId
 export const deleteEvent = async (req, res) => {
   try {
-    const deletedEvent = await Event.findByIdAndDelete(req.params.eventId);
+    // Soft delete the event
+    const deletedEvent = await Event.findByIdAndUpdate(
+      req.params.eventId,
+      { status: 'deleted' },
+      { new: true }  // return updated document
+    );
 
     if (!deletedEvent) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Soft delete all participations linked to this event
+    await Participation.updateMany(
+      { event: deletedEvent._id },  // filter participations referencing this event
+      { status: 'deleted' }         // set their status to 'deleted'
+    );
+
+    // Log the activity
     await logActivity(
       req.userId,
       'deleted',
@@ -361,8 +373,7 @@ export const deleteEvent = async (req, res) => {
       { eventTitle: deletedEvent.title }
     );
 
-
-    res.status(200).json({ message: 'Event deleted successfully' });
+    res.status(200).json({ message: 'Event and related participations soft deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete event', message: err.message });
   }
