@@ -118,7 +118,7 @@ const EventDetails = () => {
 
   const fetchInvitationsAndStats = async () => {
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${id}/invitations-get`);
+      const response = await fetch(`http://localhost:8800/api/events/invitations-get?eventId=${id}`);
 
       const data = await response.json();
       if (!response.ok) {

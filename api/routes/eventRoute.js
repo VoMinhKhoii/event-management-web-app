@@ -8,6 +8,8 @@ import { sendPendingInvitationReminders, sendAttendeeReminders } from '../contro
 
 const router = express.Router();
 
+router.get('/invitations-get', getInvitations);
+
 router.get('/', verifyToken, getAllEvent);
 router.get('/:eventId', verifyToken, getEvent);
 router.post('/', verifyToken, upload.single('image'), createEvent);
@@ -15,9 +17,7 @@ router.put('/:eventId', verifyToken, upload.single('image'), updateEvent);
 router.delete('/:eventId', verifyToken, deleteEvent);
 
 
-// TODO: Ability to cancel request/invitation, GET all requests/invitation associated with a user
-// router.get('/:userId/requests-get', );
-router.get('/:eventId/invitations-get', getInvitations);
+
 router.get('/:eventId/requests-get', getRequests);
 
 
@@ -26,6 +26,6 @@ router.put('/:eventId/requests/:requestId', verifyToken, handleJoinRequest);    
 router.post('/:eventId/invite', verifyToken, inviteToEvent);                         // Invite to join event
 router.put('/:eventId/invitations/:invitationId', verifyToken, handleInvitation);    // Receiver accept/reject invitation
 router.post('/:eventId/reminders/pending-invites', verifyToken, sendPendingInvitationReminders);
-router.post('/:eventId/reminders/attendees', verifyToken, sendAttendeeReminders);
+router.post('/:eventId/reminders/attendees', verifyToken, sendAttendeeReminders); 
 
 export default router;

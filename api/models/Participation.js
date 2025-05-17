@@ -13,7 +13,7 @@ const participationSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'invited'],
+        enum: ['pending', 'approved', 'rejected', 'invited', 'deleted'],
         default: 'pending'
     },
     respondedAt: Date

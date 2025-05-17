@@ -8,9 +8,11 @@
     import settingActive from '../assets/setting-active.png';
     import settingInactive from '../assets/setting-inactive.png';
     import { useNavigate } from 'react-router-dom';
+    import { AdminAuthContext } from '../context/adminAuthContext';
 
     const AdminNavPane = ({ activeMenu, setActiveMenu }) => {
         const navigate = useNavigate();
+        const { updateAdmin } = React.useContext(AdminAuthContext);
         const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
         const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
         const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -48,6 +50,8 @@
         
                 // Clear the auth token from local storage
                 localStorage.clear();
+                updateAdmin(null);
+                // Redirect to the login page
                 navigate('/login');
             } catch (error) {
                 console.error('Logout error:', error);
