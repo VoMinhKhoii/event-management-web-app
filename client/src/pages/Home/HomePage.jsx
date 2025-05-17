@@ -160,10 +160,11 @@ const HomePage = () => {
 
 
     if (filters.searchTerm) {
-      result = result.filter(event =>
-        event.title.toLowerCase().includes(filters.searchTerm.toLowerCase())
-      );
-    }
+    const searchTerm = filters.searchTerm.trim().toLowerCase();
+    result = result.filter(event =>
+    event.title.toLowerCase().includes(searchTerm)
+  );
+}
 
     // Filter by category 
     if (filters.category) {
@@ -216,11 +217,12 @@ const HomePage = () => {
 
 
   const handleSearchAndFilter = (term, category, date) => {
-    const newFilters = {
-      searchTerm: term || '',
+      const newFilters = {
+      searchTerm: term ? term.trim() : '',
       category: category || '',
       date: date || ''
-    };
+  };
+
 
     setFilters(newFilters);
     setIsFiltered(true);
