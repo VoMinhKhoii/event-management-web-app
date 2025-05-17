@@ -1,0 +1,43 @@
+fullstack-event-planning
+├─ README.md
+├─ api
+│  ├─ app.js
+│  ├─ config
+│  │  └─ db.js
+│  ├─ controllers
+│  ├─ middleware
+│  ├─ models
+│  ├─ node_modules
+│  │  
+└─ client
+   ├─ .gitignore
+   ├─ README.md
+   ├─ eslint.config.js
+   ├─ index.html
+   ├─ node_modules
+   ├─ package-lock.json
+   ├─ package.json
+   ├─ postcss.config.js
+   ├─ public
+   │  ├─ images
+   │  │  ├─ avatar.png
+   │  │  ├─ avatar1.png
+   │  │  ├─ business.png
+   │  │  ├─ game.png
+   │  │  └─ tech.png
+   │  └─ vite.svg
+   ├─ src
+   │  ├─ App.jsx
+   │  ├─ assets
+   │  ├─ components
+   │  ├─ context
+   │  ├─ index.css
+   │  ├─ lib
+   │  │  └─ loaders.js
+   │  ├─ main.jsx
+   │  ├─ pages
+   │  └─ routes
+   │     ├─ AdminRoute.jsx
+   │     └─ ProtectedRoute.jsx
+   ├─ tailwind.config.js
+   └─ vite.config.js

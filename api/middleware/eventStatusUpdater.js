@@ -1,4 +1,3 @@
-import cron from 'node-cron';
 import Event from '../models/Event.js';
 
 // Function to update event statuses
@@ -28,7 +27,6 @@ const updateEventStatuses = async () => {
             await event.save();
             console.log(`Event ${event._id} (${event.title}) changed to ongoing`);
         }
-
         // Find ongoing events that should be ended (past end date/time)
         const endingEvents = await Event.find({
             status: 'ongoing',
@@ -40,7 +38,6 @@ const updateEventStatuses = async () => {
                 }
             ]
         });
-
         // Update them to ended
         for (const event of endingEvents) {
             event.status = 'ended';
@@ -53,6 +50,4 @@ const updateEventStatuses = async () => {
         console.error('Error updating event statuses:', err);
     }
 };
-
-
 export default updateEventStatuses;

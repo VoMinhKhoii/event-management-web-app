@@ -324,7 +324,7 @@ export const updateEvent = async (req, res) => {
     res.status(200).json(updatedEvent);
   } catch (err) {
     await session.abortTransaction();
-    console.error('Error updating event:', err);
+        console.error('Error updating event:', err);
 
     // clean-up temp file if exists
     if (req.file?.path && fs.existsSync(req.file.path)) {

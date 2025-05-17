@@ -407,7 +407,7 @@ const Calendar = () => {
 
             {/* Create Event Button */}
             <button
-              onClick={() => navigate('/create-event')}
+              onClick={() => navigate('/create-event', { state: { source: 'calendar' } })}
               className="bg-[#569DBA] text-white px-2 py-2 md:px-4 text-sm md:text-base rounded-full hover:bg-[#6ba9c2] transition-colors flex items-center justify-center"
             >
               Create event
