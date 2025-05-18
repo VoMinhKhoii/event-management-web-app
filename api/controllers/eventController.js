@@ -21,6 +21,7 @@ export const getAllEvent = async (req, res) => {
       // Exclude multiple statuses: ended, cancelled, deleted
       filter.status = { $nin: ['ended', 'cancelled', 'ongoing', 'deleted'] };
     } 
+
     if (organizerId) filter.organizer = organizerId;
     const events = await Event.find(filter).populate('organizer').sort({ createdAt: -1 });
 
