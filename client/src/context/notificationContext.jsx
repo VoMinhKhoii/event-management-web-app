@@ -32,8 +32,9 @@ export const NotificationContextProvider = ({ children }) => {
 
     const fetchNewCount = useCallback(async () => {
         try {
-            // Get timestamp of when user last visited notifications page
-            const lastVisitTimestamp = localStorage.getItem('userNotificationsTimestamp') || '0';
+            // Use a user-specific key for the timestamp
+            const userSpecificKey = currentUser?._id ? `userNotificationsTimestamp_${currentUser._id}` : null;
+            const lastVisitTimestamp = userSpecificKey ? localStorage.getItem(userSpecificKey) || '0' : '0';
 
             console.log("Last visit timestamp:", lastVisitTimestamp);
             console.log("As date:", new Date(parseInt(lastVisitTimestamp)).toLocaleString());
@@ -53,15 +54,17 @@ export const NotificationContextProvider = ({ children }) => {
         } catch (error) {
             console.error("Error fetching new notification count:", error);
         }
-    }, []);
+    }, [currentUser]); // Add currentUser as a dependency
 
     // Mark all as seen (when visiting notifications page)
     const markAllAsSeen = useCallback(() => {
-        // Update the last visit timestamp
-        localStorage.setItem('userNotificationsTimestamp', Date.now().toString());
+        // Update the last visit timestamp with user-specific key
+        if (currentUser?._id) {
+            localStorage.setItem(`userNotificationsTimestamp_${currentUser._id}`, Date.now().toString());
+        }
         // Reset new count
         setNewCount(0);
-    }, []);
+    }, [currentUser]); // Add currentUser as a dependency
 
 
     const sendNotification = async (notification) => {

@@ -26,23 +26,23 @@ const NavPane = () => {
     // Determine active menu directly without using state - eliminates flicker
     const getActiveMenu = () => {
         const path = location.pathname;
-        
+
         // Check if we're viewing an event detail or editing an event
-        if (path.match(/^\/event\/[^/]+$/) || path.match(/^\/event\/[^/]+\/edit$/) || path.match(/create-event/)) {
+        if (path.match(/^\/event\/[^/]+$/) || path.match(/^\/event\/[^/]+\/edit$/)) {
             // Check navigation state
             if (location.state?.source === 'home') {
                 return 'home';
             } else if (location.state?.source === 'calendar') {
                 return 'calendar';
             }
-            
+
             // No source state, check if we can infer from sessionStorage
             const lastActiveMenu = sessionStorage.getItem('lastActiveMenu');
             if (lastActiveMenu) {
                 return lastActiveMenu;
             }
         }
-        
+
         // Normal path handling
         if (path.includes('/home')) {
             return 'home';
@@ -51,14 +51,14 @@ const NavPane = () => {
         } else if (path.includes('/notifications')) {
             return 'notifications';
         }
-        
+
         // Default to empty if none match
         return '';
     };
-    
+
     // Current active menu - computed directly in render
     const activeMenu = getActiveMenu();
-    
+
     // Store the current active menu in sessionStorage for persistence
     useEffect(() => {
         if (activeMenu) {
@@ -94,7 +94,7 @@ const NavPane = () => {
                     <div className="flex md:hidden">
                         <button
                             type="button"
-                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                            className="relative inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
                             aria-expanded={mobileMenuOpen}
                             onClick={toggleMobileMenu}
                         >
@@ -103,6 +103,14 @@ const NavPane = () => {
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
+
+                            {/* Position notification badge on the button */}
+                            {/* Position notification badge on the button */}
+                            {!mobileMenuOpen && newCount > 0 && location.pathname !== '/notifications' && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                    {newCount > 9 ? '9+' : newCount}
+                                </span>
+                            )}
                         </button>
                     </div>
 
@@ -112,8 +120,8 @@ const NavPane = () => {
                             <Link
                                 to="/home"
                                 className={`flex items-center px-4 py-2 text-sm font-medium ${activeMenu === 'home'
-                                        ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900'
-                                        : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
+                                    ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900'
+                                    : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
                                     } transition-all`}
                             >
                                 <img
@@ -126,8 +134,8 @@ const NavPane = () => {
                             <Link
                                 to="/calendar"
                                 className={`flex items-center px-4 py-2 text-sm font-medium mx-4 ${activeMenu === 'calendar'
-                                        ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900'
-                                        : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
+                                    ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900'
+                                    : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
                                     } transition-all`}
                             >
                                 <img
@@ -140,8 +148,8 @@ const NavPane = () => {
                             <Link
                                 to="/notifications"
                                 className={`flex items-center px-4 py-2 text-sm font-medium relative ${activeMenu === 'notifications'
-                                        ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900'
-                                        : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
+                                    ? 'bg-[#E0E0E0] rounded-[12px] text-gray-900'
+                                    : 'text-gray-600 hover:bg-[#F5F5F5] hover:rounded-[12px] hover:text-gray-900'
                                     } transition-all`}
                             >
                                 <img
@@ -182,8 +190,8 @@ const NavPane = () => {
                     <Link
                         to="/home"
                         className={`block px-3 py-2 rounded-md text-base font-medium ${activeMenu === 'home'
-                                ? 'bg-[#E0E0E0] text-gray-900'
-                                : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
+                            ? 'bg-[#E0E0E0] text-gray-900'
+                            : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
                             }`}
                         onClick={() => setMobileMenuOpen(false)}
                     >
@@ -199,8 +207,8 @@ const NavPane = () => {
                     <Link
                         to="/calendar"
                         className={`block px-3 py-2 rounded-md text-base font-medium ${activeMenu === 'calendar'
-                                ? 'bg-[#E0E0E0] text-gray-900'
-                                : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
+                            ? 'bg-[#E0E0E0] text-gray-900'
+                            : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
                             }`}
                         onClick={() => setMobileMenuOpen(false)}
                     >
@@ -216,8 +224,8 @@ const NavPane = () => {
                     <Link
                         to="/notifications"
                         className={`block px-3 py-2 rounded-md text-base font-medium ${activeMenu === 'notifications'
-                                ? 'bg-[#E0E0E0] text-gray-900'
-                                : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
+                            ? 'bg-[#E0E0E0] text-gray-900'
+                            : 'text-gray-600 hover:bg-[#F5F5F5] hover:text-gray-900'
                             }`}
                         onClick={() => setMobileMenuOpen(false)}
                     >
