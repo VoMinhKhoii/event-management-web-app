@@ -221,7 +221,7 @@ const NavPane = () => {
                             }`}
                         onClick={() => setMobileMenuOpen(false)}
                     >
-                        <div className="flex items-center">
+                        <div className="flex items-center relative">
                             <img
                                 src={activeMenu === 'notifications' ? notificationActiveIcon : notificationIcon}
                                 alt="Notifications"
@@ -229,7 +229,7 @@ const NavPane = () => {
                             />
                             Notifications
                             {newCount > 0 && location.pathname !== '/notifications' && (
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                                     {newCount > 9 ? '9+' : newCount}
                                 </span>
                             )}
