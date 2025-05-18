@@ -104,7 +104,7 @@ const AdminUserPage = () => {
             return;
         }
 
-        const searchLower = term.toLowerCase();
+        const searchLower = term.trim().toLowerCase();
         
         // Search for exact username matches first
         const exactUsernameMatches = users.filter(user => 
@@ -213,7 +213,7 @@ const AdminUserPage = () => {
             if (selectedUser) {
                 result = result.filter(user => user._id === selectedUser._id);
             } else {
-                const term = appliedFilters.searchTerm.toLowerCase();
+                const term = appliedFilters.searchTerm.trim().toLowerCase();
                 result = result.filter(user => {
                     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase().trim();
                     const username = (user.username || '').toLowerCase();

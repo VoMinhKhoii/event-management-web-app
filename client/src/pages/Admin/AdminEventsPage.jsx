@@ -125,7 +125,7 @@ const AdminEventsPage = () => {
         
         // Filter by search term (only if property exists)
         if ('searchTerm' in appliedFilters && appliedFilters.searchTerm) {
-            const term = appliedFilters.searchTerm.toLowerCase();
+            const term = appliedFilters.searchTerm.trim().toLowerCase();
             result = result.filter(event => 
                 event.title?.toLowerCase().includes(term)
             );
@@ -202,7 +202,7 @@ const AdminEventsPage = () => {
             return;
         }
         
-        const term_lower = term.toLowerCase();
+        const term_lower = term.trim().toLowerCase();
         const results = events.filter(event =>
             (event.title && event.title.toLowerCase().includes(term_lower))
         );

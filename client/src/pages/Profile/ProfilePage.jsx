@@ -610,7 +610,7 @@ const ProfilePage = () => {
                 }`}
               onClick={() => setActiveTab('bookings')}
             >
-              My Requests
+              My Requests / Invitations
             </button>
             <button
               className={`py-4 px-6 font-medium text-sm focus:outline-none ${activeTab === 'events'
