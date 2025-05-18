@@ -11,4 +11,8 @@ router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout',verifyToken, logout);
 
+
+
+
+
 export default router;

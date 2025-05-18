@@ -8,11 +8,11 @@ const EditEvent = () => {
     const { id: eventId } = useParams();
     const navigate = useNavigate();
     const { currentUser } = useContext(AuthContext);
-
+    const [currentAttendeeCount, setCurrentAttendeeCount] = useState(0);
     const [imagePreview, setImagePreview] = useState(null);
     const fileInputRef = useRef(null);
     const [errors, setErrors] = useState({});
-    const [privacy, setPrivacy] = useState(true); // State for Privacy toggle
+    const [privacy, setPrivacy] = useState(false); // State for Privacy toggle
     const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState({
         title: '',
@@ -45,6 +45,7 @@ const EditEvent = () => {
                 const startDate = new Date(data.startDate).toISOString().split('T')[0];
                 const endDate = new Date(data.endDate).toISOString().split('T')[0];
 
+                setCurrentAttendeeCount(data.currentAttendees);
                 setFormData({
                     title: data.title || '',
                     description: data.description || '',
@@ -77,7 +78,7 @@ const EditEvent = () => {
 
     const validateForm = () => {
         try {
-            const { startDate, endDate, startTime, endTime } = formData;
+            const { startDate, endDate, startTime, endTime, maxAttendees } = formData;
 
             // Ensure all required fields are present
             if (!startDate || !endDate || !startTime || !endTime) {
@@ -111,6 +112,16 @@ const EditEvent = () => {
             // 4. Start time can't be after end time (on the same day)
             if (startDate === endDate && startDateTime >= endDateTime) {
                 alert("The start time cannot be after or equal to the end time.");
+                return false;
+            }
+
+            if(maxAttendees < currentAttendeeCount) {
+                alert("The maximum attendees cannot be less than the current attendees.");
+                return false;
+            }
+
+            if(maxAttendees < 1) {
+                alert("There must be at least 1 attendee.");
                 return false;
             }
 
@@ -296,7 +307,7 @@ const EditEvent = () => {
                     <div className='flex items-center gap-4'>
                         <div className="flex items-center space-x-2">
                             <span className="text-sm font-medium text-gray-700">
-                                {privacy ? 'Private' : 'Public'}
+                                Private
                             </span>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input

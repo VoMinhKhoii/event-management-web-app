@@ -28,7 +28,7 @@ const NavPane = () => {
         const path = location.pathname;
         
         // Check if we're viewing an event detail or editing an event
-        if (path.match(/^\/event\/[^/]+$/) || path.match(/^\/event\/[^/]+\/edit$/)) {
+        if (path.match(/^\/event\/[^/]+$/) || path.match(/^\/event\/[^/]+\/edit$/) || path.match(/create-event/)) {
             // Check navigation state
             if (location.state?.source === 'home') {
                 return 'home';

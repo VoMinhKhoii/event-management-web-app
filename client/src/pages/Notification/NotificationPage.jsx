@@ -254,7 +254,7 @@ const NotificationPage = () => {
 
             // Refresh notifications to get updated data
             await markAsRead(selectedNotification._id);
-            updateNotificationCache(selectedNotification._id, { isRead: true });
+            // updateNotificationCache(selectedNotification._id, { isRead: true });
 
             // Show success message
             alert("You have successfully accepted the invitation");
