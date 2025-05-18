@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiX } from 'react-icons/fi';
 import AdminNavPane from '../../components/AdminNavPane';
+import { MdDelete } from "react-icons/md";
+
+
 
 const AdminUserPage = () => {
     const navigate = useNavigate();
@@ -525,9 +528,6 @@ const AdminUserPage = () => {
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                             Status
                                         </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                                            Action
-                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -575,9 +575,6 @@ const AdminUserPage = () => {
                                                     }`}>
                                                         {user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'Offline'}
                                                     </span>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    <FiMoreVertical className="h-5 w-5 cursor-pointer hover:text-gray-700" />
                                                 </td>
                                             </tr>
                                         ))
