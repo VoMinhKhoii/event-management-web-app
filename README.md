@@ -33,4 +33,4 @@ CLOUDINARY_UPLOAD_PRESET='ml_default'
 - [Truong Phung Tan Tai](https://github.com/Tony26112004) - 5
 - [Vo Minh Khoi](https://github.com/VoMinhKhoii) - 5
 ## Presentation Video
-[Link]()
+[Link](https://rmiteduau-my.sharepoint.com/:v:/g/personal/s4001453_rmit_edu_vn/ETM7lGPZpRRCt2Ljp55eFKYBBYPwZL-5PWIhhUvv59pVJg?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=tvFCXR)
