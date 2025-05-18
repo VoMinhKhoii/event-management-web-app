@@ -453,8 +453,7 @@ const EventDetails = () => {
 
           alert(`You have schedule conflicts with:\n\n${conflictMessages}`);
         } else {
-
-          alert(data.message || 'Failed to send join request');
+          alert(data.error || 'Failed to send join request');
         }
         return;
       }

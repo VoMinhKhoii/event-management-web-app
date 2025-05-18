@@ -288,16 +288,6 @@ const AdminEventsPage = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Existing handlers
-    const handleViewEvent = (eventId) => {
-        console.log('View event:', eventId);
-        navigate(`/event/${eventId}`);
-    };
-
-    const handleEditEvent = (eventId) => {
-        console.log('Edit event:', eventId);
-    };
-
     const handleDeleteEvent = async (eventId) => {
         try {
             const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
@@ -614,18 +604,6 @@ const AdminEventsPage = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex items-center space-x-3">
-                                                    <button 
-                                                        onClick={() => handleViewEvent(event._id)}
-                                                        className="text-blue-600 hover:text-blue-900"
-                                                    >
-                                                        <FiEye className="h-5 w-5" />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleEditEvent(event._id)}
-                                                        className="text-yellow-600 hover:text-yellow-900"
-                                                    >
-                                                        <FiEdit className="h-5 w-5" />
-                                                    </button>
                                                     <button 
                                                         onClick={() => handleDeleteEvent(event._id)}
                                                         className="text-red-600 hover:text-red-900"
