@@ -30,7 +30,7 @@ const CreateEvent = () => {
 
   const validateForm = () => {
     try {
-      const { startDate, endDate, startTime, endTime } = formData;
+      const { startDate, endDate, startTime, endTime, maxAttendees} = formData;
 
       // Ensure all required fields are present
       if (!startDate || !endDate || !startTime || !endTime) {
@@ -43,28 +43,28 @@ const CreateEvent = () => {
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(`${endDate}T${endTime}`);
 
-      // 1. Start date can't be today
-      // if (new Date(startDate).toDateString() === today.toDateString()) {
-      //   alert("The start date cannot be today.");
-      //   return false;
-      // }
-
-      // 2. Start date can't be in the past
+      // 1. Start date can't be in the past
       if (new Date(startDate) < today) {
         alert("The start date cannot be in the past.");
         return false;
       }
 
-      // 3. Start date can't be after the end date
+      // 2. Start date can't be after the end date
       if (new Date(startDate) > new Date(endDate)) {
         alert("The start date cannot be after the end date.");
         return false;
       }
 
-      // 4. Start time can't be after end time (on the same day)
+      // 3. Start time can't be after end time (on the same day)
       if (startDate === endDate && startDateTime >= endDateTime) {
         alert("The start time cannot be after or equal to the end time.");
         return false;
+      }
+
+      if (maxAttendees < 1) {
+        alert("There must be at least 1 attendees.");
+        return false;
+
       }
 
       // If all validations pass
