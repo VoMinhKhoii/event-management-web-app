@@ -143,7 +143,7 @@ export const NotificationContextProvider = ({ children }) => {
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         // Poll for new notifications periodically
-        const intervalId = setInterval(fetchNewCount, 60000); // Check every minute
+        const intervalId = setInterval(fetchNewCount, 10000); // Check every 10 seconds
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
