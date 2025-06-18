@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane';
 import { AuthContext } from '../../context/authContext.jsx';
 import { useContext } from 'react';
 import EventMiniCard from '../../components/EventMiniCard';
+import { API_BASE_URL } from '../../config/api';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ const ProfilePage = () => {
     setEventsError(null);
 
     try {
-      const response = await fetch(`http://localhost:8800/api/events?organizerId=${currentUser._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/events?organizerId=${currentUser._id}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -76,7 +76,7 @@ const ProfilePage = () => {
     setIsLoadingEvents(true);
     setEventsError(null);
     try {
-      const response = await fetch(`http://localhost:8800/api/events/?participantId=${currentUser._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/?participantId=${currentUser._id}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -198,7 +198,7 @@ const ProfilePage = () => {
       }
 
       // Send request to API
-      const res = await fetch(`http://localhost:8800/api/users/${currentUser._id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${currentUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -257,7 +257,7 @@ const ProfilePage = () => {
     formData.append('avatar', file);
 
     try {
-      const res = await fetch(`http://localhost:8800/api/users/${currentUser._id}/avatar`, {
+      const res = await fetch(`${API_BASE_URL}/api/users/${currentUser._id}/avatar`, {
         method: 'POST',
         body: formData,
         credentials: 'include'
@@ -286,7 +286,7 @@ const ProfilePage = () => {
     try {
       setIsLoggingOut(true);
 
-      const res = await fetch(`http://localhost:8800/api/auth/logout`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include' // Important for cookie handling
       });
@@ -311,7 +311,7 @@ const ProfilePage = () => {
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      const res = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -333,7 +333,7 @@ const ProfilePage = () => {
 
     const handleLogout = async () => {
       try {
-        const res = await fetch(`http://localhost:8800/api/auth/logout`, {
+        const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
           method: 'POST',
           credentials: 'include'
         });

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
+import { API_BASE_URL } from '../../config/api';
 
 const EditEvent = () => {
     const { id: eventId } = useParams();
@@ -33,7 +34,7 @@ const EditEvent = () => {
     useEffect(() => {
         const fetchEventData = async () => {
             try {
-                const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
                     credentials: 'include',
                 });
 
@@ -158,7 +159,7 @@ const EditEvent = () => {
                 }
                 fd.append('organizer', currentUser._id);
 
-                const response = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
                     method: 'PUT',
                     credentials: 'include',
                     body: fd,

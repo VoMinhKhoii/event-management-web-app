@@ -1,4 +1,5 @@
 // Functions to load data for components using React Router's loader API
+import { API_BASE_URL } from '../config/api';
 
 /**
  * Loader function for getting data about a single event
@@ -8,7 +9,7 @@ export const singleEventLoader = async ({ params }) => {
     try {
         const eventId = params.id;
 
-        const eventResponse = await fetch(`http://localhost:8800/api/events/${eventId}`,{
+        const eventResponse = await fetch(`${API_BASE_URL}/api/events/${eventId}`,{
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include' // This is critical for sending cookies/session
@@ -26,8 +27,8 @@ export const singleEventLoader = async ({ params }) => {
         if (eventData && !eventData.publicity) {
             try {
                 const [invitationsRes, requestsRes] = await Promise.all([
-                    fetch(`http://localhost:8800/api/events/invitations-get?eventId=${eventId}`, { credentials: 'include' }),
-                    fetch(`http://localhost:8800/api/events/${eventId}/requests-get`, { credentials: 'include' })
+                    fetch(`${API_BASE_URL}/api/events/invitations-get?eventId=${eventId}`, { credentials: 'include' }),
+                    fetch(`${API_BASE_URL}/api/events/${eventId}/requests-get`, { credentials: 'include' })
                 ]);
 
                 if (invitationsRes.ok) {

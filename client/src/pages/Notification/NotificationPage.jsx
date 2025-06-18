@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import NavPane from "../../components/NavPane.jsx";
 import { NotificationContext } from "../../context/notificationContext.jsx";
 import { AuthContext } from "../../context/authContext.jsx";
+import { API_BASE_URL } from '../../config/api';
 
 const NotificationPage = () => {
     // Add current user context for avatar handling
@@ -98,7 +99,7 @@ const NotificationPage = () => {
 
         try {
             // Fetch fresh data
-            const response = await fetch('http://localhost:8800/api/notifications', {
+            const response = await fetch(`${API_BASE_URL}/api/notifications`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -220,7 +221,7 @@ const NotificationPage = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:8800/api/events/${eventId}/invitations/${invitationId}`,
+                `${API_BASE_URL}/api/events/${eventId}/invitations/${invitationId}`,
                 {
                     method: "PUT",
                     headers: {
@@ -283,7 +284,7 @@ const NotificationPage = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:8800/api/events/${eventId}/invitations/${invitationId}`,
+                `${API_BASE_URL}/api/events/${eventId}/invitations/${invitationId}`,
                 {
                     method: "PUT",
                     headers: {
@@ -341,7 +342,7 @@ const NotificationPage = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:8800/api/events/${eventId}/requests/${requestId}`,
+                `${API_BASE_URL}/api/events/${eventId}/requests/${requestId}`,
                 {
                     method: "PUT",
                     headers: {
@@ -399,7 +400,7 @@ const NotificationPage = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:8800/api/events/${eventId}/requests/${requestId}`,
+                `${API_BASE_URL}/api/events/${eventId}/requests/${requestId}`,
                 {
                     method: "PUT",
                     headers: {

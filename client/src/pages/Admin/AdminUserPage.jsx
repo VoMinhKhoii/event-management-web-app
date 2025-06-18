@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiX } from 'react-icons/fi';
 import AdminNavPane from '../../components/AdminNavPane';
+import { API_BASE_URL } from '../../config/api';
 
 const AdminUserPage = () => {
     const navigate = useNavigate();
@@ -47,7 +48,7 @@ const AdminUserPage = () => {
         const fetchUsers = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:8800/api/users', {
+                const response = await fetch(`${API_BASE_URL}/api/users`, {
                     credentials: 'include'
                 });
                 

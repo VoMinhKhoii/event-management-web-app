@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import EventCard from '../../components/EventCard.jsx';
 import NavPane from '../../components/NavPane.jsx';
 import SearchBar from '../../components/SearchBar.jsx';
+import { API_BASE_URL } from '../../config/api';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const HomePage = () => {
     setLoading(true);
     try {
       // Fetch fresh data
-      const response = await fetch('http://localhost:8800/api/events?public=true', {
+      const response = await fetch(`${API_BASE_URL}/api/events?public=true`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

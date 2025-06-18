@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/authContext.jsx';
 import NavPane from '../../components/NavPane.jsx';
+import { API_BASE_URL } from '../../config/api';
 
 const Calendar = () => {
   const { currentUser } = useContext(AuthContext);
@@ -23,7 +24,7 @@ const Calendar = () => {
     const fetchEvents = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:8800/api/events?organizerId=${currentUser._id}&participantId=${currentUser._id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/events?organizerId=${currentUser._id}&participantId=${currentUser._id}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'

@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 import totalUsers from '../../assets/total-users.png';
 import totalEvents from '../../assets/total-events.png';
 import newUser from '../../assets/new-user.png';
@@ -67,13 +68,13 @@ const AdminDashboard = () => {
 
         try {
             // Fetch fresh data
-            const users = await fetch('http://localhost:8800/api/users', {
+            const users = await fetch(`${API_BASE_URL}/api/users`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
             });
 
-            const events = await fetch('http://localhost:8800/api/events', {
+            const events = await fetch(`${API_BASE_URL}/api/events`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -123,7 +124,7 @@ const AdminDashboard = () => {
 
     const fetchActivities = async () => {
         try {
-            const response = await fetch('http://localhost:8800/api/admin/activities', {
+            const response = await fetch(`${API_BASE_URL}/api/admin/activities`, {
                 credentials: 'include'
             });
 

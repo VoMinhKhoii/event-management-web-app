@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from '../config/api';
 
 export const AuthContext = createContext();
 
@@ -23,7 +24,7 @@ export const AuthContextProvider = ({ children }) => {
                 });
                 
                 // Then update in the database
-                const response = await fetch(`http://localhost:8800/api/users/${currentUser._id}/avatar`, {
+                const response = await fetch(`${API_BASE_URL}/api/users/${currentUser._id}/avatar`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'

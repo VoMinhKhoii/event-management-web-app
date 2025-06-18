@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import NavPane from '../../components/NavPane.jsx';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx'; // adjust path if needed
+import { API_BASE_URL } from '../../config/api';
 
 const CreateEvent = () => {
   const navigate = useNavigate();
@@ -100,7 +101,7 @@ const CreateEvent = () => {
       }
       fd.append('organizer', currentUser._id);
 
-      const response = await fetch('http://localhost:8800/api/events', {
+      const response = await fetch(`${API_BASE_URL}/api/events`, {
         method: 'POST',
         credentials: 'include',
         body: fd,

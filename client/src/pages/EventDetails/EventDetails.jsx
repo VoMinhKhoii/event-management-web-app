@@ -7,6 +7,7 @@ import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../../context/authContext.jsx';
 import { NotificationContext } from '../../context/notificationContext.jsx';
+import { API_BASE_URL } from '../../config/api';
 
 
 const EventDetails = () => {
@@ -96,7 +97,7 @@ const EventDetails = () => {
 
     const fetchComments = async () => {
       try {
-        const response = await fetch(`http://localhost:8800/api/comments/${id}`);
+        const response = await fetch(`${API_BASE_URL}/api/comments/${id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch comments');
         }
@@ -118,7 +119,7 @@ const EventDetails = () => {
 
   const fetchInvitationsAndStats = async () => {
     try {
-      const response = await fetch(`http://localhost:8800/api/events/invitations-get?eventId=${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/events/invitations-get?eventId=${id}`);
 
       const data = await response.json();
       if (!response.ok) {
@@ -151,7 +152,7 @@ const EventDetails = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${id}/requests-get`);
+      const response = await fetch(`${API_BASE_URL}/api/events/${id}/requests-get`);
 
       const data = await response.json();
       if (!response.ok) {
@@ -209,7 +210,7 @@ const EventDetails = () => {
     if (!comment.trim() || !currentUser) return;
 
     try {
-      const response = await fetch(`http://localhost:8800/api/comments/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +250,7 @@ const EventDetails = () => {
     if (!replyText.trim() || !currentUser) return;
 
     try {
-      const response = await fetch(`http://localhost:8800/api/comments/${commentId}/replies`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments/${commentId}/replies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -288,7 +289,7 @@ const EventDetails = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8800/api/comments/${commentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -319,7 +320,7 @@ const EventDetails = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8800/api/comments/${commentId}/replies/${replyId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/comments/${commentId}/replies/${replyId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -354,7 +355,7 @@ const EventDetails = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${id}/reminders/pending-invites`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/${id}/reminders/pending-invites`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -385,7 +386,7 @@ const EventDetails = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${id}/reminders/attendees`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/${id}/reminders/attendees`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -416,7 +417,7 @@ const EventDetails = () => {
 
     setIsInviting(true);
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${id}/invite`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/${id}/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -456,7 +457,7 @@ const EventDetails = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${id}/request-join`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/${id}/request-join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -493,7 +494,7 @@ const EventDetails = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:8800/api/users', {
+        const response = await fetch('${API_BASE_URL}/api/users', {
           credentials: 'include'
         });
 

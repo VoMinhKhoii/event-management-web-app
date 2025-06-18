@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiMoreVertical, FiEye, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
+import { API_BASE_URL } from '../../config/api';
 
 // Import custom icons
 import totalEvents from '../../assets/total-events.png';
@@ -46,7 +47,7 @@ const AdminEventsPage = () => {
         const fetchEvents = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch('http://localhost:8800/api/events', {
+                const response = await fetch(`${API_BASE_URL}/api/events`, {
                     credentials: 'include'
                 });
                 
@@ -76,7 +77,7 @@ const AdminEventsPage = () => {
 
         const fetchRSVP = async () => {
             try {
-                const response = await fetch(`http://localhost:8800/api/events/invitations-get`);
+                const response = await fetch(`${API_BASE_URL}/api/events/invitations-get`);
 
                 const data = await response.json();
                 if (!response.ok) throw new Error('Failed to fetch invitations');
@@ -316,7 +317,7 @@ const AdminEventsPage = () => {
         if (!confirmed) return; // If user cancels, do nothing
 
         try {
-            const deleteResponse = await fetch(`http://localhost:8800/api/events/${eventId}`, {
+            const deleteResponse = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -335,7 +336,7 @@ const AdminEventsPage = () => {
     const handleEventRsvp = async (eventId) => {
 
         try {
-            const response = await fetch(`http://localhost:8800/api/events/invitations-get?eventId=${eventId}`);
+            const response = await fetch(`${API_BASE_URL}/api/events/invitations-get?eventId=${eventId}`);
     
             const data = await response.json();
             if (!response.ok) throw new Error('Failed to fetch invitations');

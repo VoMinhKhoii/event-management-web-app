@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/authContext.jsx';
 import { AdminAuthContext } from '../../context/adminAuthContext';
 import { useContext } from 'react';
+import { API_BASE_URL } from '../../config/api';
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -36,7 +37,7 @@ const LoginPage = () => {
         setError(null);
 
         try {
-            const res = await fetch('http://localhost:8800/api/auth/login', {
+            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -85,7 +86,7 @@ const LoginPage = () => {
 
         try {
             // Use the specific admin login endpoint
-            const res = await fetch('http://localhost:8800/api/admin/login', {
+            const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

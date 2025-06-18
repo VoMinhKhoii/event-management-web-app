@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 
 const SignUpPage = () => {
 
@@ -93,7 +94,7 @@ const SignUpPage = () => {
         console.log("Register:", { firstName, lastName, username, email, password });
 
         try {
-            const res = await fetch('http://localhost:8800/api/auth/signup', {
+            const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

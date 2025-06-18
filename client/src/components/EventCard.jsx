@@ -1,4 +1,5 @@
 import React from 'react';
+import { API_BASE_URL } from '../config/api';
 
 const EventCard = ({ title, image, startDate, startTime, endTime, location, summary, curAttendees, category, eventType, onClick, _id }) => {
   const displayCategory = category || eventType;
@@ -13,7 +14,7 @@ const EventCard = ({ title, image, startDate, startTime, endTime, location, summ
     }
     
     try {
-      const response = await fetch(`http://localhost:8800/api/events/${_id}/request-join`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/${_id}/request-join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
