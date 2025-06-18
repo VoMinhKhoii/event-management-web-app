@@ -1,13 +1,1 @@
-# Handle static assets
-/assets/*  /assets/:splat  200
-*.js       *.js           200
-*.css      *.css          200
-*.png      *.png          200
-*.jpg      *.jpg          200
-*.svg      *.svg          200
-*.ico      *.ico          200
-*.woff     *.woff         200
-*.woff2    *.woff2        200
-
-# Handle client-side routing
-/*         /index.html    200
+/*    /index.html   200
