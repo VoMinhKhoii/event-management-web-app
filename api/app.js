@@ -26,9 +26,12 @@ const app = express();
 
 app.use(cors({
     origin: [
-        'http://localhost:5173',  // Keep for local development
-        'https://relaxed-sprite-091d26.netlify.app'  // Add your Netlify URL
-    ]
+        'http://localhost:5173',  // For local development
+        'https://relaxed-sprite-091d26.netlify.app'  // Your Netlify URL
+    ],
+    credentials: true,  // This is the key part that's missing!
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(cookieParser());
