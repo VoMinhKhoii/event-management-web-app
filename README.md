@@ -1,4 +1,14 @@
 # 2025A - Full Stack Development Group Project
+## Project Web Link
+[Link](https://relaxed-sprite-091d26.netlify.app/)
+### Sample credentials:
+#### Admin
+- Username: `admin`
+- Password: `admin`
+
+#### Demo Account
+- Username: `minh_khoi`
+- Password: `Minh_Khoi`
 ## Installation
 To run the project locally:
 - Clone the repository & move into it
@@ -34,11 +44,3 @@ CLOUDINARY_UPLOAD_PRESET='ml_default'
 - [Vo Minh Khoi](https://github.com/VoMinhKhoii) - 6
 ## Presentation Video
 [Link](https://rmiteduau-my.sharepoint.com/:v:/g/personal/s4001453_rmit_edu_vn/ETM7lGPZpRRCt2Ljp55eFKYBBYPwZL-5PWIhhUvv59pVJg?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=tvFCXR)
-## Sample credentials
-### Admin
-- Username: `admin`
-- Password: `admin`
-
-### Demo Account
-- Username: `minh_khoi`
-- Password: `Minh_Khoi`
