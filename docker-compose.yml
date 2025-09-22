@@ -1,0 +1,36 @@
+version: "3.8"
+name: "event-planning-app"
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./api/.env
+    volumes: 
+      - ./api:/app
+      - /app/node_modules
+    networks:
+      - event-planning-app
+    ports: 
+      - 8800:8800
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - 5173:5173
+    networks:
+      - event-planning-app
+    depends_on:
+      - api
+
+
+networks:
+  event-planning-app:
+    driver: bridge

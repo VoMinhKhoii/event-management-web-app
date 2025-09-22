@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = 'https://event-management-web-app-19wj.onrender.com';
+export const API_BASE_URL = "http://localhost:8800" || 'https://event-management-web-app-19wj.onrender.com';
 
 // Helper function to create API URLs
 export const createApiUrl = (endpoint) => {
